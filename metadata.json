@@ -1,0 +1,5 @@
+{
+  "name": "SkillMatch AI - Skill-Based Hiring Platform",
+  "description": "A modern job matching platform that connects talent with opportunities based on verified skills using AI-driven matching logic. Built with React, Tailwind CSS, and Gemini API for intelligent candidate-job alignment.",
+  "requestFramePermissions": []
+}
