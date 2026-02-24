@@ -1,5 +1,4 @@
 import { User, UserRole } from '../types';
-import { MOCK_USER, MOCK_EMPLOYER } from '../constants';
 
 interface LoginResponse {
   success: boolean;
@@ -16,81 +15,101 @@ interface SignupData {
 }
 
 class AuthService {
-  // Mock authentication - replace with real API calls
+  private baseUrl = 'http://localhost:3001';
+
   async login(email: string, password: string): Promise<LoginResponse> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      // Fetch user by email
+      const response = await fetch(`${this.baseUrl}/users?email=${email}`);
+      if (!response.ok) {
+        return { success: false, error: 'Network error' };
+      }
 
-    // Mock authentication logic
-    if (email === 'alex@example.com' && password === 'password') {
-      return { success: true, user: MOCK_USER };
-    }
-    
-    if (email === 'hr@techcorp.com' && password === 'password') {
-      return { success: true, user: MOCK_EMPLOYER };
-    }
+      const users = await response.json();
+      
+      if (users.length === 0) {
+        return { success: false, error: 'Invalid email or password' };
+      }
 
-    // Demo accounts for testing
-    if (email === 'demo@jobseeker.com' && password === 'demo123') {
-      return { 
-        success: true, 
-        user: {
-          ...MOCK_USER,
-          email: 'demo@jobseeker.com',
-          name: 'Demo Job Seeker'
-        }
-      };
-    }
+      const user = users[0];
+      
+      // Simple password check (in production, use proper password hashing)
+      // For demo purposes, we accept "password" or "demo123"
+      if (password === 'password' || password === 'demo123') {
+        // Remove password from response
+        const { password: _, ...userWithoutPassword } = user;
+        return { success: true, user: userWithoutPassword as User };
+      }
 
-    if (email === 'demo@employer.com' && password === 'demo123') {
-      return { 
-        success: true, 
-        user: {
-          ...MOCK_EMPLOYER,
-          email: 'demo@employer.com',
-          name: 'Demo Employer'
-        }
-      };
+      return { success: false, error: 'Invalid email or password' };
+    } catch (error) {
+      console.error('Login error:', error);
+      return { success: false, error: 'Login failed. Please try again.' };
     }
-
-    return { success: false, error: 'Invalid email or password' };
   }
 
   async signup(userData: SignupData): Promise<LoginResponse> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      // Check if email already exists
+      const checkResponse = await fetch(`${this.baseUrl}/users?email=${userData.email}`);
+      const existingUsers = await checkResponse.json();
+      
+      if (existingUsers.length > 0) {
+        return { success: false, error: 'Email already exists' };
+      }
 
-    // Mock validation
-    if (userData.email === 'existing@example.com') {
-      return { success: false, error: 'Email already exists' };
+      // Create new user
+      const newUser = {
+        name: userData.name,
+        email: userData.email,
+        password: '$2a$10$hashedpassword', // Mock hashed password
+        role: userData.role,
+        skills: [],
+        avatar: `https://picsum.photos/seed/${userData.name.replace(/\s/g, '')}/200`,
+        ...(userData.companyName && { companyName: userData.companyName }),
+      };
+
+      const response = await fetch(`${this.baseUrl}/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newUser)
+      });
+
+      if (!response.ok) {
+        return { success: false, error: 'Failed to create account' };
+      }
+
+      const createdUser = await response.json();
+      const { password: _, ...userWithoutPassword } = createdUser;
+      
+      return { success: true, user: userWithoutPassword as User };
+    } catch (error) {
+      console.error('Signup error:', error);
+      return { success: false, error: 'Signup failed. Please try again.' };
     }
-
-    // Create new user
-    const newUser: User = {
-      id: `user-${Date.now()}`,
-      name: userData.name,
-      email: userData.email,
-      role: userData.role === 'JOB_SEEKER' ? UserRole.JOB_SEEKER : UserRole.EMPLOYER,
-      skills: [],
-      avatar: `https://picsum.photos/seed/${userData.name}/200`,
-      companyName: userData.companyName,
-    };
-
-    return { success: true, user: newUser };
   }
 
   async forgotPassword(email: string): Promise<{ success: boolean; error?: string }> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock success for any email
-    return { success: true };
+    try {
+      // Check if user exists
+      const response = await fetch(`${this.baseUrl}/users?email=${email}`);
+      const users = await response.json();
+      
+      if (users.length === 0) {
+        return { success: false, error: 'Email not found' };
+      }
+      
+      // In production, send password reset email
+      return { success: true };
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      return { success: false, error: 'Failed to process request' };
+    }
   }
 
   async resetPassword(token: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
-    // Simulate API delay
+    // In production, validate token and update password
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
     return { success: true };
   }
 }
