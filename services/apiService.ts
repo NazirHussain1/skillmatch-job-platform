@@ -1,8 +1,7 @@
 import { Job, Application, User } from '../types';
-import { MOCK_JOBS, MOCK_APPLICATIONS } from '../constants';
 
 class ApiService {
-  private baseUrl = process.env.VITE_API_URL || 'http://localhost:3001/api';
+  private baseUrl = 'http://localhost:3001';
 
   // Jobs API
   async getJobs(filters?: {
@@ -11,113 +10,179 @@ class ApiService {
     type?: string;
     skills?: string[];
   }): Promise<Job[]> {
-    // Mock implementation - replace with real API calls
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    let jobs = [...MOCK_JOBS];
-    
-    if (filters?.search) {
-      jobs = jobs.filter(job => 
-        job.title.toLowerCase().includes(filters.search!.toLowerCase()) ||
-        job.companyName.toLowerCase().includes(filters.search!.toLowerCase()) ||
-        job.description.toLowerCase().includes(filters.search!.toLowerCase())
-      );
-    }
-    
-    if (filters?.location) {
-      jobs = jobs.filter(job => 
-        job.location.toLowerCase().includes(filters.location!.toLowerCase())
-      );
-    }
-    
-    if (filters?.type) {
-      jobs = jobs.filter(job => job.type === filters.type);
-    }
-    
-    if (filters?.skills && filters.skills.length > 0) {
-      jobs = jobs.filter(job => 
-        filters.skills!.some(skill => 
-          job.requiredSkills.some(reqSkill => 
-            reqSkill.toLowerCase().includes(skill.toLowerCase())
+    try {
+      const response = await fetch(`${this.baseUrl}/jobs`);
+      if (!response.ok) throw new Error('Failed to fetch jobs');
+      
+      let jobs: Job[] = await response.json();
+      
+      // Apply filters
+      if (filters?.search) {
+        const searchLower = filters.search.toLowerCase();
+        jobs = jobs.filter(job => 
+          job.title.toLowerCase().includes(searchLower) ||
+          job.companyName.toLowerCase().includes(searchLower) ||
+          job.description.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      if (filters?.location) {
+        jobs = jobs.filter(job => 
+          job.location.toLowerCase().includes(filters.location!.toLowerCase())
+        );
+      }
+      
+      if (filters?.type) {
+        jobs = jobs.filter(job => job.type === filters.type);
+      }
+      
+      if (filters?.skills && filters.skills.length > 0) {
+        jobs = jobs.filter(job => 
+          filters.skills!.some(skill => 
+            job.requiredSkills.some(reqSkill => 
+              reqSkill.toLowerCase().includes(skill.toLowerCase())
+            )
           )
-        )
-      );
+        );
+      }
+      
+      return jobs;
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
+      return [];
     }
-    
-    return jobs;
   }
 
   async getJobById(id: string): Promise<Job | null> {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    return MOCK_JOBS.find(job => job.id === id) || null;
+    try {
+      const response = await fetch(`${this.baseUrl}/jobs/${id}`);
+      if (!response.ok) return null;
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching job:', error);
+      return null;
+    }
   }
 
   async createJob(jobData: Omit<Job, 'id' | 'postedAt'>): Promise<Job> {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const newJob: Job = {
-      ...jobData,
-      id: `job-${Date.now()}`,
-      postedAt: new Date().toISOString().split('T')[0],
-    };
-    
-    return newJob;
+    try {
+      const newJob = {
+        ...jobData,
+        postedAt: new Date().toISOString().split('T')[0],
+      };
+      
+      const response = await fetch(`${this.baseUrl}/jobs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newJob)
+      });
+      
+      if (!response.ok) throw new Error('Failed to create job');
+      return await response.json();
+    } catch (error) {
+      console.error('Error creating job:', error);
+      throw error;
+    }
   }
 
   async updateJob(id: string, jobData: Partial<Job>): Promise<Job | null> {
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const job = MOCK_JOBS.find(j => j.id === id);
-    if (!job) return null;
-    
-    return { ...job, ...jobData };
+    try {
+      const response = await fetch(`${this.baseUrl}/jobs/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(jobData)
+      });
+      
+      if (!response.ok) return null;
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating job:', error);
+      return null;
+    }
   }
 
   async deleteJob(id: string): Promise<boolean> {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return true;
+    try {
+      const response = await fetch(`${this.baseUrl}/jobs/${id}`, {
+        method: 'DELETE'
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Error deleting job:', error);
+      return false;
+    }
   }
 
   // Applications API
   async getApplications(userId: string): Promise<Application[]> {
-    await new Promise(resolve => setTimeout(resolve, 400));
-    return MOCK_APPLICATIONS.filter(app => app.id.includes(userId.slice(-1)));
+    try {
+      const response = await fetch(`${this.baseUrl}/applications?userId=${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch applications');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching applications:', error);
+      return [];
+    }
   }
 
   async createApplication(applicationData: Omit<Application, 'id' | 'appliedAt'>): Promise<Application> {
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const newApplication: Application = {
-      ...applicationData,
-      id: `app-${Date.now()}`,
-      appliedAt: new Date().toISOString().split('T')[0],
-    };
-    
-    return newApplication;
+    try {
+      const newApplication = {
+        ...applicationData,
+        appliedAt: new Date().toISOString().split('T')[0],
+      };
+      
+      const response = await fetch(`${this.baseUrl}/applications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newApplication)
+      });
+      
+      if (!response.ok) throw new Error('Failed to create application');
+      return await response.json();
+    } catch (error) {
+      console.error('Error creating application:', error);
+      throw error;
+    }
   }
 
   async updateApplicationStatus(id: string, status: Application['status']): Promise<Application | null> {
-    await new Promise(resolve => setTimeout(resolve, 600));
-    
-    const app = MOCK_APPLICATIONS.find(a => a.id === id);
-    if (!app) return null;
-    
-    return { ...app, status };
+    try {
+      const response = await fetch(`${this.baseUrl}/applications/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      
+      if (!response.ok) return null;
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating application:', error);
+      return null;
+    }
   }
 
   // User API
   async updateUserProfile(userId: string, userData: Partial<User>): Promise<User | null> {
-    await new Promise(resolve => setTimeout(resolve, 700));
-    
-    // Mock update - in real app, this would update the database
-    return { ...userData } as User;
+    try {
+      const response = await fetch(`${this.baseUrl}/users/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+      
+      if (!response.ok) return null;
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      return null;
+    }
   }
 
   async uploadAvatar(userId: string, file: File): Promise<string> {
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Mock file upload - return a placeholder URL
-    return `https://picsum.photos/seed/${userId}/200`;
+    // Mock file upload - in production, this would upload to a storage service
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return `https://picsum.photos/seed/${userId}-${Date.now()}/200`;
   }
 
   // Analytics API

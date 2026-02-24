@@ -9,16 +9,15 @@ const Profile: React.FC = () => {
   const [newSkill, setNewSkill] = useState('');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    name: user?.name || '',
+    email: user?.email || '',
+    bio: user?.bio || '',
+    skills: user?.skills || [],
+    companyName: user?.companyName || '',
+  });
 
   if (!user) return null;
-
-  const [formData, setFormData] = useState({
-    name: user.name,
-    email: user.email,
-    bio: user.bio || '',
-    skills: user.skills,
-    companyName: user.companyName || '',
-  });
 
   const addSkill = (e: React.FormEvent) => {
     e.preventDefault();
@@ -192,6 +191,7 @@ const Profile: React.FC = () => {
               </p>
             </div>
           </div>
+        </div>
         </div>
       </div>
     </div>
