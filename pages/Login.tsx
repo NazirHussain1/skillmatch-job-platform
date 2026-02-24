@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { Briefcase, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
 
@@ -28,9 +30,11 @@ const Login: React.FC = () => {
 
     const result = await login(formData.email, formData.password);
     if (result.success) {
+      toast.success('Welcome back!');
       navigate(from, { replace: true });
     } else {
       setError(result.error || 'Login failed');
+      toast.error(result.error || 'Login failed');
     }
   };
 
@@ -53,10 +57,20 @@ const Login: React.FC = () => {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <motion.div
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8"
+      >
         <div className="max-w-md w-full space-y-8">
           {/* Header */}
-          <div className="text-center">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-center"
+          >
             <Link to="/" className="inline-flex items-center space-x-2 mb-8">
               <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
                 <Briefcase className="text-white" size={24} />
@@ -67,7 +81,7 @@ const Login: React.FC = () => {
             <p className="mt-2 text-slate-600">
               Sign in to your account to continue your journey
             </p>
-          </div>
+          </motion.div>
 
           {/* Demo Accounts */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -180,10 +194,15 @@ const Login: React.FC = () => {
             </p>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Right Side - Image/Illustration */}
-      <div className="hidden lg:block lg:w-1/2 bg-gradient-to-br from-indigo-600 to-purple-700 relative overflow-hidden">
+      <motion.div
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
+        className="hidden lg:block lg:w-1/2 bg-gradient-to-br from-indigo-600 to-purple-700 relative overflow-hidden"
+      >
         <div className="absolute inset-0 bg-black bg-opacity-20"></div>
         <div className="relative h-full flex items-center justify-center p-12">
           <div className="text-center text-white">
@@ -211,7 +230,7 @@ const Login: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

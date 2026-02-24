@@ -32,6 +32,7 @@ export interface Job {
 export interface Application {
   id: string;
   jobId: string;
+  userId: string;
   jobTitle: string;
   companyName: string;
   status: 'Pending' | 'Reviewing' | 'Interviewing' | 'Accepted' | 'Rejected';

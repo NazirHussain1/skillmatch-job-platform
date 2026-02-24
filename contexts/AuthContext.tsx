@@ -37,12 +37,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check for existing session on app load
     const initAuth = async () => {
       try {
-        const savedUser = localStorage.getItem('skillmatch_user');
-        if (savedUser) {
-          setUser(JSON.parse(savedUser));
+        const token = localStorage.getItem('skillmatch_token');
+        if (token) {
+          // Verify token and get user data
+          const userData = await authService.getMe();
+          if (userData) {
+            setUser(userData);
+            localStorage.setItem('skillmatch_user', JSON.stringify(userData));
+          } else {
+            // Token invalid, clear storage
+            localStorage.removeItem('skillmatch_token');
+            localStorage.removeItem('skillmatch_user');
+          }
         }
       } catch (error) {
         console.error('Error loading user session:', error);
+        localStorage.removeItem('skillmatch_token');
+        localStorage.removeItem('skillmatch_user');
       } finally {
         setLoading(false);
       }
@@ -87,7 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('skillmatch_user');
+    authService.logout();
   };
 
   const updateUser = (userData: Partial<User>) => {

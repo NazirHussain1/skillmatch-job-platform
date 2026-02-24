@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/apiService';
 import { Job } from '../types';
 import JobCard from '../components/JobCard';
+import { JobCardSkeleton } from '../components/LoadingSkeleton';
+import { EmptyState } from '../components/EmptyState';
+import { StaggerContainer, StaggerItem } from '../components/PageTransition';
 import { Search, Filter, MapPin, Briefcase, Clock, Loader2 } from 'lucide-react';
 
 const Jobs: React.FC = () => {
@@ -44,17 +49,17 @@ const Jobs: React.FC = () => {
 
       await apiService.createApplication({
         jobId: job.id,
+        userId: user.id,
         jobTitle: job.title,
         companyName: job.companyName,
         status: 'Pending',
-        matchScore: 85, // This would be calculated by AI in real implementation
+        matchScore: 85,
       });
 
-      // Show success message or redirect
-      alert('Application submitted successfully!');
-    } catch (error) {
+      toast.success('Application submitted successfully!');
+    } catch (error: any) {
       console.error('Error applying to job:', error);
-      alert('Failed to submit application. Please try again.');
+      toast.error(error.message || 'Failed to submit application');
     }
   };
 
@@ -196,40 +201,39 @@ const Jobs: React.FC = () => {
 
         {/* Job Listings */}
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="animate-spin text-indigo-600" size={40} />
-          </div>
-        ) : jobs.length > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {jobs.map((job) => user && (
-              <JobCard
-                key={job.id}
-                job={job}
-                user={user}
-                onApply={handleApply}
-              />
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <JobCardSkeleton key={i} />
             ))}
           </div>
-        ) : (
-          <div className="text-center py-20">
-            <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Search size={32} className="text-slate-400" />
+        ) : jobs.length > 0 ? (
+          <StaggerContainer>
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {jobs.map((job) => user && (
+                <StaggerItem key={job.id}>
+                  <JobCard
+                    job={job}
+                    user={user}
+                    onApply={handleApply}
+                  />
+                </StaggerItem>
+              ))}
             </div>
-            <h3 className="text-xl font-semibold text-slate-900 mb-2">No jobs found</h3>
-            <p className="text-slate-600 mb-6">
-              Try adjusting your search criteria or filters to find more opportunities.
-            </p>
-            <button
-              onClick={() => {
+          </StaggerContainer>
+        ) : (
+          <EmptyState
+            icon="search"
+            title="No jobs found"
+            description="Try adjusting your search criteria or filters to find more opportunities."
+            action={{
+              label: 'Clear Filters',
+              onClick: () => {
                 setSearchQuery('');
                 setLocationFilter('');
                 setTypeFilter('');
-              }}
-              className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
-            >
-              Clear Filters
-            </button>
-          </div>
+              }
+            }}
+          />
         )}
 
         {/* Load More Button */}

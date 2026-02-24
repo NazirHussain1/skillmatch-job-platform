@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Job, User, MatchResult } from '../types';
 import { calculateSkillMatch } from '../services/matchingService';
 import { 
@@ -32,7 +33,13 @@ const JobCard: React.FC<JobCardProps> = ({ job, user, onApply }) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg hover:border-indigo-200 transition-all group">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -5, boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}
+      transition={{ duration: 0.3 }}
+      className="bg-white rounded-2xl border border-slate-200 p-6 hover:border-indigo-200 transition-all group"
+    >
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
@@ -109,7 +116,9 @@ const JobCard: React.FC<JobCardProps> = ({ job, user, onApply }) => {
       )}
 
       <div className="flex gap-3">
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={handleSmartMatch}
           disabled={isAnalyzing}
           className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-indigo-600 text-indigo-600 font-semibold hover:bg-indigo-50 transition-all disabled:opacity-50"
@@ -122,16 +131,18 @@ const JobCard: React.FC<JobCardProps> = ({ job, user, onApply }) => {
               Smart Match
             </>
           )}
-        </button>
-        <button
+        </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => onApply(job.id)}
           className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-all"
         >
           Apply Now
           <ArrowRight size={18} />
-        </button>
+        </motion.button>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

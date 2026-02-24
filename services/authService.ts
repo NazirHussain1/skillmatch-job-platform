@@ -1,8 +1,9 @@
-import { User, UserRole } from '../types';
+import { User } from '../types';
 
 interface LoginResponse {
   success: boolean;
   user?: User;
+  token?: string;
   error?: string;
 }
 
@@ -15,102 +16,123 @@ interface SignupData {
 }
 
 class AuthService {
-  private baseUrl = 'http://localhost:3001';
+  private baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+  private getAuthHeader(): HeadersInit {
+    const token = localStorage.getItem('skillmatch_token');
+    return {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` })
+    };
+  }
 
   async login(email: string, password: string): Promise<LoginResponse> {
     try {
-      // Fetch user by email
-      const response = await fetch(`${this.baseUrl}/users?email=${email}`);
+      const response = await fetch(`${this.baseUrl}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
       if (!response.ok) {
-        return { success: false, error: 'Network error' };
+        return { success: false, error: data.message || 'Login failed' };
       }
 
-      const users = await response.json();
-      
-      if (users.length === 0) {
-        return { success: false, error: 'Invalid email or password' };
+      // Store token
+      if (data.token) {
+        localStorage.setItem('skillmatch_token', data.token);
       }
 
-      const user = users[0];
-      
-      // Simple password check (in production, use proper password hashing)
-      // For demo purposes, we accept "password" or "demo123"
-      if (password === 'password' || password === 'demo123') {
-        // Remove password from response
-        const { password: _, ...userWithoutPassword } = user;
-        return { success: true, user: userWithoutPassword as User };
-      }
+      // Transform MongoDB _id to id for frontend
+      const user: User = {
+        id: data._id,
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        avatar: data.avatar,
+        skills: data.skills || [],
+        bio: data.bio,
+        companyName: data.companyName
+      };
 
-      return { success: false, error: 'Invalid email or password' };
+      return { success: true, user, token: data.token };
     } catch (error) {
       console.error('Login error:', error);
-      return { success: false, error: 'Login failed. Please try again.' };
+      return { success: false, error: 'Network error. Please try again.' };
     }
   }
 
   async signup(userData: SignupData): Promise<LoginResponse> {
     try {
-      // Check if email already exists
-      const checkResponse = await fetch(`${this.baseUrl}/users?email=${userData.email}`);
-      const existingUsers = await checkResponse.json();
-      
-      if (existingUsers.length > 0) {
-        return { success: false, error: 'Email already exists' };
-      }
-
-      // Create new user
-      const newUser = {
-        name: userData.name,
-        email: userData.email,
-        password: '$2a$10$hashedpassword', // Mock hashed password
-        role: userData.role,
-        skills: [],
-        avatar: `https://picsum.photos/seed/${userData.name.replace(/\s/g, '')}/200`,
-        ...(userData.companyName && { companyName: userData.companyName }),
-      };
-
-      const response = await fetch(`${this.baseUrl}/users`, {
+      const response = await fetch(`${this.baseUrl}/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newUser)
+        body: JSON.stringify(userData)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: data.message || 'Signup failed' };
+      }
+
+      // Store token
+      if (data.token) {
+        localStorage.setItem('skillmatch_token', data.token);
+      }
+
+      // Transform MongoDB _id to id for frontend
+      const user: User = {
+        id: data._id,
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        avatar: data.avatar,
+        skills: data.skills || [],
+        bio: data.bio,
+        companyName: data.companyName
+      };
+
+      return { success: true, user, token: data.token };
+    } catch (error) {
+      console.error('Signup error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  }
+
+  async getMe(): Promise<User | null> {
+    try {
+      const response = await fetch(`${this.baseUrl}/auth/me`, {
+        headers: this.getAuthHeader()
       });
 
       if (!response.ok) {
-        return { success: false, error: 'Failed to create account' };
+        return null;
       }
 
-      const createdUser = await response.json();
-      const { password: _, ...userWithoutPassword } = createdUser;
-      
-      return { success: true, user: userWithoutPassword as User };
+      const data = await response.json();
+
+      return {
+        id: data._id,
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        avatar: data.avatar,
+        skills: data.skills || [],
+        bio: data.bio,
+        companyName: data.companyName
+      };
     } catch (error) {
-      console.error('Signup error:', error);
-      return { success: false, error: 'Signup failed. Please try again.' };
+      console.error('Get me error:', error);
+      return null;
     }
   }
 
-  async forgotPassword(email: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      // Check if user exists
-      const response = await fetch(`${this.baseUrl}/users?email=${email}`);
-      const users = await response.json();
-      
-      if (users.length === 0) {
-        return { success: false, error: 'Email not found' };
-      }
-      
-      // In production, send password reset email
-      return { success: true };
-    } catch (error) {
-      console.error('Forgot password error:', error);
-      return { success: false, error: 'Failed to process request' };
-    }
-  }
-
-  async resetPassword(token: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
-    // In production, validate token and update password
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return { success: true };
+  logout(): void {
+    localStorage.removeItem('skillmatch_token');
+    localStorage.removeItem('skillmatch_user');
   }
 }
 
