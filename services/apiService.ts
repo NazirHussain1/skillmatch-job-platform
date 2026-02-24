@@ -187,36 +187,70 @@ class ApiService {
 
   // Analytics API
   async getAnalytics(userId: string, role: string) {
-    await new Promise(resolve => setTimeout(resolve, 600));
-    
-    if (role === 'JOB_SEEKER') {
-      return {
-        profileViews: Math.floor(Math.random() * 100) + 20,
-        applicationsSent: Math.floor(Math.random() * 15) + 5,
-        interviewsScheduled: Math.floor(Math.random() * 5) + 1,
-        offersReceived: Math.floor(Math.random() * 3),
-        skillMatchTrend: [
-          { month: 'Jan', score: 65 },
-          { month: 'Feb', score: 72 },
-          { month: 'Mar', score: 78 },
-          { month: 'Apr', score: 85 },
-          { month: 'May', score: 88 },
-        ]
-      };
-    } else {
-      return {
-        jobsPosted: Math.floor(Math.random() * 10) + 3,
-        applicationsReceived: Math.floor(Math.random() * 50) + 20,
-        candidatesInterviewed: Math.floor(Math.random() * 15) + 5,
-        hiresMade: Math.floor(Math.random() * 5) + 1,
-        applicationTrend: [
-          { month: 'Jan', count: 12 },
-          { month: 'Feb', count: 18 },
-          { month: 'Mar', count: 25 },
-          { month: 'Apr', count: 32 },
-          { month: 'May', count: 28 },
-        ]
-      };
+    try {
+      // Get user-specific data from database
+      const applicationsResponse = await fetch(`${this.baseUrl}/applications?userId=${userId}`);
+      const applications = applicationsResponse.ok ? await applicationsResponse.json() : [];
+      
+      const jobsResponse = await fetch(`${this.baseUrl}/jobs?employerId=${userId}`);
+      const jobs = jobsResponse.ok ? await jobsResponse.json() : [];
+      
+      if (role === 'JOB_SEEKER') {
+        return {
+          profileViews: Math.floor(Math.random() * 100) + 20,
+          applicationsSent: applications.length,
+          interviewsScheduled: applications.filter((a: Application) => a.status === 'Interviewing').length,
+          offersReceived: applications.filter((a: Application) => a.status === 'Accepted').length,
+          skillMatchTrend: [
+            { month: 'Jan', score: 65 },
+            { month: 'Feb', score: 72 },
+            { month: 'Mar', score: 78 },
+            { month: 'Apr', score: 85 },
+            { month: 'May', score: 88 },
+          ]
+        };
+      } else {
+        // Get applications for employer's jobs
+        const allApplicationsResponse = await fetch(`${this.baseUrl}/applications`);
+        const allApplications = allApplicationsResponse.ok ? await allApplicationsResponse.json() : [];
+        const employerApplications = allApplications.filter((app: Application) => 
+          jobs.some((job: Job) => job.id === app.jobId)
+        );
+        
+        return {
+          jobsPosted: jobs.length,
+          applicationsReceived: employerApplications.length,
+          candidatesInterviewed: employerApplications.filter((a: Application) => a.status === 'Interviewing').length,
+          hiresMade: employerApplications.filter((a: Application) => a.status === 'Accepted').length,
+          applicationTrend: [
+            { month: 'Jan', count: 12 },
+            { month: 'Feb', count: 18 },
+            { month: 'Mar', count: 25 },
+            { month: 'Apr', count: 32 },
+            { month: 'May', count: employerApplications.length },
+          ]
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+      // Return default data on error
+      if (role === 'JOB_SEEKER') {
+        return {
+          profileViews: 0,
+          applicationsSent: 0,
+          interviewsScheduled: 0,
+          offersReceived: 0,
+          skillMatchTrend: []
+        };
+      } else {
+        return {
+          jobsPosted: 0,
+          applicationsReceived: 0,
+          candidatesInterviewed: 0,
+          hiresMade: 0,
+          applicationTrend: []
+        };
+      }
     }
   }
 }
