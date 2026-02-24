@@ -1,16 +1,48 @@
 
-import React from 'react';
-import { User, UserRole, Application, Job } from '../types';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { apiService } from '../services/apiService';
+import { UserRole, Application, Job } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { TrendingUp, Users, Briefcase, CheckCircle } from 'lucide-react';
+import { TrendingUp, Users, Briefcase, CheckCircle, Loader2 } from 'lucide-react';
 
-interface DashboardProps {
-  user: User;
-  applications: Application[];
-  jobs: Job[];
-}
+const Dashboard: React.FC = () => {
+  const { user } = useAuth();
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
 
-const Dashboard: React.FC<DashboardProps> = ({ user, applications, jobs }) => {
+  useEffect(() => {
+    const loadData = async () => {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        const [appsData, jobsData] = await Promise.all([
+          apiService.getApplications(user.id),
+          apiService.getJobs()
+        ]);
+        setApplications(appsData);
+        setJobs(jobsData);
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [user]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin text-indigo-600" size={48} />
+      </div>
+    );
+  }
+
+  if (!user) return null;
   const chartData = [
     { name: 'Jan', value: 4 },
     { name: 'Feb', value: 7 },

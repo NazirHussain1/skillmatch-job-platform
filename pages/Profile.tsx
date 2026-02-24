@@ -1,16 +1,24 @@
 
-import React from 'react';
-import { User, UserRole } from '../types';
-import { Plus, X, Save, ShieldCheck } from 'lucide-react';
+import React, { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { UserRole } from '../types';
+import { Plus, X, Save, ShieldCheck, Loader2, CheckCircle2 } from 'lucide-react';
 
-interface ProfileProps {
-  user: User;
-  onUpdate: (updatedUser: User) => void;
-}
+const Profile: React.FC = () => {
+  const { user, updateUser } = useAuth();
+  const [newSkill, setNewSkill] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
-const Profile: React.FC<ProfileProps> = ({ user, onUpdate }) => {
-  const [formData, setFormData] = React.useState<User>(user);
-  const [newSkill, setNewSkill] = React.useState('');
+  if (!user) return null;
+
+  const [formData, setFormData] = useState({
+    name: user.name,
+    email: user.email,
+    bio: user.bio || '',
+    skills: user.skills,
+    companyName: user.companyName || '',
+  });
 
   const addSkill = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,9 +32,33 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdate }) => {
     setFormData({ ...formData, skills: formData.skills.filter(s => s !== skill) });
   };
 
+  const handleSave = async () => {
+    setSaving(true);
+    setMessage(null);
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      updateUser(formData);
+      setMessage('Profile updated successfully!');
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      setMessage('Failed to update profile');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in slide-in-from-bottom-4 duration-500">
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="min-h-screen bg-slate-50 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+        {message && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center space-x-2">
+            <CheckCircle2 className="text-green-500" size={20} />
+            <span className="text-green-700">{message}</span>
+          </div>
+        )}
+
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="h-32 bg-indigo-600 relative">
           <div className="absolute -bottom-12 left-8">
             <img 
@@ -40,14 +72,24 @@ const Profile: React.FC<ProfileProps> = ({ user, onUpdate }) => {
         <div className="pt-16 pb-8 px-8 flex justify-between items-end">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">{formData.name}</h1>
-            <p className="text-slate-500">{formData.role === UserRole.EMPLOYER ? formData.companyName : 'Software Developer'}</p>
+            <p className="text-slate-500">{user.role === UserRole.EMPLOYER ? formData.companyName : 'Software Developer'}</p>
           </div>
           <button 
-            onClick={() => onUpdate(formData)}
-            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all"
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Save size={18} />
-            Save Changes
+            {saving ? (
+              <>
+                <Loader2 className="animate-spin" size={18} />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save size={18} />
+                Save Changes
+              </>
+            )}
           </button>
         </div>
 
