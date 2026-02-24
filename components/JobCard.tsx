@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Job, User, MatchResult } from '../types';
-import { getSkillMatchAnalysis } from '../services/geminiService';
+import { calculateSkillMatch } from '../services/matchingService';
 import { 
   MapPin, 
   DollarSign, 
@@ -24,7 +24,9 @@ const JobCard: React.FC<JobCardProps> = ({ job, user, onApply }) => {
 
   const handleSmartMatch = async () => {
     setIsAnalyzing(true);
-    const result = await getSkillMatchAnalysis(user, job);
+    // Simulate a brief delay for better UX
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const result = calculateSkillMatch(user, job);
     setMatchResult(result);
     setIsAnalyzing(false);
   };
