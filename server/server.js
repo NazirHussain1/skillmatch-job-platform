@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import connectDB from './config/db.js';
+import connectDB from './config/db.jsx';
 
 // Load env vars
 dotenv.config();
@@ -12,8 +12,8 @@ connectDB();
 // Route imports
 import authRoutes from './routes/auth.jsx';
 import userRoutes from './routes/users.jsx';
-import jobRoutes from './routes/jobs.js';
-import applicationRoutes from './routes/applications.js';
+import jobRoutes from './routes/jobs.jsx';
+import applicationRoutes from './routes/applications.jsx';
 
 const app = express();
 
