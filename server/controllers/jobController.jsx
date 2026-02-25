@@ -1,4 +1,4 @@
-import Job from '../models/Job.js';
+import Job from '../models/Job.jsx';
 
 // @desc    Get all jobs with filters
 // @route   GET /api/jobs

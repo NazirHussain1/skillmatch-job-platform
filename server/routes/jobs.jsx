@@ -7,8 +7,8 @@ import {
   updateJob,
   deleteJob,
   getEmployerJobs
-} from '../controllers/jobController.js';
-import { protect, authorize } from '../middleware/auth.js';
+} from '../controllers/jobController.jsx';
+import { protect, authorize } from '../middleware/auth.jsx';
 
 const router = express.Router();
 

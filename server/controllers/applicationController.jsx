@@ -1,5 +1,5 @@
-import Application from '../models/Application.js';
-import Job from '../models/Job.js';
+import Application from '../models/Application.jsx';
+import Job from '../models/Job.jsx';
 
 // @desc    Get user's applications
 // @route   GET /api/applications

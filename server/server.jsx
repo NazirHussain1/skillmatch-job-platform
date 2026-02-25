@@ -10,8 +10,8 @@ dotenv.config();
 connectDB();
 
 // Route imports
-import authRoutes from './routes/auth.js';
-import userRoutes from './routes/users.js';
+import authRoutes from './routes/auth.jsx';
+import userRoutes from './routes/users.jsx';
 import jobRoutes from './routes/jobs.js';
 import applicationRoutes from './routes/applications.js';
 

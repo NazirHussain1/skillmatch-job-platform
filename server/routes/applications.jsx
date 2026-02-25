@@ -6,8 +6,8 @@ import {
   createApplication,
   updateApplicationStatus,
   deleteApplication
-} from '../controllers/applicationController.js';
-import { protect, authorize } from '../middleware/auth.js';
+} from '../controllers/applicationController.jsx';
+import { protect, authorize } from '../middleware/auth.jsx';
 
 const router = express.Router();
 

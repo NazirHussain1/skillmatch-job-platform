@@ -1,6 +1,6 @@
-import User from '../models/User.js';
-import Application from '../models/Application.js';
-import Job from '../models/Job.js';
+import User from '../models/User.jsx';
+import Application from '../models/Application.jsx';
+import Job from '../models/Job.jsx';
 
 // @desc    Update user profile
 // @route   PUT /api/users/profile
