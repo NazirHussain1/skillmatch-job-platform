@@ -1,15 +1,9 @@
-import jwt from 'jsonwebtoken';
 import userRepository from '../users/user.repository.js';
 import { UserWithTokenDTO, UserResponseDTO } from '../users/user.dto.js';
 import ApiError from '../../utils/ApiError.js';
+import tokenManager from '../../utils/tokenManager.js';
 
 class AuthService {
-  generateToken(userId) {
-    return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRE
-    });
-  }
-
   async signup(data) {
     const { name, email, password, role, companyName } = data;
 
@@ -26,8 +20,13 @@ class AuthService {
       companyName
     });
 
-    const token = this.generateToken(user._id);
-    return new UserWithTokenDTO(user, token);
+    const { accessToken, refreshToken } = tokenManager.generateTokenPair(user._id);
+    
+    return {
+      user: new UserResponseDTO(user),
+      accessToken,
+      refreshToken
+    };
   }
 
   async login(email, password) {
@@ -37,12 +36,42 @@ class AuthService {
       throw ApiError.unauthorized('Invalid email or password');
     }
 
-    const token = this.generateToken(user._id);
+    const { accessToken, refreshToken } = tokenManager.generateTokenPair(user._id);
     
     // Remove password from response
     user.password = undefined;
     
-    return new UserWithTokenDTO(user, token);
+    return {
+      user: new UserResponseDTO(user),
+      accessToken,
+      refreshToken
+    };
+  }
+
+  async refreshToken(oldRefreshToken) {
+    try {
+      const decoded = tokenManager.verifyRefreshToken(oldRefreshToken);
+      
+      // Generate new token pair
+      const { accessToken, refreshToken } = tokenManager.generateTokenPair(decoded.id);
+      
+      return {
+        accessToken,
+        refreshToken
+      };
+    } catch (error) {
+      throw ApiError.unauthorized('Invalid refresh token');
+    }
+  }
+
+  async logout(userId, accessToken) {
+    // Blacklist the access token
+    tokenManager.blacklistToken(accessToken);
+    
+    // Invalidate refresh tokens
+    tokenManager.invalidateUserTokens(userId);
+    
+    return { message: 'Logged out successfully' };
   }
 
   async getMe(userId) {

@@ -2,6 +2,10 @@ import app from './app.js';
 import connectDB from './config/database.js';
 import { createServer } from 'http';
 import { initializeSocket } from './config/socket.js';
+import validateEnv from './config/env.validation.js';
+
+// Validate environment variables before starting
+const env = validateEnv();
 
 // Connect to database
 connectDB();
@@ -12,21 +16,36 @@ const server = createServer(app);
 // Initialize Socket.IO
 initializeSocket(server);
 
-const PORT = process.env.PORT || 5000;
+const PORT = env.PORT || 5000;
 
 server.listen(PORT, () => {
   console.log(`
     ╔═══════════════════════════════════════╗
-    ║   Server running on port ${PORT}        ║
-    ║   Environment: ${process.env.NODE_ENV || 'development'}           ║
-    ║   API: http://localhost:${PORT}/api    ║
-    ║   Socket.IO: Enabled                  ║
+    ║   🚀 Server running on port ${PORT}     ║
+    ║   🌍 Environment: ${env.NODE_ENV.padEnd(11)}        ║
+    ║   📡 API: http://localhost:${PORT}/api    ║
+    ║   🔌 Socket.IO: Enabled                ║
+    ║   🔒 Security: Enhanced                ║
     ╚═══════════════════════════════════════╝
   `);
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
-  console.error('Unhandled Rejection:', err);
+  console.error('❌ Unhandled Rejection:', err);
   server.close(() => process.exit(1));
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err);
+  process.exit(1);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('👋 SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    console.log('✅ Process terminated');
+  });
 });

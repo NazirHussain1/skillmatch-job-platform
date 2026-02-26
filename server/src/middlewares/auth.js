@@ -1,7 +1,7 @@
-import jwt from 'jsonwebtoken';
 import User from '../modules/users/user.model.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
+import tokenManager from '../utils/tokenManager.js';
 
 export const protect = asyncHandler(async (req, res, next) => {
   let token;
@@ -15,7 +15,7 @@ export const protect = asyncHandler(async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = tokenManager.verifyAccessToken(token);
     req.user = await User.findById(decoded.id).select('-password');
 
     if (!req.user) {
@@ -24,7 +24,7 @@ export const protect = asyncHandler(async (req, res, next) => {
 
     next();
   } catch (error) {
-    throw ApiError.unauthorized('Not authorized, token failed');
+    throw ApiError.unauthorized(error.message || 'Not authorized, token failed');
   }
 });
 

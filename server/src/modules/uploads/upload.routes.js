@@ -6,14 +6,37 @@ import {
   deleteLogo
 } from './upload.controller.js';
 import { protect, authorize } from '../../middlewares/auth.js';
-import { uploadResume as resumeUpload, uploadLogo as logoUpload, virusScan } from '../../middlewares/upload.js';
+import { 
+  uploadResume as resumeUpload, 
+  uploadLogo as logoUpload, 
+  virusScan,
+  validateFileType
+} from '../../middlewares/upload.js';
+import { uploadLimiter } from '../../config/security.js';
 
 const router = express.Router();
 
 router.use(protect);
 
-router.post('/resume', resumeUpload, virusScan, uploadResume);
-router.post('/logo', authorize('EMPLOYER'), logoUpload, virusScan, uploadCompanyLogo);
+router.post(
+  '/resume',
+  uploadLimiter,
+  resumeUpload,
+  validateFileType('pdf'),
+  virusScan,
+  uploadResume
+);
+
+router.post(
+  '/logo',
+  uploadLimiter,
+  authorize('EMPLOYER'),
+  logoUpload,
+  validateFileType('image'),
+  virusScan,
+  uploadCompanyLogo
+);
+
 router.delete('/resume', deleteResume);
 router.delete('/logo', authorize('EMPLOYER'), deleteLogo);
 

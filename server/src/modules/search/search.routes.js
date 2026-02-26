@@ -6,10 +6,11 @@ import {
   clearSearchHistory
 } from './search.controller.js';
 import { protect } from '../../middlewares/auth.js';
+import { searchLimiter } from '../../config/security.js';
 
 const router = express.Router();
 
-router.get('/jobs', searchJobs);
+router.get('/jobs', searchLimiter, searchJobs);
 
 // Protected routes
 router.get('/history', protect, getSearchHistory);
