@@ -788,3 +788,1005 @@ class SearchService {
 export default new SearchService();
 ```
 
+
+#### Search History Model
+
+**File**: `server/src/modules/search/search-history.model.js`
+
+```javascript
+import mongoose from 'mongoose';
+
+const searchHistorySchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    index: true
+  },
+  query: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  filters: {
+    location: String,
+    experienceLevel: String,
+    minSalary: Number,
+    maxSalary: Number
+  },
+  searchedAt: {
+    type: Date,
+    default: Date.now,
+    index: true
+  }
+}, {
+  timestamps: true
+});
+
+// Compound index for efficient queries
+searchHistorySchema.index({ userId: 1, searchedAt: -1 });
+
+export default mongoose.model('SearchHistory', searchHistorySchema);
+```
+
+### 4. Analytics System
+
+#### Analytics Service
+
+**File**: `server/src/modules/analytics/analytics.service.js`
+
+```javascript
+import Job from '../jobs/job.model.js';
+import Application from '../applications/application.model.js';
+import User from '../users/user.model.js';
+import JobView from './job-view.model.js';
+import DailyStats from './daily-stats.model.js';
+import CacheUtil from '../../utils/cache.util.js';
+import logger from '../../config/logger.config.js';
+
+class AnalyticsService {
+  constructor() {
+    this.employerCache = new CacheUtil(300000); // 5 minutes
+    this.adminCache = new CacheUtil(600000); // 10 minutes
+  }
+
+  // Track job view
+  async trackJobView(jobId, userId) {
+    try {
+      // Check if user already viewed this job
+      const existingView = await JobView.findOne({ jobId, userId });
+      
+      if (!existingView) {
+        await JobView.create({ jobId, userId });
+        logger.info(`Job view tracked: ${jobId} by ${userId}`);
+      }
+    } catch (error) {
+      logger.error(`Failed to track job view: ${error.message}`);
+      // Don't throw - tracking failure shouldn't break the request
+    }
+  }
+
+  // Get employer analytics
+  async getEmployerAnalytics(employerId) {
+    const cacheKey = `employer:${employerId}`;
+    const cached = this.employerCache.get(cacheKey);
+    
+    if (cached) {
+      // Return cached data and refresh asynchronously
+      this.refreshEmployerAnalytics(employerId);
+      return cached;
+    }
+
+    return await this.computeEmployerAnalytics(employerId);
+  }
+
+  async computeEmployerAnalytics(employerId) {
+    const jobs = await Job.find({ employerId, isActive: true });
+    const jobIds = jobs.map(j => j._id);
+
+    // Aggregate views and applications per job
+    const jobStats = await Promise.all(
+      jobIds.map(async (jobId) => {
+        const views = await JobView.countDocuments({ jobId });
+        const applications = await Application.countDocuments({ jobId });
+        const conversionRate = views > 0 
+          ? ((applications / views) * 100).toFixed(2) 
+          : 0;
+
+        const job = jobs.find(j => j._id.equals(jobId));
+
+        return {
+          jobId,
+          title: job.title,
+          views,
+          applications,
+          conversionRate: parseFloat(conversionRate)
+        };
+      })
+    );
+
+    // Get view trends (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const viewTrends = await JobView.aggregate([
+      {
+        $match: {
+          jobId: { $in: jobIds },
+          viewedAt: { $gte: thirtyDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$viewedAt' }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      }
+    ]);
+
+    // Get application trends (last 30 days)
+    const applicationTrends = await Application.aggregate([
+      {
+        $match: {
+          jobId: { $in: jobIds },
+          appliedAt: { $gte: thirtyDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$appliedAt' }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      }
+    ]);
+
+    const result = {
+      jobStats,
+      trends: {
+        views: viewTrends.map(t => ({ date: t._id, count: t.count })),
+        applications: applicationTrends.map(t => ({ date: t._id, count: t.count }))
+      },
+      summary: {
+        totalJobs: jobs.length,
+        totalViews: jobStats.reduce((sum, j) => sum + j.views, 0),
+        totalApplications: jobStats.reduce((sum, j) => sum + j.applications, 0)
+      }
+    };
+
+    // Cache the result
+    this.employerCache.set(`employer:${employerId}`, result);
+
+    return result;
+  }
+
+  async refreshEmployerAnalytics(employerId) {
+    // Asynchronous refresh
+    setTimeout(async () => {
+      try {
+        await this.computeEmployerAnalytics(employerId);
+      } catch (error) {
+        logger.error(`Failed to refresh employer analytics: ${error.message}`);
+      }
+    }, 0);
+  }
+
+  // Get skill demand analytics
+  async getSkillDemandAnalytics(filters = {}) {
+    const { location, experienceLevel } = filters;
+
+    const matchStage = { isActive: true };
+    if (location) matchStage.location = new RegExp(location, 'i');
+    if (experienceLevel) matchStage.experienceLevel = experienceLevel;
+
+    const skillDemand = await Job.aggregate([
+      { $match: matchStage },
+      { $unwind: '$requiredSkills' },
+      {
+        $group: {
+          _id: '$requiredSkills',
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } },
+      { $limit: 20 }
+    ]);
+
+    const totalJobs = await Job.countDocuments(matchStage);
+
+    return skillDemand.map(skill => ({
+      skill: skill._id,
+      count: skill.count,
+      percentage: ((skill.count / totalJobs) * 100).toFixed(2)
+    }));
+  }
+
+  // Get admin dashboard analytics
+  async getAdminAnalytics() {
+    const cacheKey = 'admin:dashboard';
+    const cached = this.adminCache.get(cacheKey);
+
+    if (cached) {
+      this.refreshAdminAnalytics();
+      return cached;
+    }
+
+    return await this.computeAdminAnalytics();
+  }
+
+  async computeAdminAnalytics() {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // Total counts
+    const [
+      totalJobSeekers,
+      totalEmployers,
+      totalJobs,
+      totalApplications
+    ] = await Promise.all([
+      User.countDocuments({ role: 'jobseeker' }),
+      User.countDocuments({ role: 'employer' }),
+      Job.countDocuments(),
+      Application.countDocuments()
+    ]);
+
+    // Registration trends
+    const registrationTrends = await User.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: thirtyDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+            role: '$role'
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { '_id.date': 1 }
+      }
+    ]);
+
+    // Application activity
+    const applicationActivity = await Application.aggregate([
+      {
+        $match: {
+          appliedAt: { $gte: thirtyDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$appliedAt' }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { _id: 1 }
+      }
+    ]);
+
+    // Most active employers
+    const activeEmployers = await Job.aggregate([
+      {
+        $group: {
+          _id: '$employerId',
+          jobCount: { $sum: 1 }
+        }
+      },
+      { $sort: { jobCount: -1 } },
+      { $limit: 10 },
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'employer'
+        }
+      },
+      { $unwind: '$employer' },
+      {
+        $project: {
+          employerId: '$_id',
+          companyName: '$employer.companyName',
+          email: '$employer.email',
+          jobCount: 1
+        }
+      }
+    ]);
+
+    // Most popular jobs
+    const popularJobs = await Application.aggregate([
+      {
+        $group: {
+          _id: '$jobId',
+          applicationCount: { $sum: 1 }
+        }
+      },
+      { $sort: { applicationCount: -1 } },
+      { $limit: 10 },
+      {
+        $lookup: {
+          from: 'jobs',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'job'
+        }
+      },
+      { $unwind: '$job' },
+      {
+        $project: {
+          jobId: '$_id',
+          title: '$job.title',
+          companyName: '$job.companyName',
+          applicationCount: 1
+        }
+      }
+    ]);
+
+    const result = {
+      summary: {
+        totalJobSeekers,
+        totalEmployers,
+        totalJobs,
+        totalApplications
+      },
+      trends: {
+        registrations: registrationTrends.map(t => ({
+          date: t._id.date,
+          role: t._id.role,
+          count: t.count
+        })),
+        applications: applicationActivity.map(t => ({
+          date: t._id,
+          count: t.count
+        }))
+      },
+      topEmployers: activeEmployers,
+      topJobs: popularJobs
+    };
+
+    this.adminCache.set(cacheKey, result);
+
+    return result;
+  }
+
+  async refreshAdminAnalytics() {
+    setTimeout(async () => {
+      try {
+        await this.computeAdminAnalytics();
+      } catch (error) {
+        logger.error(`Failed to refresh admin analytics: ${error.message}`);
+      }
+    }, 0);
+  }
+
+  // Background job to compute daily statistics
+  async computeDailyStats() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Check if already computed
+    const existing = await DailyStats.findOne({ date: today });
+    if (existing) {
+      logger.info('Daily stats already computed for today');
+      return;
+    }
+
+    // Compute stats for yesterday
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const [
+      newJobSeekers,
+      newEmployers,
+      newJobs,
+      newApplications,
+      totalViews
+    ] = await Promise.all([
+      User.countDocuments({
+        role: 'jobseeker',
+        createdAt: { $gte: yesterday, $lt: today }
+      }),
+      User.countDocuments({
+        role: 'employer',
+        createdAt: { $gte: yesterday, $lt: today }
+      }),
+      Job.countDocuments({
+        createdAt: { $gte: yesterday, $lt: today }
+      }),
+      Application.countDocuments({
+        appliedAt: { $gte: yesterday, $lt: today }
+      }),
+      JobView.countDocuments({
+        viewedAt: { $gte: yesterday, $lt: today }
+      })
+    ]);
+
+    await DailyStats.create({
+      date: yesterday,
+      newJobSeekers,
+      newEmployers,
+      newJobs,
+      newApplications,
+      totalViews
+    });
+
+    logger.info(`Daily stats computed for ${yesterday.toISOString()}`);
+  }
+}
+
+export default new AnalyticsService();
+```
+
+
+#### Analytics Models
+
+**File**: `server/src/modules/analytics/job-view.model.js`
+
+```javascript
+import mongoose from 'mongoose';
+
+const jobViewSchema = new mongoose.Schema({
+  jobId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Job',
+    required: true,
+    index: true
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    index: true
+  },
+  viewedAt: {
+    type: Date,
+    default: Date.now,
+    index: true
+  }
+}, {
+  timestamps: false
+});
+
+// Compound index for unique views
+jobViewSchema.index({ jobId: 1, userId: 1 }, { unique: true });
+
+export default mongoose.model('JobView', jobViewSchema);
+```
+
+**File**: `server/src/modules/analytics/daily-stats.model.js`
+
+```javascript
+import mongoose from 'mongoose';
+
+const dailyStatsSchema = new mongoose.Schema({
+  date: {
+    type: Date,
+    required: true,
+    unique: true,
+    index: true
+  },
+  newJobSeekers: {
+    type: Number,
+    default: 0
+  },
+  newEmployers: {
+    type: Number,
+    default: 0
+  },
+  newJobs: {
+    type: Number,
+    default: 0
+  },
+  newApplications: {
+    type: Number,
+    default: 0
+  },
+  totalViews: {
+    type: Number,
+    default: 0
+  }
+}, {
+  timestamps: true
+});
+
+export default mongoose.model('DailyStats', dailyStatsSchema);
+```
+
+### 5. AI Matching System
+
+#### Matching Service
+
+**File**: `server/src/modules/matching/matching.service.js`
+
+```javascript
+import Job from '../jobs/job.model.js';
+import User from '../users/user.model.js';
+import Application from '../applications/application.model.js';
+import SkillTaxonomy from './skill-taxonomy.model.js';
+import CacheUtil from '../../utils/cache.util.js';
+import logger from '../../config/logger.config.js';
+
+class MatchingService {
+  constructor() {
+    this.cache = new CacheUtil(3600000); // 1 hour TTL
+    this.EXACT_MATCH_WEIGHT = 2.0;
+    this.CATEGORY_MATCH_WEIGHT = 1.5;
+    this.RELATED_MATCH_WEIGHT = 1.0;
+  }
+
+  // Get skill taxonomy data
+  async getSkillRelations(skillName) {
+    const taxonomy = await SkillTaxonomy.findOne({ 
+      skillName: new RegExp(`^${skillName}$`, 'i') 
+    });
+    return taxonomy || { category: null, relatedSkills: [] };
+  }
+
+  // Calculate experience level multiplier
+  getExperienceLevelMultiplier(jobSeekerLevel, jobLevel) {
+    const levels = { entry: 0, mid: 1, senior: 2 };
+    const seekerLevelNum = levels[jobSeekerLevel] || 0;
+    const jobLevelNum = levels[jobLevel] || 0;
+
+    const difference = Math.abs(seekerLevelNum - jobLevelNum);
+
+    if (difference === 0) return 1.0;
+    if (difference === 1) return 0.8;
+    return 0.5;
+  }
+
+  // Calculate skill score for a job seeker and job
+  async calculateSkillScore(jobSeekerId, jobId) {
+    // Check cache
+    const cacheKey = `score:${jobSeekerId}:${jobId}`;
+    const cached = this.cache.get(cacheKey);
+    if (cached !== undefined) return cached;
+
+    const startTime = Date.now();
+
+    // Fetch job seeker and job
+    const [jobSeeker, job] = await Promise.all([
+      User.findById(jobSeekerId).select('skills experienceLevel').lean(),
+      Job.findById(jobId).select('requiredSkills experienceLevel').lean()
+    ]);
+
+    if (!jobSeeker || !job) {
+      return 0;
+    }
+
+    const jobSeekerSkills = jobSeeker.skills || [];
+    const requiredSkills = job.requiredSkills || [];
+
+    if (requiredSkills.length === 0) {
+      return 0;
+    }
+
+    // Calculate weighted skill matches
+    let totalWeight = 0;
+    let matchedWeight = 0;
+
+    for (const requiredSkill of requiredSkills) {
+      const requiredSkillLower = requiredSkill.toLowerCase();
+      let skillMatched = false;
+      let matchWeight = 0;
+
+      // Check for exact match
+      for (const userSkill of jobSeekerSkills) {
+        if (userSkill.toLowerCase() === requiredSkillLower) {
+          matchWeight = this.EXACT_MATCH_WEIGHT;
+          skillMatched = true;
+          break;
+        }
+      }
+
+      // Check for category or related match if no exact match
+      if (!skillMatched) {
+        const taxonomy = await this.getSkillRelations(requiredSkill);
+        
+        for (const userSkill of jobSeekerSkills) {
+          const userSkillLower = userSkill.toLowerCase();
+          
+          // Check category match
+          if (taxonomy.category) {
+            const userTaxonomy = await this.getSkillRelations(userSkill);
+            if (userTaxonomy.category === taxonomy.category) {
+              matchWeight = Math.max(matchWeight, this.CATEGORY_MATCH_WEIGHT);
+              skillMatched = true;
+            }
+          }
+
+          // Check related skills
+          if (taxonomy.relatedSkills.some(
+            rs => rs.toLowerCase() === userSkillLower
+          )) {
+            matchWeight = Math.max(matchWeight, this.RELATED_MATCH_WEIGHT);
+            skillMatched = true;
+          }
+        }
+      }
+
+      totalWeight += this.EXACT_MATCH_WEIGHT;
+      matchedWeight += matchWeight;
+    }
+
+    // Calculate base score (0-100)
+    let baseScore = totalWeight > 0 
+      ? (matchedWeight / totalWeight) * 100 
+      : 0;
+
+    // Apply experience level multiplier
+    const expMultiplier = this.getExperienceLevelMultiplier(
+      jobSeeker.experienceLevel,
+      job.experienceLevel
+    );
+
+    const finalScore = Math.min(100, baseScore * expMultiplier);
+
+    const duration = Date.now() - startTime;
+    if (duration > 100) {
+      logger.warn(`Slow skill score calculation: ${duration}ms`);
+    }
+
+    // Cache the result
+    this.cache.set(cacheKey, finalScore);
+
+    return Math.round(finalScore);
+  }
+
+  // Get skill gap analysis
+  async getSkillGap(jobSeekerId, jobId) {
+    const [jobSeeker, job] = await Promise.all([
+      User.findById(jobSeekerId).select('skills').lean(),
+      Job.findById(jobId).select('requiredSkills').lean()
+    ]);
+
+    if (!jobSeeker || !job) {
+      throw ApiError.notFound('Job seeker or job not found');
+    }
+
+    const jobSeekerSkills = (jobSeeker.skills || []).map(s => s.toLowerCase());
+    const requiredSkills = job.requiredSkills || [];
+
+    const matchedSkills = [];
+    const missingSkills = [];
+
+    for (const requiredSkill of requiredSkills) {
+      const requiredSkillLower = requiredSkill.toLowerCase();
+      
+      if (jobSeekerSkills.includes(requiredSkillLower)) {
+        matchedSkills.push({
+          skill: requiredSkill,
+          weight: this.EXACT_MATCH_WEIGHT
+        });
+      } else {
+        // Check for related matches
+        const taxonomy = await this.getSkillRelations(requiredSkill);
+        let hasRelatedMatch = false;
+
+        for (const userSkill of jobSeeker.skills) {
+          const userTaxonomy = await this.getSkillRelations(userSkill);
+          
+          if (taxonomy.category && userTaxonomy.category === taxonomy.category) {
+            matchedSkills.push({
+              skill: requiredSkill,
+              matchedVia: userSkill,
+              weight: this.CATEGORY_MATCH_WEIGHT
+            });
+            hasRelatedMatch = true;
+            break;
+          }
+        }
+
+        if (!hasRelatedMatch) {
+          missingSkills.push({
+            skill: requiredSkill,
+            weight: this.EXACT_MATCH_WEIGHT
+          });
+        }
+      }
+    }
+
+    // Sort by weight (importance)
+    matchedSkills.sort((a, b) => b.weight - a.weight);
+    missingSkills.sort((a, b) => b.weight - a.weight);
+
+    const matchPercentage = requiredSkills.length > 0
+      ? ((matchedSkills.length / requiredSkills.length) * 100).toFixed(2)
+      : 0;
+
+    return {
+      matchedSkills,
+      missingSkills,
+      matchPercentage: parseFloat(matchPercentage),
+      totalRequired: requiredSkills.length
+    };
+  }
+
+  // Generate job recommendations for a job seeker
+  async getJobRecommendations(jobSeekerId, limit = 10) {
+    const jobSeeker = await User.findById(jobSeekerId).select('skills experienceLevel');
+    
+    if (!jobSeeker) {
+      throw ApiError.notFound('Job seeker not found');
+    }
+
+    // Get jobs the user has already applied to or dismissed
+    const appliedJobIds = await Application.find({ 
+      jobSeekerId 
+    }).distinct('jobId');
+
+    // Get active jobs (limit to 100 for performance)
+    const jobs = await Job.find({
+      isActive: true,
+      _id: { $nin: appliedJobIds }
+    })
+    .limit(100)
+    .lean();
+
+    // Calculate scores for each job
+    const scoredJobs = await Promise.all(
+      jobs.map(async (job) => {
+        const score = await this.calculateSkillScore(jobSeekerId, job._id);
+        return {
+          job,
+          score
+        };
+      })
+    );
+
+    // Filter jobs with score > 60 and sort by score
+    const recommendations = scoredJobs
+      .filter(sj => sj.score > 60)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit)
+      .map(sj => ({
+        ...sj.job,
+        matchScore: sj.score
+      }));
+
+    return recommendations;
+  }
+
+  // Generate candidate recommendations for a job
+  async getCandidateRecommendations(jobId, limit = 20) {
+    const job = await Job.findById(jobId).select('requiredSkills experienceLevel');
+    
+    if (!job) {
+      throw ApiError.notFound('Job not found');
+    }
+
+    // Get users who have already applied
+    const appliedUserIds = await Application.find({ 
+      jobId 
+    }).distinct('jobSeekerId');
+
+    // Get job seekers with relevant skills
+    const jobSeekers = await User.find({
+      role: 'jobseeker',
+      _id: { $nin: appliedUserIds },
+      skills: { $in: job.requiredSkills }
+    })
+    .limit(100)
+    .lean();
+
+    // Calculate scores for each candidate
+    const scoredCandidates = await Promise.all(
+      jobSeekers.map(async (jobSeeker) => {
+        const score = await this.calculateSkillScore(jobSeeker._id, jobId);
+        
+        // Count matched skills
+        const matchedSkillsCount = jobSeeker.skills.filter(skill =>
+          job.requiredSkills.some(rs => 
+            rs.toLowerCase() === skill.toLowerCase()
+          )
+        ).length;
+
+        return {
+          jobSeeker,
+          score,
+          matchedSkillsCount
+        };
+      })
+    );
+
+    // Filter candidates with score > 70 and sort by score
+    const recommendations = scoredCandidates
+      .filter(sc => sc.score > 70)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit)
+      .map(sc => ({
+        userId: sc.jobSeeker._id,
+        name: sc.jobSeeker.name,
+        email: sc.jobSeeker.email,
+        skills: sc.jobSeeker.skills,
+        experienceLevel: sc.jobSeeker.experienceLevel,
+        matchScore: sc.score,
+        matchedSkillsCount: sc.matchedSkillsCount
+      }));
+
+    return recommendations;
+  }
+
+  // Invalidate cache for a user or job
+  invalidateCache(entityId) {
+    // Remove all cache entries containing this entity ID
+    const keys = this.cache.keys();
+    keys.forEach(key => {
+      if (key.includes(entityId)) {
+        this.cache.delete(key);
+      }
+    });
+  }
+}
+
+export default new MatchingService();
+```
+
+
+#### Skill Taxonomy Model
+
+**File**: `server/src/modules/matching/skill-taxonomy.model.js`
+
+```javascript
+import mongoose from 'mongoose';
+
+const skillTaxonomySchema = new mongoose.Schema({
+  skillName: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    index: true
+  },
+  category: {
+    type: String,
+    required: true,
+    trim: true,
+    index: true
+  },
+  relatedSkills: [{
+    type: String,
+    trim: true
+  }],
+  aliases: [{
+    type: String,
+    trim: true
+  }]
+}, {
+  timestamps: true
+});
+
+export default mongoose.model('SkillTaxonomy', skillTaxonomySchema);
+```
+
+## Data Models
+
+### Updated Job Model
+
+The existing Job model needs to be extended with additional fields:
+
+```javascript
+// Add to existing job.model.js
+const jobSchema = new mongoose.Schema({
+  // ... existing fields ...
+  
+  experienceLevel: {
+    type: String,
+    enum: ['entry', 'mid', 'senior'],
+    required: true
+  },
+  salaryMin: {
+    type: Number,
+    required: false
+  },
+  salaryMax: {
+    type: Number,
+    required: false
+  }
+}, {
+  timestamps: true
+});
+
+// Add text index for full-text search
+jobSchema.index({ 
+  title: 'text', 
+  description: 'text', 
+  requiredSkills: 'text' 
+});
+
+// Add compound indexes for filtering
+jobSchema.index({ location: 1, experienceLevel: 1 });
+jobSchema.index({ salaryMin: 1, salaryMax: 1 });
+jobSchema.index({ isActive: 1, postedAt: -1 });
+```
+
+### Updated User Model
+
+The existing User model needs to be extended:
+
+```javascript
+// Add to existing user.model.js
+const userSchema = new mongoose.Schema({
+  // ... existing fields ...
+  
+  // For job seekers
+  skills: [{
+    type: String,
+    trim: true
+  }],
+  experienceLevel: {
+    type: String,
+    enum: ['entry', 'mid', 'senior'],
+    required: function() {
+      return this.role === 'jobseeker';
+    }
+  },
+  resumeUrl: {
+    type: String,
+    trim: true
+  },
+  resumePublicId: {
+    type: String,
+    trim: true
+  },
+  
+  // For employers
+  companyLogoUrl: {
+    type: String,
+    trim: true
+  },
+  companyLogoPublicId: {
+    type: String,
+    trim: true
+  }
+}, {
+  timestamps: true
+});
+```
+
+### Database Indexes Summary
+
+Critical indexes for performance:
+
+1. **Job Collection**:
+   - Text index: `{ title: 'text', description: 'text', requiredSkills: 'text' }`
+   - Compound: `{ location: 1, experienceLevel: 1 }`
+   - Compound: `{ isActive: 1, postedAt: -1 }`
+   - Range: `{ salaryMin: 1, salaryMax: 1 }`
+
+2. **Notification Collection**:
+   - Compound: `{ userId: 1, isRead: 1, createdAt: -1 }`
+   - Compound: `{ userId: 1, type: 1 }`
+   - TTL: `{ createdAt: 1 }` with 90-day expiration
+
+3. **JobView Collection**:
+   - Unique compound: `{ jobId: 1, userId: 1 }`
+   - Single: `{ viewedAt: 1 }`
+
+4. **SearchHistory Collection**:
+   - Compound: `{ userId: 1, searchedAt: -1 }`
+
+5. **SkillTaxonomy Collection**:
+   - Unique: `{ skillName: 1 }`
+   - Single: `{ category: 1 }`
+
