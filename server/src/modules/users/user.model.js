@@ -43,6 +43,23 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  resumeUrl: {
+    type: String
+  },
+  resumePublicId: {
+    type: String
+  },
+  companyLogo: {
+    type: String
+  },
+  logoPublicId: {
+    type: String
+  },
+  experienceLevel: {
+    type: String,
+    enum: ['entry', 'mid', 'senior'],
+    default: 'entry'
+  },
   createdAt: {
     type: Date,
     default: Date.now

@@ -1,6 +1,8 @@
 import applicationRepository from './application.repository.js';
 import jobRepository from '../jobs/job.repository.js';
+import notificationService from '../notifications/notification.service.js';
 import { ApplicationResponseDTO, CreateApplicationDTO } from './application.dto.js';
+import { emitToUser } from '../../config/socket.js';
 import ApiError from '../../utils/ApiError.js';
 
 class ApplicationService {
@@ -37,6 +39,16 @@ class ApplicationService {
     const applicationData = new CreateApplicationDTO(data, userId);
     const application = await applicationRepository.create(applicationData);
 
+    // Send notification to employer
+    await notificationService.createNotification({
+      userId: job.employerId,
+      type: 'application_submitted',
+      title: 'New Application Received',
+      message: `You received a new application for ${job.title}`,
+      relatedEntityId: application._id,
+      relatedEntityType: 'Application'
+    });
+
     return new ApplicationResponseDTO(application);
   }
 
@@ -53,6 +65,24 @@ class ApplicationService {
 
     application.status = status;
     await application.save();
+
+    // Send notification to job seeker
+    const notificationTypes = {
+      'Reviewing': 'application_reviewed',
+      'Accepted': 'application_accepted',
+      'Rejected': 'application_rejected'
+    };
+
+    if (notificationTypes[status]) {
+      await notificationService.createNotification({
+        userId: application.userId,
+        type: notificationTypes[status],
+        title: `Application ${status}`,
+        message: `Your application for ${application.jobTitle} has been ${status.toLowerCase()}`,
+        relatedEntityId: application._id,
+        relatedEntityType: 'Application'
+      });
+    }
 
     return new ApplicationResponseDTO(application);
   }

@@ -26,6 +26,15 @@ const jobSchema = new mongoose.Schema({
     required: [true, 'Please add a salary range'],
     trim: true
   },
+  salaryRange: {
+    type: Number,
+    default: 0
+  },
+  experienceLevel: {
+    type: String,
+    enum: ['entry', 'mid', 'senior'],
+    default: 'entry'
+  },
   type: {
     type: String,
     enum: ['Full-time', 'Part-time', 'Contract', 'Remote'],
@@ -46,7 +55,15 @@ const jobSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
-  }
+  },
+  views: {
+    type: Number,
+    default: 0
+  },
+  uniqueViewers: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }]
 }, {
   timestamps: true
 });
