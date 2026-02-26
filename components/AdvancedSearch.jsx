@@ -8,6 +8,9 @@ const AdvancedSearch = ({ onSearch, onResultsChange }) => {
   const [showFilters, setShowFilters] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [searchHistory, setSearchHistory] = useState([]);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [filters, setFilters] = useState({
     location: '',
     type: '',
@@ -47,7 +50,7 @@ const AdvancedSearch = ({ onSearch, onResultsChange }) => {
     }
   };
 
-  const handleSearch = async (query = searchQuery, customFilters = filters) => {
+  const handleSearch = async (query = searchQuery, customFilters = filters, cursor = null, append = false) => {
     const params = new URLSearchParams();
     
     if (query) params.append('search', query);
@@ -57,24 +60,44 @@ const AdvancedSearch = ({ onSearch, onResultsChange }) => {
     if (customFilters.salaryMin) params.append('salaryMin', customFilters.salaryMin);
     if (customFilters.salaryMax) params.append('salaryMax', customFilters.salaryMax);
     if (customFilters.skills) params.append('skills', customFilters.skills);
+    if (cursor) params.append('cursor', cursor);
 
     try {
+      if (append) setIsLoadingMore(true);
+      
       const response = await fetch(`http://localhost:5000/api/search/jobs?${params}`);
       const data = await response.json();
       
       if (data.success) {
+        const { jobs, pagination } = data.data;
+        
+        setNextCursor(pagination.nextCursor);
+        setHasMore(pagination.hasMore);
+        
         if (onResultsChange) {
           onResultsChange(data.data);
         }
         if (onSearch) {
-          onSearch(data.data.jobs);
+          if (append) {
+            onSearch((prevJobs) => [...prevJobs, ...jobs]);
+          } else {
+            onSearch(jobs);
+          }
         }
         setShowHistory(false);
-        fetchSearchHistory();
+        if (!append) fetchSearchHistory();
       }
     } catch (error) {
       toast.error('Search failed');
       console.error('Search error:', error);
+    } finally {
+      if (append) setIsLoadingMore(false);
+    }
+  };
+
+  const handleLoadMore = () => {
+    if (nextCursor && hasMore && !isLoadingMore) {
+      handleSearch(searchQuery, filters, nextCursor, true);
     }
   };
 
@@ -109,6 +132,8 @@ const AdvancedSearch = ({ onSearch, onResultsChange }) => {
       salaryMax: '',
       skills: ''
     });
+    setNextCursor(null);
+    setHasMore(false);
   };
 
   const activeFiltersCount = Object.values(filters).filter(v => v).length;
@@ -336,6 +361,21 @@ const AdvancedSearch = ({ onSearch, onResultsChange }) => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Load More Button */}
+      {hasMore && (
+        <div className="flex justify-center pt-4">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleLoadMore}
+            disabled={isLoadingMore}
+            className="px-8 py-3 bg-white border-2 border-indigo-600 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoadingMore ? 'Loading...' : 'Load More Jobs'}
+          </motion.button>
+        </div>
+      )}
     </div>
   );
 };

@@ -45,6 +45,14 @@ class JobRepository extends BaseRepository {
       .findById(jobId)
       .populate('employerId', 'name email companyName');
   }
+
+  async incrementApplicationCount(jobId) {
+    return await this.model.findByIdAndUpdate(
+      jobId,
+      { $inc: { applicationCount: 1 } },
+      { new: true }
+    );
+  }
 }
 
 export default new JobRepository();

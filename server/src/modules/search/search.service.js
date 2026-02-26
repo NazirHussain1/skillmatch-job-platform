@@ -1,5 +1,6 @@
 import Job from '../jobs/job.model.js';
 import SearchHistory from './search.model.js';
+import cacheService from '../../utils/cacheService.js';
 
 class SearchService {
   async searchJobs(filters, userId = null) {
@@ -12,16 +13,50 @@ class SearchService {
       salaryMax,
       experienceLevel,
       sortBy = 'relevance',
-      page = 1,
+      cursor,
       limit = 20
     } = filters;
 
+    // Generate cache key
+    const cacheKey = cacheService.generateCacheKey('search', {
+      search,
+      location,
+      type,
+      skills,
+      salaryMin,
+      salaryMax,
+      experienceLevel,
+      sortBy,
+      cursor,
+      limit
+    });
+
+    // Check cache
+    const cachedResult = await cacheService.get(cacheKey);
+    if (cachedResult) {
+      console.log('🎯 Cache hit for search query');
+      return cachedResult;
+    }
+
     let query = { isActive: true };
     let sort = {};
+    let projection = {
+      title: 1,
+      companyName: 1,
+      location: 1,
+      salary: 1,
+      type: 1,
+      requiredSkills: 1,
+      postedAt: 1,
+      views: 1,
+      applicationCount: 1,
+      employerId: 1
+    };
 
-    // Full-text search
+    // Full-text search with weighted indexes
     if (search) {
       query.$text = { $search: search };
+      projection.score = { $meta: 'textScore' };
     }
 
     // Location filter
@@ -52,48 +87,145 @@ class SearchService {
       if (salaryMax) query.salaryRange.$lte = parseInt(salaryMax);
     }
 
-    // Sorting
-    if (sortBy === 'relevance' && search) {
-      sort = { score: { $meta: 'textScore' } };
-    } else if (sortBy === 'date') {
-      sort = { postedAt: -1 };
-    } else if (sortBy === 'salary') {
-      sort = { salaryRange: -1 };
-    } else {
-      sort = { postedAt: -1 };
+    // Cursor-based pagination
+    if (cursor) {
+      query._id = { $lt: cursor };
     }
 
-    // Pagination
-    const skip = (page - 1) * limit;
+    // Sorting with relevance boosting
+    if (sortBy === 'relevance' && search) {
+      // Relevance with popularity and freshness boosting
+      const jobs = await this.searchWithRelevanceBoost(query, projection, limit);
+      
+      const result = {
+        jobs,
+        pagination: {
+          hasMore: jobs.length === limit,
+          nextCursor: jobs.length > 0 ? jobs[jobs.length - 1]._id : null,
+          limit: parseInt(limit)
+        }
+      };
 
-    // Execute query
+      // Save search history
+      if (userId && search) {
+        await this.saveSearchHistory(userId, {
+          query: search,
+          filters: { location, type, skills, salaryMin, salaryMax, experienceLevel },
+          resultCount: jobs.length
+        });
+      }
+
+      // Cache result for 5 minutes
+      await cacheService.set(cacheKey, result, 300);
+
+      return result;
+    } else if (sortBy === 'date') {
+      sort = { postedAt: -1, _id: -1 };
+    } else if (sortBy === 'salary') {
+      sort = { salaryRange: -1, _id: -1 };
+    } else if (sortBy === 'popularity') {
+      sort = { applicationCount: -1, views: -1, _id: -1 };
+    } else {
+      sort = { postedAt: -1, _id: -1 };
+    }
+
+    // Execute query with projection
     const jobs = await Job.find(query)
-      .select(search ? { score: { $meta: 'textScore' } } : {})
+      .select(projection)
       .populate('employerId', 'name email companyName companyLogo')
       .sort(sort)
-      .limit(limit)
-      .skip(skip);
+      .limit(parseInt(limit));
 
-    const total = await Job.countDocuments(query);
+    const result = {
+      jobs,
+      pagination: {
+        hasMore: jobs.length === limit,
+        nextCursor: jobs.length > 0 ? jobs[jobs.length - 1]._id : null,
+        limit: parseInt(limit)
+      }
+    };
 
     // Save search history
     if (userId && search) {
       await this.saveSearchHistory(userId, {
         query: search,
         filters: { location, type, skills, salaryMin, salaryMax, experienceLevel },
-        resultCount: total
+        resultCount: jobs.length
       });
     }
 
-    return {
-      jobs,
-      pagination: {
-        total,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        pages: Math.ceil(total / limit)
+    // Cache result for 5 minutes
+    await cacheService.set(cacheKey, result, 300);
+
+    return result;
+  }
+
+  async searchWithRelevanceBoost(query, projection, limit) {
+    const now = Date.now();
+    const thirtyDaysAgo = now - (30 * 24 * 60 * 60 * 1000);
+
+    const jobs = await Job.aggregate([
+      { $match: query },
+      {
+        $addFields: {
+          // Text relevance score
+          textScore: { $meta: 'textScore' },
+          
+          // Popularity boost (0-1 scale, max at 100 applications)
+          popularityBoost: {
+            $min: [{ $divide: ['$applicationCount', 100] }, 1]
+          },
+          
+          // Freshness boost (0-0.2 scale for jobs posted in last 30 days)
+          freshnessBoost: {
+            $cond: {
+              if: { $gte: ['$postedAt', new Date(thirtyDaysAgo)] },
+              then: {
+                $multiply: [
+                  0.2,
+                  {
+                    $divide: [
+                      { $subtract: ['$postedAt', new Date(thirtyDaysAgo)] },
+                      30 * 24 * 60 * 60 * 1000
+                    ]
+                  }
+                ]
+              },
+              else: 0
+            }
+          }
+        }
+      },
+      {
+        $addFields: {
+          // Final relevance score: textScore + (popularityBoost * 2) + freshnessBoost
+          finalScore: {
+            $add: [
+              '$textScore',
+              { $multiply: ['$popularityBoost', 2] },
+              '$freshnessBoost'
+            ]
+          }
+        }
+      },
+      { $sort: { finalScore: -1, _id: -1 } },
+      { $limit: parseInt(limit) },
+      {
+        $project: {
+          ...projection,
+          score: '$textScore',
+          finalScore: 1
+        }
       }
-    };
+    ]);
+
+    // Populate employerId
+    await Job.populate(jobs, {
+      path: 'employerId',
+      select: 'name email companyName companyLogo'
+    });
+
+    return jobs;
   }
 
   async saveSearchHistory(userId, searchData) {

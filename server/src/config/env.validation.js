@@ -11,7 +11,7 @@ const envSchema = z.object({
   // JWT
   JWT_SECRET: z.string().min(32, 'JWT secret must be at least 32 characters'),
   JWT_EXPIRE: z.string().default('15m'),
-  JWT_REFRESH_SECRET: z.string().min(32, 'JWT refresh secret must be at least 32 characters'),
+  JWT_REFRESH_SECRET: z.string().min(32, 'JWT refresh secret must be at least 32 characters').optional().or(z.literal('')),
   JWT_REFRESH_EXPIRE: z.string().default('7d'),
   
   // Frontend
@@ -37,10 +37,12 @@ export const validateEnv = () => {
     return env;
   } catch (error) {
     console.error('❌ Environment validation failed:');
-    if (error instanceof z.ZodError) {
+    if (error.errors) {
       error.errors.forEach((err) => {
         console.error(`  - ${err.path.join('.')}: ${err.message}`);
       });
+    } else {
+      console.error(error);
     }
     console.error('\n💡 Please check your .env file and ensure all required variables are set correctly.');
     process.exit(1);

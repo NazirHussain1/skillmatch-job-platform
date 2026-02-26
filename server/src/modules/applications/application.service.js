@@ -39,6 +39,13 @@ class ApplicationService {
     const applicationData = new CreateApplicationDTO(data, userId);
     const application = await applicationRepository.create(applicationData);
 
+    // Increment job application count
+    await jobRepository.incrementApplicationCount(data.jobId);
+
+    // Invalidate search cache
+    const cacheService = (await import('../../utils/cacheService.js')).default;
+    await cacheService.delPattern('search:*');
+
     // Send notification to employer
     await notificationService.createNotification({
       userId: job.employerId,

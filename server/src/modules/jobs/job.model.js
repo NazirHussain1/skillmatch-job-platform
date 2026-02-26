@@ -63,12 +63,30 @@ const jobSchema = new mongoose.Schema({
   uniqueViewers: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
-  }]
+  }],
+  applicationCount: {
+    type: Number,
+    default: 0
+  }
 }, {
   timestamps: true
 });
 
-jobSchema.index({ title: 'text', description: 'text', companyName: 'text' });
+// Weighted text index for relevance scoring
+jobSchema.index({
+  title: 'text',
+  requiredSkills: 'text',
+  companyName: 'text',
+  description: 'text'
+}, {
+  weights: {
+    title: 10,
+    requiredSkills: 5,
+    companyName: 3,
+    description: 1
+  },
+  name: 'job_search_index'
+});
 
 const Job = mongoose.model('Job', jobSchema);
 

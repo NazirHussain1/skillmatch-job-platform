@@ -2,6 +2,7 @@ import app from './app.js';
 import connectDB from './config/database.js';
 import { createServer } from 'http';
 import { initializeSocket } from './config/socket.js';
+import { initRedis, closeRedis, isRedisAvailable } from './config/redis.js';
 import validateEnv from './config/env.validation.js';
 
 // Validate environment variables before starting
@@ -9,6 +10,9 @@ const env = validateEnv();
 
 // Connect to database
 connectDB();
+
+// Initialize Redis (optional, won't crash if unavailable)
+initRedis();
 
 // Create HTTP server
 const server = createServer(app);
@@ -26,6 +30,7 @@ server.listen(PORT, () => {
     ║   📡 API: http://localhost:${PORT}/api    ║
     ║   🔌 Socket.IO: Enabled                ║
     ║   🔒 Security: Enhanced                ║
+    ║   💾 Redis: ${isRedisAvailable() ? 'Enabled' : 'Disabled'}                  ║
     ╚═══════════════════════════════════════╝
   `);
 });
@@ -43,8 +48,9 @@ process.on('uncaughtException', (err) => {
 });
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   console.log('👋 SIGTERM received, shutting down gracefully');
+  await closeRedis();
   server.close(() => {
     console.log('✅ Process terminated');
   });
