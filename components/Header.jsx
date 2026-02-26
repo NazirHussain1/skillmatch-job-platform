@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import NotificationBell from './NotificationBell';
 import { 
   Briefcase, 
   User, 
   Settings, 
   LogOut, 
-  Bell, 
   Search,
   Menu,
   X
@@ -71,10 +71,7 @@ const Header: React.FC = () => {
                 </div>
 
                 {/* Notifications */}
-                <button className="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors">
-                  <Bell size={20} />
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-                </button>
+                <NotificationBell />
 
                 {/* Profile Dropdown */}
                 <div className="relative">

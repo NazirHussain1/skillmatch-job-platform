@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
+import { SocketProvider } from './contexts/SocketContext';
 import { ToastProvider } from './components/Toast';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -56,81 +57,83 @@ const App: React.FC = () => {
   return (
     <>
       <ToastProvider />
-      <div className="min-h-screen flex flex-col">
-        {/* Show header on all pages except login/signup */}
-        <Routes>
-          <Route path="/login" element={null} />
-          <Route path="/signup" element={null} />
-          <Route path="*" element={<Header />} />
-        </Routes>
-
-        <main className="flex-1">
+      <SocketProvider>
+        <div className="min-h-screen flex flex-col">
+          {/* Show header on all pages except login/signup */}
           <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Landing />} />
-            <Route
-              path="/login"
-              element={
-                <PublicRoute>
-                  <Login />
-                </PublicRoute>
-              }
-            />
-            <Route
-              path="/signup"
-              element={
-                <PublicRoute>
-                  <Signup />
-                </PublicRoute>
-              }
-            />
-
-            {/* Protected Routes */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/jobs"
-              element={
-                <ProtectedRoute>
-                  <Jobs />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute>
-                  <Settings />
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Catch all - redirect to home */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="/login" element={null} />
+            <Route path="/signup" element={null} />
+            <Route path="*" element={<Header />} />
           </Routes>
-        </main>
 
-        {/* Show footer on all pages except login/signup */}
-        <Routes>
-          <Route path="/login" element={null} />
-          <Route path="/signup" element={null} />
-          <Route path="*" element={<Footer />} />
-        </Routes>
-      </div>
+          <main className="flex-1">
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<Landing />} />
+              <Route
+                path="/login"
+                element={
+                  <PublicRoute>
+                    <Login />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/signup"
+                element={
+                  <PublicRoute>
+                    <Signup />
+                  </PublicRoute>
+                }
+              />
+
+              {/* Protected Routes */}
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/jobs"
+                element={
+                  <ProtectedRoute>
+                    <Jobs />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <Settings />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Catch all - redirect to home */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+
+          {/* Show footer on all pages except login/signup */}
+          <Routes>
+            <Route path="/login" element={null} />
+            <Route path="/signup" element={null} />
+            <Route path="*" element={<Footer />} />
+          </Routes>
+        </div>
+      </SocketProvider>
     </>
   );
 };
