@@ -19,18 +19,22 @@ interface JobCardProps {
   onApply: (jobId: string) => void;
 }
 
-const JobCard: React.FC<JobCardProps> = ({ job, user, onApply }) => {
+const JobCard: React.FC<JobCardProps> = React.memo(({ job, user, onApply }) => {
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const [matchResult, setMatchResult] = React.useState<MatchResult | null>(null);
 
-  const handleSmartMatch = async () => {
+  const handleSmartMatch = React.useCallback(async () => {
     setIsAnalyzing(true);
     // Simulate a brief delay for better UX
     await new Promise(resolve => setTimeout(resolve, 500));
     const result = calculateSkillMatch(user, job);
     setMatchResult(result);
     setIsAnalyzing(false);
-  };
+  }, [user, job]);
+
+  const handleApply = React.useCallback(() => {
+    onApply(job.id);
+  }, [onApply, job.id]);
 
   return (
     <motion.div
@@ -135,7 +139,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, user, onApply }) => {
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          onClick={() => onApply(job.id)}
+          onClick={handleApply}
           className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-all"
         >
           Apply Now
@@ -144,6 +148,15 @@ const JobCard: React.FC<JobCardProps> = ({ job, user, onApply }) => {
       </div>
     </motion.div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison function for React.memo
+  return (
+    prevProps.job.id === nextProps.job.id &&
+    prevProps.user.id === nextProps.user.id &&
+    prevProps.onApply === nextProps.onApply
+  );
+});
+
+JobCard.displayName = 'JobCard';
 
 export default JobCard;
