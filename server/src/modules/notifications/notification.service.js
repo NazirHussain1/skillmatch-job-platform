@@ -1,5 +1,6 @@
 import Notification from './notification.model.js';
 import { emitToUser } from '../../config/socket.js';
+import logger from '../../utils/logger.js';
 
 class NotificationService {
   async createNotification(data) {
@@ -12,6 +13,24 @@ class NotificationService {
       title: notification.title,
       message: notification.message,
       createdAt: notification.createdAt
+    });
+
+    return notification;
+  }
+
+  // Create notification within a transaction
+  async createNotificationWithSession(data, session) {
+    const [notification] = await Notification.create([data], { session });
+    
+    // Emit real-time notification (outside transaction)
+    setImmediate(() => {
+      emitToUser(data.userId.toString(), 'notification', {
+        id: notification._id,
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        createdAt: notification.createdAt
+      });
     });
 
     return notification;
@@ -59,7 +78,12 @@ class NotificationService {
   }
 
   async deleteNotification(notificationId, userId) {
-    await Notification.findOneAndDelete({ _id: notificationId, userId });
+    const notification = await Notification.findOne({ _id: notificationId, userId });
+    
+    if (notification) {
+      await notification.softDelete();
+    }
+    
     return { success: true };
   }
 }

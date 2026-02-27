@@ -38,17 +38,43 @@ const notificationSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  deletedAt: {
+    type: Date,
+    default: null
+  },
   createdAt: {
     type: Date,
     default: Date.now,
     expires: 7776000 // 90 days
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  optimisticConcurrency: true
 });
 
 notificationSchema.index({ userId: 1, createdAt: -1 });
 notificationSchema.index({ userId: 1, isRead: 1 });
+notificationSchema.index({ deletedAt: 1 });
+
+// Query middleware to exclude soft-deleted documents by default
+notificationSchema.pre(/^find/, function(next) {
+  if (!this.getOptions().includeDeleted) {
+    this.where({ deletedAt: null });
+  }
+  next();
+});
+
+// Instance method for soft delete
+notificationSchema.methods.softDelete = function() {
+  this.deletedAt = new Date();
+  return this.save();
+};
+
+// Instance method to restore soft-deleted document
+notificationSchema.methods.restore = function() {
+  this.deletedAt = null;
+  return this.save();
+};
 
 const Notification = mongoose.model('Notification', notificationSchema);
 

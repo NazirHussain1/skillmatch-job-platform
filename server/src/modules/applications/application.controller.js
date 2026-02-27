@@ -20,7 +20,11 @@ export const getEmployerApplications = asyncHandler(async (req, res) => {
 });
 
 export const createApplication = asyncHandler(async (req, res) => {
-  const application = await applicationService.createApplication(req.body, req.user._id);
+  const application = await applicationService.createApplication(
+    req.body, 
+    req.user._id, 
+    req.correlationId
+  );
   
   res.status(HTTP_STATUS.CREATED).json(
     ApiResponse.created(application, 'Application submitted successfully')
@@ -31,7 +35,8 @@ export const updateApplicationStatus = asyncHandler(async (req, res) => {
   const application = await applicationService.updateApplicationStatus(
     req.params.id,
     req.body.status,
-    req.user._id
+    req.user._id,
+    req.correlationId
   );
   
   res.status(HTTP_STATUS.OK).json(
@@ -40,7 +45,11 @@ export const updateApplicationStatus = asyncHandler(async (req, res) => {
 });
 
 export const deleteApplication = asyncHandler(async (req, res) => {
-  const result = await applicationService.deleteApplication(req.params.id, req.user._id);
+  const result = await applicationService.deleteApplication(
+    req.params.id, 
+    req.user._id, 
+    req.correlationId
+  );
   
   res.status(HTTP_STATUS.OK).json(
     ApiResponse.success(result, result.message)

@@ -5,7 +5,7 @@ import tokenManager from '../../utils/tokenManager.js';
 import { HTTP_STATUS } from '../../config/constants.js';
 
 export const signup = asyncHandler(async (req, res) => {
-  const result = await authService.signup(req.body);
+  const result = await authService.signup(req.body, req.correlationId);
   
   // Set refresh token in httpOnly cookie
   tokenManager.setRefreshTokenCookie(res, result.refreshToken);
@@ -20,7 +20,7 @@ export const signup = asyncHandler(async (req, res) => {
 
 export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  const result = await authService.login(email, password);
+  const result = await authService.login(email, password, req.correlationId);
   
   // Set refresh token in httpOnly cookie
   tokenManager.setRefreshTokenCookie(res, result.refreshToken);
@@ -40,7 +40,7 @@ export const refreshToken = asyncHandler(async (req, res) => {
     throw ApiError.unauthorized('Refresh token not found');
   }
   
-  const result = await authService.refreshToken(oldRefreshToken);
+  const result = await authService.refreshToken(oldRefreshToken, req.correlationId);
   
   // Set new refresh token in cookie
   tokenManager.setRefreshTokenCookie(res, result.refreshToken);
@@ -54,9 +54,9 @@ export const refreshToken = asyncHandler(async (req, res) => {
 });
 
 export const logout = asyncHandler(async (req, res) => {
-  const token = req.headers.authorization?.split(' ')[1];
+  const token = req.token || req.headers.authorization?.split(' ')[1];
   
-  await authService.logout(req.user._id, token);
+  await authService.logout(req.user._id, token, req.correlationId);
   
   // Clear refresh token cookie
   tokenManager.clearRefreshTokenCookie(res);
