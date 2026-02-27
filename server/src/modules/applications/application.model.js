@@ -37,7 +37,13 @@ const applicationSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Indexes for performance
 applicationSchema.index({ jobId: 1, userId: 1 }, { unique: true });
+applicationSchema.index({ jobId: 1 });
+applicationSchema.index({ userId: 1 });
+applicationSchema.index({ status: 1 });
+applicationSchema.index({ appliedAt: -1 });
+applicationSchema.index({ createdAt: -1 });
 
 const Application = mongoose.model('Application', applicationSchema);
 

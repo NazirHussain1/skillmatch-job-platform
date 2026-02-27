@@ -122,11 +122,15 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Indexes
+// Indexes for performance
 userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ isDeleted: 1 });
 userSchema.index({ createdAt: -1 });
+userSchema.index({ skills: 1 });
+userSchema.index({ location: 1 });
+userSchema.index({ isActive: 1 });
+userSchema.index({ lastLogin: -1 });
 
 // Virtual for account locked
 userSchema.virtual('isLocked').get(function () {

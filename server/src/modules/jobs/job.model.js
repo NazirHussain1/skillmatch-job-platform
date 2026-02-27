@@ -88,6 +88,19 @@ jobSchema.index({
   name: 'job_search_index'
 });
 
+// Additional indexes for performance
+jobSchema.index({ employerId: 1 });
+jobSchema.index({ isActive: 1 });
+jobSchema.index({ postedAt: -1 });
+jobSchema.index({ createdAt: -1 });
+jobSchema.index({ salaryRange: 1 });
+jobSchema.index({ type: 1 });
+jobSchema.index({ experienceLevel: 1 });
+jobSchema.index({ location: 1 });
+jobSchema.index({ requiredSkills: 1 });
+jobSchema.index({ applicationCount: -1 });
+jobSchema.index({ views: -1 });
+
 const Job = mongoose.model('Job', jobSchema);
 
 export default Job;

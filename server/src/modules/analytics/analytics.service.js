@@ -1,15 +1,24 @@
 import Job from '../jobs/job.model.js';
 import Application from '../applications/application.model.js';
 import User from '../users/user.model.js';
+import cacheService from '../../utils/cacheService.js';
 
 class AnalyticsService {
   async getEmployerAnalytics(employerId) {
-    const jobs = await Job.find({ employerId });
+    // Check cache first
+    const cacheKey = `analytics:employer:${employerId}`;
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      console.log('🎯 Cache hit for employer analytics');
+      return cached;
+    }
+
+    const jobs = await Job.find({ employerId }).lean();
     const jobIds = jobs.map(job => job._id);
-    const applications = await Application.find({ jobId: { $in: jobIds } });
+    const applications = await Application.find({ jobId: { $in: jobIds } }).lean();
 
     // Calculate metrics per job
-    const jobAnalytics = await Promise.all(jobs.map(async (job) => {
+    const jobAnalytics = jobs.map((job) => {
       const jobApplications = applications.filter(
         app => app.jobId.toString() === job._id.toString()
       );
@@ -26,7 +35,7 @@ class AnalyticsService {
         conversionRate: parseFloat(conversionRate),
         postedAt: job.postedAt
       };
-    }));
+    });
 
     // Skill demand analysis
     const skillDemand = {};
@@ -45,7 +54,7 @@ class AnalyticsService {
       .sort((a, b) => b.count - a.count)
       .slice(0, 20);
 
-    // Application trends (last 30 days)
+    // Application trends (last 30 days) - optimized aggregation
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -64,10 +73,17 @@ class AnalyticsService {
           count: { $sum: 1 }
         }
       },
-      { $sort: { _id: 1 } }
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          _id: 0,
+          date: '$_id',
+          count: 1
+        }
+      }
     ]);
 
-    return {
+    const result = {
       summary: {
         totalJobs: jobs.length,
         totalApplications: applications.length,
@@ -80,16 +96,38 @@ class AnalyticsService {
       topSkills,
       applicationTrend
     };
+
+    // Cache for 5 minutes
+    await cacheService.set(cacheKey, result, 300);
+
+    return result;
   }
 
   async getAdminAnalytics() {
-    const totalUsers = await User.countDocuments();
-    const totalJobSeekers = await User.countDocuments({ role: 'JOB_SEEKER' });
-    const totalEmployers = await User.countDocuments({ role: 'EMPLOYER' });
-    const totalJobs = await Job.countDocuments();
-    const totalApplications = await Application.countDocuments();
+    // Check cache first
+    const cacheKey = 'analytics:admin';
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      console.log('🎯 Cache hit for admin analytics');
+      return cached;
+    }
 
-    // Registration trends (last 30 days)
+    // Use countDocuments for better performance
+    const [
+      totalUsers,
+      totalJobSeekers,
+      totalEmployers,
+      totalJobs,
+      totalApplications
+    ] = await Promise.all([
+      User.countDocuments(),
+      User.countDocuments({ role: 'candidate' }),
+      User.countDocuments({ role: 'employer' }),
+      Job.countDocuments(),
+      Application.countDocuments()
+    ]);
+
+    // Registration trends (last 30 days) - optimized
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -107,10 +145,17 @@ class AnalyticsService {
           count: { $sum: 1 }
         }
       },
-      { $sort: { _id: 1 } }
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          _id: 0,
+          date: '$_id',
+          count: 1
+        }
+      }
     ]);
 
-    // Application activity (last 30 days)
+    // Application activity (last 30 days) - optimized
     const applicationActivity = await Application.aggregate([
       {
         $match: {
@@ -125,10 +170,17 @@ class AnalyticsService {
           count: { $sum: 1 }
         }
       },
-      { $sort: { _id: 1 } }
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          _id: 0,
+          date: '$_id',
+          count: 1
+        }
+      }
     ]);
 
-    // Most active employers
+    // Most active employers - optimized
     const activeEmployers = await Job.aggregate([
       {
         $group: {
@@ -143,12 +195,22 @@ class AnalyticsService {
           from: 'users',
           localField: '_id',
           foreignField: '_id',
-          as: 'employer'
+          as: 'employer',
+          pipeline: [
+            {
+              $project: {
+                name: 1,
+                email: 1,
+                companyName: 1
+              }
+            }
+          ]
         }
       },
       { $unwind: '$employer' },
       {
         $project: {
+          _id: 0,
           name: '$employer.name',
           email: '$employer.email',
           companyName: '$employer.companyName',
@@ -157,7 +219,7 @@ class AnalyticsService {
       }
     ]);
 
-    // Most popular jobs
+    // Most popular jobs - optimized
     const popularJobs = await Application.aggregate([
       {
         $group: {
@@ -172,12 +234,21 @@ class AnalyticsService {
           from: 'jobs',
           localField: '_id',
           foreignField: '_id',
-          as: 'job'
+          as: 'job',
+          pipeline: [
+            {
+              $project: {
+                title: 1,
+                companyName: 1
+              }
+            }
+          ]
         }
       },
       { $unwind: '$job' },
       {
         $project: {
+          _id: 0,
           title: '$job.title',
           companyName: '$job.companyName',
           applicationCount: 1
@@ -185,26 +256,28 @@ class AnalyticsService {
       }
     ]);
 
-    // Platform-wide skill demand
-    const allJobs = await Job.find({ isActive: true });
-    const skillDemand = {};
-    
-    allJobs.forEach(job => {
-      job.requiredSkills.forEach(skill => {
-        skillDemand[skill] = (skillDemand[skill] || 0) + 1;
-      });
-    });
+    // Platform-wide skill demand - optimized
+    const skillDemandAgg = await Job.aggregate([
+      { $match: { isActive: true } },
+      { $unwind: '$requiredSkills' },
+      {
+        $group: {
+          _id: '$requiredSkills',
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } },
+      { $limit: 20 }
+    ]);
 
-    const topSkills = Object.entries(skillDemand)
-      .map(([skill, count]) => ({
-        skill,
-        count,
-        percentage: ((count / allJobs.length) * 100).toFixed(2)
-      }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 20);
+    const totalActiveJobs = await Job.countDocuments({ isActive: true });
+    const topSkills = skillDemandAgg.map(item => ({
+      skill: item._id,
+      count: item.count,
+      percentage: ((item.count / totalActiveJobs) * 100).toFixed(2)
+    }));
 
-    return {
+    const result = {
       summary: {
         totalUsers,
         totalJobSeekers,
@@ -218,6 +291,11 @@ class AnalyticsService {
       popularJobs,
       topSkills
     };
+
+    // Cache for 10 minutes
+    await cacheService.set(cacheKey, result, 600);
+
+    return result;
   }
 
   async trackJobView(jobId, userId) {
@@ -236,9 +314,21 @@ class AnalyticsService {
       job.uniqueViewers.push(userId);
       job.views += 1;
       await job.save();
+      
+      // Invalidate analytics cache
+      const employerId = job.employerId.toString();
+      await cacheService.del(`analytics:employer:${employerId}`);
+      await cacheService.del('analytics:admin');
     }
 
     return job;
+  }
+
+  async invalidateAnalyticsCache(employerId = null) {
+    if (employerId) {
+      await cacheService.del(`analytics:employer:${employerId}`);
+    }
+    await cacheService.del('analytics:admin');
   }
 }
 
