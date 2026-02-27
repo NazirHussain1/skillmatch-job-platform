@@ -1,5 +1,6 @@
 import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
+import logger from '../utils/logger.js';
 
 /**
  * Global Error Handler Middleware
@@ -39,14 +40,21 @@ export const errorHandler = (err, req, res, next) => {
   const statusCode = error.statusCode || 500;
   const message = error.message || 'Internal Server Error';
 
+  // Log error with correlation ID
+  logger.error('Request error', {
+    correlationId: req.correlationId,
+    method: req.method,
+    url: req.url,
+    statusCode,
+    message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+    userId: req.user?._id,
+    ip: req.ip
+  });
+
   res.status(statusCode).json(
     ApiResponse.error(message, statusCode, error.errors)
   );
-
-  // Log error in development
-  if (process.env.NODE_ENV === 'development') {
-    console.error('Error:', err);
-  }
 };
 
 /**

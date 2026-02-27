@@ -24,7 +24,16 @@ class CacheService {
       const data = await redis.get(key);
       
       if (data) {
+        // Record cache hit
+        if (global.metrics) {
+          global.metrics.recordCacheHit();
+        }
         return JSON.parse(data);
+      }
+      
+      // Record cache miss
+      if (global.metrics) {
+        global.metrics.recordCacheMiss();
       }
       
       return null;

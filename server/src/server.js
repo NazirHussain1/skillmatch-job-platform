@@ -4,6 +4,13 @@ import { createServer } from 'http';
 import { initializeSocket } from './config/socket.js';
 import { initRedis, closeRedis, isRedisAvailable } from './config/redis.js';
 import validateEnv from './config/env.validation.js';
+import logger from './utils/logger.js';
+import fs from 'fs';
+
+// Create logs directory if it doesn't exist
+if (!fs.existsSync('logs')) {
+  fs.mkdirSync('logs');
+}
 
 // Validate environment variables before starting
 const env = validateEnv();
@@ -23,7 +30,7 @@ initializeSocket(server);
 const PORT = env.PORT || 5000;
 
 server.listen(PORT, () => {
-  console.log(`
+  const startupMessage = `
     ╔═══════════════════════════════════════╗
     ║   🚀 Server running on port ${PORT}     ║
     ║   🌍 Environment: ${env.NODE_ENV.padEnd(11)}        ║
@@ -31,27 +38,43 @@ server.listen(PORT, () => {
     ║   🔌 Socket.IO: Enabled                ║
     ║   🔒 Security: Enhanced                ║
     ║   💾 Redis: ${isRedisAvailable() ? 'Enabled' : 'Disabled'}                  ║
+    ║   📊 Metrics: /health/metrics          ║
+    ║   🏥 Health: /health/ready             ║
     ╚═══════════════════════════════════════╝
-  `);
+  `;
+  
+  console.log(startupMessage);
+  
+  logger.info('Server started successfully', {
+    port: PORT,
+    environment: env.NODE_ENV,
+    redis: isRedisAvailable() ? 'enabled' : 'disabled'
+  });
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
-  console.error('❌ Unhandled Rejection:', err);
+  logger.error('Unhandled Rejection', {
+    error: err.message,
+    stack: err.stack
+  });
   server.close(() => process.exit(1));
 });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
-  console.error('❌ Uncaught Exception:', err);
+  logger.error('Uncaught Exception', {
+    error: err.message,
+    stack: err.stack
+  });
   process.exit(1);
 });
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  console.log('👋 SIGTERM received, shutting down gracefully');
+  logger.info('SIGTERM received, shutting down gracefully');
   await closeRedis();
   server.close(() => {
-    console.log('✅ Process terminated');
+    logger.info('Process terminated');
   });
 });
