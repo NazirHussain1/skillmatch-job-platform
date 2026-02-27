@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 
 // Import security middleware
 import {
@@ -13,6 +15,9 @@ import {
   generalLimiter,
   disablePoweredBy
 } from './config/security.js';
+
+// Import Swagger configuration
+import { swaggerOptions } from './swagger/swagger.config.js';
 
 // Import routes
 import authRoutes from './modules/auth/auth.routes.js';
@@ -69,6 +74,19 @@ app.use(requestLoggerMiddleware);
 
 // Rate limiting (apply to all routes)
 app.use('/api/', generalLimiter);
+
+// Swagger API Documentation
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'SkillMatch AI API Documentation'
+}));
+
+// Swagger JSON endpoint
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
 
 // Health and metrics routes (no /api prefix for standard endpoints)
 app.use('/health', healthRoutes);

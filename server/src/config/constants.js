@@ -1,31 +1,30 @@
-export const USER_ROLES = {
-  JOB_SEEKER: 'JOB_SEEKER',
-  EMPLOYER: 'EMPLOYER',
-  ADMIN: 'ADMIN'
-};
+/**
+ * @deprecated This file is deprecated. Import from './app.constants.ts' instead.
+ * This file is kept for backward compatibility during migration.
+ */
 
-export const JOB_TYPES = {
-  FULL_TIME: 'Full-time',
-  PART_TIME: 'Part-time',
-  CONTRACT: 'Contract',
-  REMOTE: 'Remote'
-};
-
-export const APPLICATION_STATUS = {
-  PENDING: 'Pending',
-  REVIEWING: 'Reviewing',
-  INTERVIEWING: 'Interviewing',
-  ACCEPTED: 'Accepted',
-  REJECTED: 'Rejected'
-};
-
-export const HTTP_STATUS = {
-  OK: 200,
-  CREATED: 201,
-  BAD_REQUEST: 400,
-  UNAUTHORIZED: 401,
-  FORBIDDEN: 403,
-  NOT_FOUND: 404,
-  CONFLICT: 409,
-  INTERNAL_SERVER_ERROR: 500
-};
+// Re-export from centralized constants file
+export {
+  USER_ROLES,
+  JOB_TYPES,
+  APPLICATION_STATUS,
+  HTTP_STATUS,
+  EXPERIENCE_LEVELS,
+  NOTIFICATION_TYPES,
+  MATCHING_CONSTANTS,
+  FILE_UPLOAD,
+  PAGINATION,
+  CACHE_TTL,
+  RATE_LIMITS,
+  JWT_CONFIG,
+  VALIDATION,
+  SEARCH_HISTORY,
+  NOTIFICATION_SETTINGS,
+  RELATED_SKILLS,
+  ERROR_MESSAGES,
+  SUCCESS_MESSAGES,
+  API_VERSION,
+  API_PREFIX,
+  ENVIRONMENTS,
+  CONSTANTS
+} from './app.constants.js';
