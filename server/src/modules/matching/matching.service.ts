@@ -4,7 +4,7 @@ import Application from '../applications/application.model.js';
 import { 
   MATCHING_CONSTANTS, 
   RELATED_SKILLS, 
-  ExperienceLevel 
+  ExperienceLevel
 } from '../../config/app.constants.js';
 
 interface SkillGapResult {
@@ -17,7 +17,7 @@ interface SkillGapResult {
 }
 
 interface JobRecommendation {
-  _id: string;
+  _id: any;
   title: string;
   companyName: string;
   location: string;
@@ -28,6 +28,7 @@ interface JobRecommendation {
   requiredSkills: string[];
   isActive: boolean;
   matchScore: number;
+  [key: string]: any;
 }
 
 interface CandidateRecommendation {
@@ -37,7 +38,7 @@ interface CandidateRecommendation {
   avatar?: string;
   skills: string[];
   experienceLevel: string;
-  bio?: string;
+  bio?: string | null;
   matchScore: number;
 }
 
@@ -195,7 +196,8 @@ class MatchingService {
   ): Promise<JobRecommendation[]> {
     const user = await User.findById(userId);
     
-    if (!user || user.role !== 'job_seeker') {
+    // Check if user exists and is a candidate/job seeker
+    if (!user || (user.role as string) !== 'candidate') {
       return [];
     }
 
@@ -246,7 +248,7 @@ class MatchingService {
 
     const candidates = await User.find({
       _id: { $nin: appliedUserIds },
-      role: 'job_seeker'
+      role: 'candidate'
     }).limit(100);
 
     // Calculate match scores

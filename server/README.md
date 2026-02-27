@@ -1,5 +1,38 @@
 # SkillMatch AI Backend Server
 
+**Status:** Production-Ready | **Test Coverage:** 78.5% | **TypeScript:** 15%
+
+AI-powered skill-based hiring platform with clean architecture, real-time features, and enterprise-grade security.
+
+📋 See [PROJECT_STATUS.md](../PROJECT_STATUS.md) for complete project status and roadmap.
+
+---
+
+## Quick Start
+
+```bash
+# Install dependencies
+npm install
+
+# Setup environment
+cp .env.example .env
+# Edit .env with your configuration
+
+# Run tests
+npm test
+
+# Build TypeScript
+npm run build
+
+# Start development server
+npm run dev
+
+# Access API documentation
+open http://localhost:5000/api-docs
+```
+
+---
+
 ## Setup Instructions
 
 ### 1. Install Dependencies

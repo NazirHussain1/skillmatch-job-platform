@@ -5,12 +5,13 @@
 
 // User Roles
 export const USER_ROLES = {
-  JOB_SEEKER: 'job_seeker',
+  CANDIDATE: 'candidate',
+  JOB_SEEKER: 'candidate', // Alias for backward compatibility
   EMPLOYER: 'employer',
   ADMIN: 'admin'
 } as const;
 
-export type UserRole = typeof USER_ROLES[keyof typeof USER_ROLES];
+export type UserRole = 'candidate' | 'employer' | 'admin';
 
 // Job Types
 export const JOB_TYPES = {
