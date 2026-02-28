@@ -32,7 +32,7 @@
   },
   "include": [
     "src/**/*.ts"
-  ],
+, "src/config/app.constants.js"  ],
   "exclude": [
     "node_modules",
     "dist",

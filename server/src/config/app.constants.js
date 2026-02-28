@@ -9,9 +9,7 @@ export const USER_ROLES = {
   JOB_SEEKER: 'candidate', // Alias for backward compatibility
   EMPLOYER: 'employer',
   ADMIN: 'admin'
-} as const;
-
-export type UserRole = 'candidate' | 'employer' | 'admin';
+};
 
 // Job Types
 export const JOB_TYPES = {
@@ -19,18 +17,14 @@ export const JOB_TYPES = {
   PART_TIME: 'Part-time',
   CONTRACT: 'Contract',
   REMOTE: 'Remote'
-} as const;
-
-export type JobType = typeof JOB_TYPES[keyof typeof JOB_TYPES];
+};
 
 // Experience Levels
 export const EXPERIENCE_LEVELS = {
   ENTRY: 'entry',
   MID: 'mid',
   SENIOR: 'senior'
-} as const;
-
-export type ExperienceLevel = typeof EXPERIENCE_LEVELS[keyof typeof EXPERIENCE_LEVELS];
+};
 
 // Application Status
 export const APPLICATION_STATUS = {
@@ -39,9 +33,7 @@ export const APPLICATION_STATUS = {
   INTERVIEWING: 'Interviewing',
   ACCEPTED: 'Accepted',
   REJECTED: 'Rejected'
-} as const;
-
-export type ApplicationStatus = typeof APPLICATION_STATUS[keyof typeof APPLICATION_STATUS];
+};
 
 // Notification Types
 export const NOTIFICATION_TYPES = {
@@ -51,9 +43,7 @@ export const NOTIFICATION_TYPES = {
   APPLICATION_REJECTED: 'application_rejected',
   NEW_MESSAGE: 'new_message',
   JOB_RECOMMENDATION: 'job_recommendation'
-} as const;
-
-export type NotificationType = typeof NOTIFICATION_TYPES[keyof typeof NOTIFICATION_TYPES];
+};
 
 // HTTP Status Codes
 export const HTTP_STATUS = {
@@ -69,7 +59,7 @@ export const HTTP_STATUS = {
   TOO_MANY_REQUESTS: 429,
   INTERNAL_SERVER_ERROR: 500,
   SERVICE_UNAVAILABLE: 503
-} as const;
+};
 
 // Matching Engine Constants
 export const MATCHING_CONSTANTS = {
@@ -88,7 +78,7 @@ export const MATCHING_CONSTANTS = {
     CANDIDATE_RECOMMENDATION: 70,
     HIGH_MATCH: 80
   }
-} as const;
+};
 
 // File Upload Constants
 export const FILE_UPLOAD = {
@@ -104,14 +94,14 @@ export const FILE_UPLOAD = {
     RESUME: ['.pdf'],
     LOGO: ['.jpg', '.jpeg', '.png', '.webp']
   }
-} as const;
+};
 
 // Pagination Constants
 export const PAGINATION = {
   DEFAULT_LIMIT: 20,
   MAX_LIMIT: 100,
   DEFAULT_PAGE: 1
-} as const;
+};
 
 // Cache TTL (Time To Live) in seconds
 export const CACHE_TTL = {
@@ -119,7 +109,7 @@ export const CACHE_TTL = {
   MEDIUM: 300,         // 5 minutes
   LONG: 3600,          // 1 hour
   VERY_LONG: 86400     // 24 hours
-} as const;
+};
 
 // Rate Limiting
 export const RATE_LIMITS = {
@@ -139,7 +129,7 @@ export const RATE_LIMITS = {
     WINDOW_MS: 1 * 60 * 1000,   // 1 minute
     MAX_REQUESTS: 30
   }
-} as const;
+};
 
 // JWT Configuration
 export const JWT_CONFIG = {
@@ -147,7 +137,7 @@ export const JWT_CONFIG = {
   REFRESH_TOKEN_EXPIRY: '7d',
   EMAIL_TOKEN_EXPIRY: '24h',
   ALGORITHM: 'HS256'
-} as const;
+};
 
 // Validation Rules
 export const VALIDATION = {
@@ -182,21 +172,21 @@ export const VALIDATION = {
     MAX_COUNT: 50,
     MAX_LENGTH_PER_SKILL: 50
   }
-} as const;
+};
 
 // Search History
 export const SEARCH_HISTORY = {
   MAX_ENTRIES: 10
-} as const;
+};
 
 // Notification Settings
 export const NOTIFICATION_SETTINGS = {
   MAX_UNREAD: 100,
   AUTO_DELETE_AFTER_DAYS: 90
-} as const;
+};
 
 // Related Skills Mapping
-export const RELATED_SKILLS: Record<string, string[]> = {
+export const RELATED_SKILLS = {
   'javascript': ['typescript', 'node', 'react', 'vue', 'angular', 'express', 'next'],
   'typescript': ['javascript', 'node', 'react', 'angular', 'nest'],
   'python': ['django', 'flask', 'fastapi', 'pandas', 'numpy', 'scikit-learn'],
@@ -268,7 +258,7 @@ export const ERROR_MESSAGES = {
   // Server
   INTERNAL_ERROR: 'Internal server error',
   SERVICE_UNAVAILABLE: 'Service temporarily unavailable'
-} as const;
+};
 
 // Success Messages
 export const SUCCESS_MESSAGES = {
@@ -297,7 +287,7 @@ export const SUCCESS_MESSAGES = {
   
   // General
   OPERATION_SUCCESS: 'Operation completed successfully'
-} as const;
+};
 
 // API Versioning
 export const API_VERSION = 'v1';
@@ -309,9 +299,7 @@ export const ENVIRONMENTS = {
   TEST: 'test',
   STAGING: 'staging',
   PRODUCTION: 'production'
-} as const;
-
-export type Environment = typeof ENVIRONMENTS[keyof typeof ENVIRONMENTS];
+};
 
 // Export all constants as a single object for convenience
 export const CONSTANTS = {
@@ -336,6 +324,6 @@ export const CONSTANTS = {
   API_VERSION,
   API_PREFIX,
   ENVIRONMENTS
-} as const;
+};
 
 export default CONSTANTS;

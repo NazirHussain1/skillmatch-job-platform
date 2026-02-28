@@ -1,5 +1,16 @@
 # SkillMatch AI - Project Status
 
+**🚀 SERVERS RUNNING:**
+- Backend: http://localhost:5000 ✅
+- Frontend: http://localhost:3000 ✅
+- API Docs: http://localhost:5000/api-docs ✅
+
+**Status:** 97.5% Complete | **Test Coverage:** 78.5% | **Completion:** Backend 100%, Frontend 95%
+
+📋 See [RUNNING_STATUS.md](RUNNING_STATUS.md) for detailed running status and next steps.
+
+---
+
 ## ✅ Completed Features
 
 ### Architecture & Design Patterns
