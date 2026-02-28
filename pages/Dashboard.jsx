@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiService } from '../services/apiService';
@@ -37,12 +36,13 @@ const Dashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-indigo-600" size={48} />
+        <Loader2 className="w-12 h-12 animate-spin text-primary-600" />
       </div>
     );
   }
 
   if (!user) return null;
+
   const chartData = [
     { name: 'Jan', value: 4 },
     { name: 'Feb', value: 7 },
@@ -68,34 +68,45 @@ const Dashboard: React.FC = () => {
   const stats = user.role === UserRole.JOB_SEEKER ? seekerStats : employerStats;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <header>
-        <h1 className="text-3xl font-bold text-slate-900">Welcome back, {user.name} 👋</h1>
-        <p className="text-slate-500 mt-1">Here's what's happening with your recruitment process today.</p>
+    <div className="container-custom space-y-8 animate-fade-in">
+      {/* Header */}
+      <header className="space-y-2">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
+          Welcome back, {user.name} 👋
+        </h1>
+        <p className="text-sm sm:text-base text-gray-600">
+          Here's what's happening with your recruitment process today.
+        </p>
       </header>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {stats.map((stat) => (
-          <div key={stat.label} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <div 
+            key={stat.label} 
+            className="card bg-white p-6 transition-all duration-300 hover:-translate-y-1"
+          >
             <div className="flex items-center justify-between mb-4">
               <div className={`p-3 ${stat.bg} ${stat.color} rounded-xl`}>
-                <stat.icon size={24} />
+                <stat.icon className="w-6 h-6" />
               </div>
-              <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-lg">+12%</span>
+              <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-lg">
+                +12%
+              </span>
             </div>
-            <h3 className="text-slate-500 text-sm font-medium">{stat.label}</h3>
-            <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+            <h3 className="text-sm font-medium text-gray-600 mb-1">{stat.label}</h3>
+            <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Charts and Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         {/* Activity Chart */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-lg font-bold text-slate-900">Activity Overview</h2>
-            <select className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-sm outline-none">
+        <div className="lg:col-span-2 card bg-white p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <h2 className="text-lg font-bold text-gray-900">Activity Overview</h2>
+            <select className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
               <option>Last 6 months</option>
               <option>Last 12 months</option>
             </select>
@@ -130,9 +141,9 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Recent Applications/Actions */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <h2 className="text-lg font-bold text-slate-900 mb-6">Recent Status</h2>
+        {/* Recent Activity */}
+        <div className="card bg-white p-6 overflow-hidden">
+          <h2 className="text-lg font-bold text-gray-900 mb-6">Recent Status</h2>
           <div className="space-y-6">
             {(user.role === UserRole.JOB_SEEKER ? applications : []).slice(0, 4).map((app) => (
               <div key={app.id} className="flex gap-4">
@@ -140,23 +151,23 @@ const Dashboard: React.FC = () => {
                   {app.companyName.charAt(0)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 truncate">{app.jobTitle}</p>
-                  <p className="text-xs text-slate-500 mb-2">{app.companyName}</p>
+                  <p className="text-sm font-semibold text-gray-900 truncate">{app.jobTitle}</p>
+                  <p className="text-xs text-gray-500 mb-2">{app.companyName}</p>
                   <div className="flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full ${app.status === 'Reviewing' ? 'bg-amber-400' : 'bg-green-400'}`} />
-                    <span className="text-[11px] font-medium text-slate-600">{app.status}</span>
+                    <span className="text-xs font-medium text-gray-600">{app.status}</span>
                   </div>
                 </div>
               </div>
             ))}
             {applications.length === 0 && (
               <div className="text-center py-10">
-                <Briefcase className="mx-auto text-slate-200 mb-3" size={40} />
-                <p className="text-slate-400 text-sm">No recent activity found.</p>
+                <Briefcase className="w-10 h-10 mx-auto text-gray-200 mb-3" />
+                <p className="text-gray-400 text-sm">No recent activity found.</p>
               </div>
             )}
           </div>
-          <button className="w-full mt-8 py-2.5 text-indigo-600 text-sm font-bold border border-indigo-100 rounded-xl hover:bg-indigo-50 transition-all">
+          <button className="w-full mt-8 py-3 text-primary-600 text-sm font-bold border border-primary-100 rounded-xl hover:bg-primary-50 transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
             View All Activity
           </button>
         </div>
