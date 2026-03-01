@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { LazyMotion, domAnimation, m } from 'framer-motion';
 import { Briefcase, FileText, Search, Inbox } from 'lucide-react';
 
 interface EmptyStateProps {
@@ -28,14 +28,15 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   const Icon = icons[icon];
 
   return (
-    <motion.div
+    <LazyMotion features={domAnimation}>
+      <m.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
       className="flex flex-col items-center justify-center py-16 px-4 text-center"
     >
       {/* Enhanced icon with gradient background */}
-      <motion.div
+      <m.div
         initial={{ scale: 0, rotate: -180 }}
         animate={{ scale: 1, rotate: 0 }}
         transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
@@ -54,28 +55,28 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         {/* Decorative dots */}
         <div className="absolute -top-2 -right-2 w-4 h-4 bg-primary-400 rounded-full animate-bounce"></div>
         <div className="absolute -bottom-2 -left-2 w-3 h-3 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-      </motion.div>
+      </m.div>
 
-      <motion.h3 
+      <m.h3 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
         className="text-2xl font-bold text-gray-900 mb-3"
       >
         {title}
-      </motion.h3>
+      </m.h3>
       
-      <motion.p 
+      <m.p 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
         className="text-gray-600 mb-8 max-w-md leading-relaxed"
       >
         {description}
-      </motion.p>
+      </m.p>
       
       {action && (
-        <motion.button
+        <m.button
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
@@ -85,8 +86,10 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           className="px-8 py-3.5 bg-gradient-to-r from-primary-600 to-purple-600 text-white rounded-xl font-semibold hover:from-primary-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
         >
           {action.label}
-        </motion.button>
+        </m.button>
       )}
-    </motion.div>
+    </m.div>
+    </LazyMotion>
   );
 };
+

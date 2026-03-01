@@ -2,24 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
 import { authService } from '../services/authService';
 
-interface AuthContextType {
-  user: User | null;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signup: (userData: SignupData) => Promise<{ success: boolean; error?: string }>;
-  logout: () => void;
-  loading: boolean;
-  updateUser: (userData: Partial<User>) => void;
-}
-
-interface SignupData {
-  name: string;
-  email: string;
-  password: string;
-  role: 'JOB_SEEKER' | 'EMPLOYER';
-  companyName?: string;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -29,8 +12,8 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

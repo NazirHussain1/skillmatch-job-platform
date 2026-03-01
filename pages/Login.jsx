@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { LazyMotion, domAnimation, m } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { Briefcase, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
@@ -55,22 +55,23 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left Side - Form */}
-      <motion.div
-        initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gray-50"
-      >
-        <div className="max-w-md w-full space-y-8">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-center"
-          >
+    <LazyMotion features={domAnimation}>
+      <div className="min-h-screen flex">
+        {/* Left Side - Form */}
+        <m.div
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gray-50"
+        >
+          <div className="max-w-md w-full space-y-8">
+            {/* Header */}
+            <m.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-center"
+            >
             <Link to="/" className="inline-flex items-center gap-2 mb-8 group">
               <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                 <Briefcase className="text-white" size={24} />
@@ -81,10 +82,10 @@ const Login: React.FC = () => {
             <p className="text-gray-600">
               Sign in to your account to continue your journey
             </p>
-          </motion.div>
+          </m.div>
 
           {/* Demo Accounts with Enhanced Styling */}
-          <motion.div 
+          <m.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
@@ -106,7 +107,7 @@ const Login: React.FC = () => {
                 </button>
               ))}
             </div>
-          </motion.div>
+          </m.div>
 
           {/* Form */}
           <form className="space-y-6" onSubmit={handleSubmit}>
@@ -202,10 +203,10 @@ const Login: React.FC = () => {
             </p>
           </div>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Right Side - Image/Illustration with Enhanced Gradient */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
@@ -220,23 +221,23 @@ const Login: React.FC = () => {
         
         <div className="relative h-full flex items-center justify-center p-12">
           <div className="text-center text-white max-w-lg">
-            <motion.h3 
+            <m.h3 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
               className="text-3xl sm:text-4xl font-bold mb-6"
             >
               Find Your Perfect Match
-            </motion.h3>
-            <motion.p 
+            </m.h3>
+            <m.p 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
               className="text-lg sm:text-xl text-primary-100 mb-8"
             >
               Connect with opportunities that align with your skills and career goals through our AI-powered platform.
-            </motion.p>
-            <motion.div 
+            </m.p>
+            <m.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
@@ -258,11 +259,11 @@ const Login: React.FC = () => {
                 <div className="text-3xl font-bold mb-1">24/7</div>
                 <div className="text-primary-100">AI Support</div>
               </div>
-            </motion.div>
+            </m.div>
           </div>
         </div>
-      </motion.div>
-    </div>
+      </m.div>
+    </LazyMotion>
   );
 };
 

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { LazyMotion, domAnimation, m } from 'framer-motion';
 import { Job, User, MatchResult } from '../types';
 import { calculateSkillMatch } from '../services/matchingService';
 import { 
@@ -37,7 +37,8 @@ const JobCard: React.FC<JobCardProps> = React.memo(({ job, user, onApply }) => {
   }, [onApply, job.id]);
 
   return (
-    <motion.div
+    <LazyMotion features={domAnimation}>
+      <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -8 }}
@@ -100,7 +101,7 @@ const JobCard: React.FC<JobCardProps> = React.memo(({ job, user, onApply }) => {
               </span>
             </div>
             <div className="w-full bg-primary-200 h-2 rounded-full mb-3 overflow-hidden">
-              <motion.div 
+              <m.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${matchResult.score}%` }}
                 transition={{ duration: 1, ease: "easeOut" }}
@@ -126,7 +127,7 @@ const JobCard: React.FC<JobCardProps> = React.memo(({ job, user, onApply }) => {
         )}
 
         <div className="flex gap-3">
-          <motion.button
+          <m.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleSmartMatch}
@@ -141,8 +142,8 @@ const JobCard: React.FC<JobCardProps> = React.memo(({ job, user, onApply }) => {
                 <span>Smart Match</span>
               </>
             )}
-          </motion.button>
-          <motion.button
+          </m.button>
+          <m.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleApply}
@@ -150,10 +151,11 @@ const JobCard: React.FC<JobCardProps> = React.memo(({ job, user, onApply }) => {
           >
             <span>Apply Now</span>
             <ArrowRight size={18} />
-          </motion.button>
+          </m.button>
         </div>
       </div>
-    </motion.div>
+    </m.div>
+    </LazyMotion>
   );
 }, (prevProps, nextProps) => {
   // Custom comparison function for React.memo
@@ -167,3 +169,4 @@ const JobCard: React.FC<JobCardProps> = React.memo(({ job, user, onApply }) => {
 JobCard.displayName = 'JobCard';
 
 export default JobCard;
+
