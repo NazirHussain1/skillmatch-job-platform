@@ -23,28 +23,8 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['jobseeker', 'employer', 'admin'],
+    enum: ['admin', 'employer', 'jobseeker'],
     default: 'jobseeker'
-  },
-  skills: [{
-    type: String,
-    trim: true
-  }],
-  bio: {
-    type: String,
-    maxlength: [500, 'Bio cannot be more than 500 characters']
-  },
-  companyName: {
-    type: String,
-    trim: true
-  },
-  avatar: {
-    type: String,
-    default: 'https://ui-avatars.com/api/?name=User'
-  },
-  isActive: {
-    type: Boolean,
-    default: true
   }
 }, {
   timestamps: true
@@ -63,13 +43,6 @@ userSchema.pre('save', async function(next) {
 // Match password method
 userSchema.methods.matchPassword = async function(enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
-};
-
-// Remove password from JSON response
-userSchema.methods.toJSON = function() {
-  const user = this.toObject();
-  delete user.password;
-  return user;
 };
 
 module.exports = mongoose.model('User', userSchema);

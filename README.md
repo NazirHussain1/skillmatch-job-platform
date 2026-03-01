@@ -87,6 +87,28 @@ skillmatch-ai/
 - MongoDB Atlas account or local MongoDB
 - npm or yarn
 
+### Quick Install (Recommended)
+
+Use the installation script for your platform:
+
+**Windows:**
+```bash
+install.bat
+```
+
+**Mac/Linux:**
+```bash
+chmod +x install.sh
+./install.sh
+```
+
+The script will:
+- Install all dependencies for backend and frontend
+- Create .env files from templates
+- Verify Node.js installation
+
+### Manual Installation
+
 ### Backend Setup
 
 ```bash
