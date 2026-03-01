@@ -59,7 +59,6 @@ class AuthService {
 
       return { success: true, user, token: data.token };
     } catch (error) {
-      console.error('Login error:', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
   }
@@ -97,7 +96,6 @@ class AuthService {
 
       return { success: true, user, token: data.token };
     } catch (error) {
-      console.error('Signup error:', error);
       return { success: false, error: 'Network error. Please try again.' };
     }
   }
@@ -125,7 +123,6 @@ class AuthService {
         companyName: data.companyName
       };
     } catch (error) {
-      console.error('Get me error:', error);
       return null;
     }
   }

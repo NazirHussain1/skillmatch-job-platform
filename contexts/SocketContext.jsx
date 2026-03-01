@@ -30,12 +30,10 @@ export const SocketProvider = ({ children }) => {
 
       newSocket.on('connect', () => {
         setConnected(true);
-        console.log('Socket connected');
       });
 
       newSocket.on('disconnect', () => {
         setConnected(false);
-        console.log('Socket disconnected');
       });
 
       newSocket.on('notification', (data) => {

@@ -105,29 +105,29 @@ const Signup: React.FC = () => {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Image/Illustration */}
-      <div className="hidden lg:block lg:w-1/2 bg-gradient-to-br from-purple-600 to-indigo-700 relative overflow-hidden">
+      <div className="hidden lg:block lg:w-1/2 bg-gradient-to-br from-purple-600 to-primary-700 relative overflow-hidden">
         <div className="absolute inset-0 bg-black bg-opacity-20"></div>
         <div className="relative h-full flex items-center justify-center p-12">
           <div className="text-center text-white">
-            <h3 className="text-4xl font-bold mb-6">Join the Future of Hiring</h3>
-            <p className="text-xl text-purple-100 mb-8 max-w-md">
+            <h3 className="text-3xl sm:text-4xl font-bold mb-6">Join the Future of Hiring</h3>
+            <p className="text-lg sm:text-xl text-purple-100 mb-8 max-w-md">
               Whether you're looking for talent or opportunities, our AI-powered platform connects the right people with the right roles.
             </p>
             <div className="space-y-4 text-left max-w-sm">
-              <div className="flex items-center space-x-3">
-                <CheckCircle2 className="text-green-300" size={20} />
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="text-green-300 flex-shrink-0" size={20} />
                 <span>AI-powered skill matching</span>
               </div>
-              <div className="flex items-center space-x-3">
-                <CheckCircle2 className="text-green-300" size={20} />
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="text-green-300 flex-shrink-0" size={20} />
                 <span>Real-time job recommendations</span>
               </div>
-              <div className="flex items-center space-x-3">
-                <CheckCircle2 className="text-green-300" size={20} />
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="text-green-300 flex-shrink-0" size={20} />
                 <span>Advanced analytics dashboard</span>
               </div>
-              <div className="flex items-center space-x-3">
-                <CheckCircle2 className="text-green-300" size={20} />
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="text-green-300 flex-shrink-0" size={20} />
                 <span>24/7 support and guidance</span>
               </div>
             </div>
@@ -136,18 +136,18 @@ const Signup: React.FC = () => {
       </div>
 
       {/* Right Side - Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="max-w-md w-full space-y-8 py-12">
           {/* Header */}
           <div className="text-center">
-            <Link to="/" className="inline-flex items-center space-x-2 mb-8">
-              <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
+            <Link to="/" className="inline-flex items-center gap-2 mb-8">
+              <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
                 <Briefcase className="text-white" size={24} />
               </div>
-              <span className="text-2xl font-bold text-slate-900">SkillMatch AI</span>
+              <span className="text-2xl font-bold text-gray-900">SkillMatch AI</span>
             </Link>
-            <h2 className="text-3xl font-bold text-slate-900">Create your account</h2>
-            <p className="mt-2 text-slate-600">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Create your account</h2>
+            <p className="mt-2 text-gray-600">
               Start your journey to better career opportunities
             </p>
           </div>
@@ -155,22 +155,22 @@ const Signup: React.FC = () => {
           {/* Form */}
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-2">
-                <AlertCircle className="text-red-500" size={20} />
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2">
+                <AlertCircle className="text-red-500 flex-shrink-0" size={20} />
                 <span className="text-red-700 text-sm">{error}</span>
               </div>
             )}
 
             {/* Role Selection */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
                 I am a...
               </label>
               <div className="grid grid-cols-2 gap-3">
-                <label className={`relative flex items-center justify-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                <label className={`relative flex items-center justify-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
                   formData.role === 'JOB_SEEKER' 
-                    ? 'border-indigo-500 bg-indigo-50' 
-                    : 'border-slate-200 hover:border-slate-300'
+                    ? 'border-primary-500 bg-primary-50' 
+                    : 'border-gray-200 hover:border-gray-300'
                 }`}>
                   <input
                     type="radio"
@@ -181,14 +181,14 @@ const Signup: React.FC = () => {
                     className="sr-only"
                   />
                   <div className="text-center">
-                    <div className="text-sm font-medium text-slate-900">Job Seeker</div>
-                    <div className="text-xs text-slate-500">Looking for opportunities</div>
+                    <div className="text-sm font-medium text-gray-900">Job Seeker</div>
+                    <div className="text-xs text-gray-500">Looking for opportunities</div>
                   </div>
                 </label>
-                <label className={`relative flex items-center justify-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                <label className={`relative flex items-center justify-center p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
                   formData.role === 'EMPLOYER' 
-                    ? 'border-indigo-500 bg-indigo-50' 
-                    : 'border-slate-200 hover:border-slate-300'
+                    ? 'border-primary-500 bg-primary-50' 
+                    : 'border-gray-200 hover:border-gray-300'
                 }`}>
                   <input
                     type="radio"
@@ -199,8 +199,8 @@ const Signup: React.FC = () => {
                     className="sr-only"
                   />
                   <div className="text-center">
-                    <div className="text-sm font-medium text-slate-900">Employer</div>
-                    <div className="text-xs text-slate-500">Hiring talent</div>
+                    <div className="text-sm font-medium text-gray-900">Employer</div>
+                    <div className="text-xs text-gray-500">Hiring talent</div>
                   </div>
                 </label>
               </div>
@@ -208,7 +208,7 @@ const Signup: React.FC = () => {
 
             <div className="grid grid-cols-1 gap-6">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-2">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                   Full Name
                 </label>
                 <input
@@ -218,13 +218,13 @@ const Signup: React.FC = () => {
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
                   placeholder="Enter your full name"
                 />
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                   Email Address
                 </label>
                 <input
@@ -234,14 +234,14 @@ const Signup: React.FC = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
                   placeholder="Enter your email"
                 />
               </div>
 
               {formData.role === 'EMPLOYER' && (
                 <div>
-                  <label htmlFor="companyName" className="block text-sm font-medium text-slate-700 mb-2">
+                  <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-2">
                     Company Name
                   </label>
                   <input
@@ -251,14 +251,14 @@ const Signup: React.FC = () => {
                     required
                     value={formData.companyName}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
                     placeholder="Enter your company name"
                   />
                 </div>
               )}
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                   Password
                 </label>
                 <div className="relative">
@@ -269,34 +269,34 @@ const Signup: React.FC = () => {
                     required
                     value={formData.password}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 pr-12 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
                     placeholder="Create a password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
                 {formData.password && (
                   <div className="mt-2">
-                    <div className="flex items-center space-x-2">
-                      <div className="flex-1 bg-slate-200 rounded-full h-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
                         <div
-                          className={`h-2 rounded-full transition-all ${getPasswordStrengthColor()}`}
+                          className={`h-2 rounded-full transition-all duration-300 ${getPasswordStrengthColor()}`}
                           style={{ width: `${(passwordStrength / 5) * 100}%` }}
                         />
                       </div>
-                      <span className="text-xs text-slate-600">{getPasswordStrengthText()}</span>
+                      <span className="text-xs text-gray-600 font-medium">{getPasswordStrengthText()}</span>
                     </div>
                   </div>
                 )}
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-2">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
                   Confirm Password
                 </label>
                 <div className="relative">
@@ -307,13 +307,13 @@ const Signup: React.FC = () => {
                     required
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 pr-12 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
                     placeholder="Confirm your password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
                   >
                     {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -321,22 +321,22 @@ const Signup: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-start space-x-2">
+            <div className="flex items-start gap-2">
               <input
                 id="agreeToTerms"
                 name="agreeToTerms"
                 type="checkbox"
                 checked={formData.agreeToTerms}
                 onChange={handleChange}
-                className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 mt-1"
+                className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 mt-1"
               />
-              <label htmlFor="agreeToTerms" className="text-sm text-slate-600">
+              <label htmlFor="agreeToTerms" className="text-sm text-gray-600">
                 I agree to the{' '}
-                <Link to="/terms" className="text-indigo-600 hover:text-indigo-500 font-medium">
+                <Link to="/terms" className="text-primary-600 hover:text-primary-500 font-medium">
                   Terms of Service
                 </Link>{' '}
                 and{' '}
-                <Link to="/privacy" className="text-indigo-600 hover:text-indigo-500 font-medium">
+                <Link to="/privacy" className="text-primary-600 hover:text-primary-500 font-medium">
                   Privacy Policy
                 </Link>
               </label>
@@ -345,7 +345,7 @@ const Signup: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary w-full py-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
@@ -360,9 +360,9 @@ const Signup: React.FC = () => {
 
           {/* Sign in link */}
           <div className="text-center">
-            <p className="text-slate-600">
+            <p className="text-gray-600">
               Already have an account?{' '}
-              <Link to="/login" className="text-indigo-600 hover:text-indigo-500 font-medium">
+              <Link to="/login" className="text-primary-600 hover:text-primary-500 font-medium">
                 Sign in
               </Link>
             </p>

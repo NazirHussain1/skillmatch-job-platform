@@ -62,7 +62,6 @@ class ApiService {
       const data = await response.json();
       return data.map(this.transformJob);
     } catch (error) {
-      console.error('Error fetching jobs:', error);
       return [];
     }
   }
@@ -260,3 +259,4 @@ class ApiService {
 }
 
 export const apiService = new ApiService();
+

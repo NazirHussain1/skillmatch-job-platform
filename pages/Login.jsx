@@ -61,7 +61,7 @@ const Login: React.FC = () => {
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8"
+        className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gray-50"
       >
         <div className="max-w-md w-full space-y-8">
           {/* Header */}
@@ -71,14 +71,14 @@ const Login: React.FC = () => {
             transition={{ delay: 0.2 }}
             className="text-center"
           >
-            <Link to="/" className="inline-flex items-center space-x-2 mb-8">
-              <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
+            <Link to="/" className="inline-flex items-center gap-2 mb-8">
+              <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
                 <Briefcase className="text-white" size={24} />
               </div>
-              <span className="text-2xl font-bold text-slate-900">SkillMatch AI</span>
+              <span className="text-2xl font-bold text-gray-900">SkillMatch AI</span>
             </Link>
-            <h2 className="text-3xl font-bold text-slate-900">Welcome back</h2>
-            <p className="mt-2 text-slate-600">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Welcome back</h2>
+            <p className="mt-2 text-gray-600">
               Sign in to your account to continue your journey
             </p>
           </motion.div>
@@ -91,7 +91,7 @@ const Login: React.FC = () => {
                 <button
                   key={account.email}
                   onClick={() => fillDemoAccount(account.email, account.password)}
-                  className="w-full text-left text-xs text-blue-700 hover:text-blue-900 bg-white rounded px-2 py-1 border border-blue-200 hover:border-blue-300 transition-colors"
+                  className="w-full text-left text-xs text-blue-700 hover:text-blue-900 bg-white rounded px-2 py-1 border border-blue-200 hover:border-blue-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <div className="font-medium">{account.role}</div>
                   <div>{account.email} / {account.password}</div>
@@ -103,14 +103,14 @@ const Login: React.FC = () => {
           {/* Form */}
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-2">
-                <AlertCircle className="text-red-500" size={20} />
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2">
+                <AlertCircle className="text-red-500 flex-shrink-0" size={20} />
                 <span className="text-red-700 text-sm">{error}</span>
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email address
               </label>
               <input
@@ -121,13 +121,13 @@ const Login: React.FC = () => {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
                 placeholder="Enter your email"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
               <div className="relative">
@@ -139,13 +139,13 @@ const Login: React.FC = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 pr-12 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
                   placeholder="Enter your password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -156,13 +156,13 @@ const Login: React.FC = () => {
               <label className="flex items-center">
                 <input
                   type="checkbox"
-                  className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                  className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                 />
-                <span className="ml-2 text-sm text-slate-600">Remember me</span>
+                <span className="ml-2 text-sm text-gray-600">Remember me</span>
               </label>
               <Link
                 to="/forgot-password"
-                className="text-sm text-indigo-600 hover:text-indigo-500 font-medium"
+                className="text-sm text-primary-600 hover:text-primary-500 font-medium"
               >
                 Forgot password?
               </Link>
@@ -171,7 +171,7 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary w-full py-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
@@ -186,9 +186,9 @@ const Login: React.FC = () => {
 
           {/* Sign up link */}
           <div className="text-center">
-            <p className="text-slate-600">
+            <p className="text-gray-600">
               Don't have an account?{' '}
-              <Link to="/signup" className="text-indigo-600 hover:text-indigo-500 font-medium">
+              <Link to="/signup" className="text-primary-600 hover:text-primary-500 font-medium">
                 Sign up for free
               </Link>
             </p>
@@ -201,31 +201,31 @@ const Login: React.FC = () => {
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
-        className="hidden lg:block lg:w-1/2 bg-gradient-to-br from-indigo-600 to-purple-700 relative overflow-hidden"
+        className="hidden lg:block lg:w-1/2 bg-gradient-to-br from-primary-600 to-purple-700 relative overflow-hidden"
       >
         <div className="absolute inset-0 bg-black bg-opacity-20"></div>
         <div className="relative h-full flex items-center justify-center p-12">
           <div className="text-center text-white">
-            <h3 className="text-4xl font-bold mb-6">Find Your Perfect Match</h3>
-            <p className="text-xl text-indigo-100 mb-8 max-w-md">
+            <h3 className="text-3xl sm:text-4xl font-bold mb-6">Find Your Perfect Match</h3>
+            <p className="text-lg sm:text-xl text-primary-100 mb-8 max-w-md">
               Connect with opportunities that align with your skills and career goals through our AI-powered platform.
             </p>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="bg-white bg-opacity-10 rounded-lg p-4">
                 <div className="text-2xl font-bold">10K+</div>
-                <div className="text-indigo-100">Active Jobs</div>
+                <div className="text-primary-100">Active Jobs</div>
               </div>
               <div className="bg-white bg-opacity-10 rounded-lg p-4">
                 <div className="text-2xl font-bold">5K+</div>
-                <div className="text-indigo-100">Companies</div>
+                <div className="text-primary-100">Companies</div>
               </div>
               <div className="bg-white bg-opacity-10 rounded-lg p-4">
                 <div className="text-2xl font-bold">95%</div>
-                <div className="text-indigo-100">Match Accuracy</div>
+                <div className="text-primary-100">Match Accuracy</div>
               </div>
               <div className="bg-white bg-opacity-10 rounded-lg p-4">
                 <div className="text-2xl font-bold">24/7</div>
-                <div className="text-indigo-100">AI Support</div>
+                <div className="text-primary-100">AI Support</div>
               </div>
             </div>
           </div>
