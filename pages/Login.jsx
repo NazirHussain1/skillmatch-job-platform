@@ -71,34 +71,42 @@ const Login: React.FC = () => {
             transition={{ delay: 0.2 }}
             className="text-center"
           >
-            <Link to="/" className="inline-flex items-center gap-2 mb-8">
-              <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
+            <Link to="/" className="inline-flex items-center gap-2 mb-8 group">
+              <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                 <Briefcase className="text-white" size={24} />
               </div>
-              <span className="text-2xl font-bold text-gray-900">SkillMatch AI</span>
+              <span className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">SkillMatch AI</span>
             </Link>
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Welcome back</h2>
-            <p className="mt-2 text-gray-600">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
+            <p className="text-gray-600">
               Sign in to your account to continue your journey
             </p>
           </motion.div>
 
-          {/* Demo Accounts */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-blue-900 mb-2">Demo Accounts</h3>
+          {/* Demo Accounts with Enhanced Styling */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 shadow-sm"
+          >
+            <h3 className="text-sm font-medium text-blue-900 mb-3 flex items-center gap-2">
+              <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+              Demo Accounts
+            </h3>
             <div className="space-y-2">
               {demoAccounts.map((account) => (
                 <button
                   key={account.email}
                   onClick={() => fillDemoAccount(account.email, account.password)}
-                  className="w-full text-left text-xs text-blue-700 hover:text-blue-900 bg-white rounded px-2 py-1 border border-blue-200 hover:border-blue-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full text-left text-xs text-blue-700 hover:text-blue-900 bg-white rounded-lg px-3 py-2 border border-blue-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <div className="font-medium">{account.role}</div>
-                  <div>{account.email} / {account.password}</div>
+                  <div className="font-medium mb-1">{account.role}</div>
+                  <div className="text-blue-600">{account.email} / {account.password}</div>
                 </button>
               ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* Form */}
           <form className="space-y-6" onSubmit={handleSubmit}>
@@ -171,7 +179,7 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full py-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary w-full py-3.5 text-base font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
             >
               {loading ? (
                 <>
@@ -188,7 +196,7 @@ const Login: React.FC = () => {
           <div className="text-center">
             <p className="text-gray-600">
               Don't have an account?{' '}
-              <Link to="/signup" className="text-primary-600 hover:text-primary-500 font-medium">
+              <Link to="/signup" className="text-primary-600 hover:text-primary-500 font-semibold hover:underline transition-all duration-200">
                 Sign up for free
               </Link>
             </p>
@@ -196,38 +204,61 @@ const Login: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* Right Side - Image/Illustration */}
+      {/* Right Side - Image/Illustration with Enhanced Gradient */}
       <motion.div
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
-        className="hidden lg:block lg:w-1/2 bg-gradient-to-br from-primary-600 to-purple-700 relative overflow-hidden"
+        className="hidden lg:block lg:w-1/2 bg-gradient-to-br from-primary-600 via-purple-600 to-pink-600 relative overflow-hidden"
       >
-        <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+        {/* Animated background patterns */}
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-20 right-20 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-white/5 rounded-full blur-2xl"></div>
+        </div>
+        
         <div className="relative h-full flex items-center justify-center p-12">
-          <div className="text-center text-white">
-            <h3 className="text-3xl sm:text-4xl font-bold mb-6">Find Your Perfect Match</h3>
-            <p className="text-lg sm:text-xl text-primary-100 mb-8 max-w-md">
+          <div className="text-center text-white max-w-lg">
+            <motion.h3 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-3xl sm:text-4xl font-bold mb-6"
+            >
+              Find Your Perfect Match
+            </motion.h3>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="text-lg sm:text-xl text-primary-100 mb-8"
+            >
               Connect with opportunities that align with your skills and career goals through our AI-powered platform.
-            </p>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="bg-white bg-opacity-10 rounded-lg p-4">
-                <div className="text-2xl font-bold">10K+</div>
+            </motion.p>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="grid grid-cols-2 gap-4 text-sm"
+            >
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 hover:bg-white/20 transition-all duration-300 hover:scale-105">
+                <div className="text-3xl font-bold mb-1">10K+</div>
                 <div className="text-primary-100">Active Jobs</div>
               </div>
-              <div className="bg-white bg-opacity-10 rounded-lg p-4">
-                <div className="text-2xl font-bold">5K+</div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 hover:bg-white/20 transition-all duration-300 hover:scale-105">
+                <div className="text-3xl font-bold mb-1">5K+</div>
                 <div className="text-primary-100">Companies</div>
               </div>
-              <div className="bg-white bg-opacity-10 rounded-lg p-4">
-                <div className="text-2xl font-bold">95%</div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 hover:bg-white/20 transition-all duration-300 hover:scale-105">
+                <div className="text-3xl font-bold mb-1">95%</div>
                 <div className="text-primary-100">Match Accuracy</div>
               </div>
-              <div className="bg-white bg-opacity-10 rounded-lg p-4">
-                <div className="text-2xl font-bold">24/7</div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 hover:bg-white/20 transition-all duration-300 hover:scale-105">
+                <div className="text-3xl font-bold mb-1">24/7</div>
                 <div className="text-primary-100">AI Support</div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </motion.div>
