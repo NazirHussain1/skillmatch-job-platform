@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-hot-toast';
 import { login, reset } from '../features/auth/authSlice';
@@ -12,8 +12,12 @@ function Login() {
   });
 
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const { user, isLoading, isError, isSuccess, message } = useSelector((state) => state.auth);
+
+  // Get the page user was trying to access before login
+  const from = location.state?.from?.pathname || '/dashboard';
 
   useEffect(() => {
     if (isError) {
@@ -21,11 +25,12 @@ function Login() {
     }
 
     if (isSuccess || user) {
-      navigate('/dashboard');
+      // Redirect to the page they were trying to access
+      navigate(from, { replace: true });
     }
 
     dispatch(reset());
-  }, [user, isError, isSuccess, message, navigate, dispatch]);
+  }, [user, isError, isSuccess, message, navigate, dispatch, from]);
 
   const onChange = (e) => {
     setFormData((prev) => ({

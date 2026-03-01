@@ -1,6 +1,11 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
 import { Toaster } from 'react-hot-toast';
+import useAuthPersist from './hooks/useAuthPersist';
+
+// Route Components
+import ProtectedRoute from './components/ProtectedRoute';
+import PublicRoute from './components/PublicRoute';
+import RoleBasedRoute from './components/RoleBasedRoute';
 
 // Layouts
 import MainLayout from './layouts/MainLayout';
@@ -15,7 +20,8 @@ import Applications from './pages/Applications';
 import Profile from './pages/Profile';
 
 function App() {
-  const { user } = useSelector((state) => state.auth);
+  // Enable auth persistence across tabs
+  useAuthPersist();
 
   return (
     <>
@@ -23,35 +29,73 @@ function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Landing />} />
+        
+        {/* Auth Routes - Only accessible when NOT logged in */}
         <Route 
           path="/login" 
-          element={user ? <Navigate to="/dashboard" /> : <Login />} 
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          } 
         />
         <Route 
           path="/register" 
-          element={user ? <Navigate to="/dashboard" /> : <Register />} 
+          element={
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
+          } 
         />
 
-        {/* Protected Routes */}
+        {/* Protected Routes - Require authentication */}
         <Route 
           path="/dashboard" 
-          element={user ? <MainLayout><Dashboard /></MainLayout> : <Navigate to="/login" />} 
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Dashboard />
+              </MainLayout>
+            </ProtectedRoute>
+          } 
         />
+        
         <Route 
           path="/jobs" 
-          element={user ? <MainLayout><Jobs /></MainLayout> : <Navigate to="/login" />} 
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Jobs />
+              </MainLayout>
+            </ProtectedRoute>
+          } 
         />
-        <Route 
-          path="/applications" 
-          element={user ? <MainLayout><Applications /></MainLayout> : <Navigate to="/login" />} 
-        />
+        
         <Route 
           path="/profile" 
-          element={user ? <MainLayout><Profile /></MainLayout> : <Navigate to="/login" />} 
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <Profile />
+              </MainLayout>
+            </ProtectedRoute>
+          } 
         />
 
-        {/* Catch all */}
-        <Route path="*" element={<Navigate to="/" />} />
+        {/* Role-Based Route - Only for jobseekers */}
+        <Route 
+          path="/applications" 
+          element={
+            <RoleBasedRoute allowedRoles={['jobseeker']}>
+              <MainLayout>
+                <Applications />
+              </MainLayout>
+            </RoleBasedRoute>
+          } 
+        />
+
+        {/* Catch all - Redirect to home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );
