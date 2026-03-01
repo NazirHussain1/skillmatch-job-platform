@@ -4,11 +4,13 @@ const jobSchema = new mongoose.Schema({
   title: {
     type: String,
     required: [true, 'Please add a job title'],
-    trim: true
+    trim: true,
+    maxlength: [100, 'Title cannot be more than 100 characters']
   },
   description: {
     type: String,
-    required: [true, 'Please add a description']
+    required: [true, 'Please add a description'],
+    maxlength: [2000, 'Description cannot be more than 2000 characters']
   },
   companyName: {
     type: String,
@@ -21,18 +23,33 @@ const jobSchema = new mongoose.Schema({
     trim: true
   },
   salary: {
-    type: String,
-    trim: true
+    min: {
+      type: Number,
+      default: 0
+    },
+    max: {
+      type: Number,
+      default: 0
+    },
+    currency: {
+      type: String,
+      default: 'USD'
+    }
   },
   type: {
     type: String,
-    enum: ['Full-time', 'Part-time', 'Contract', 'Remote'],
-    default: 'Full-time'
+    enum: ['full-time', 'part-time', 'contract', 'remote', 'internship'],
+    default: 'full-time'
   },
   requiredSkills: [{
     type: String,
     trim: true
   }],
+  experience: {
+    type: String,
+    enum: ['entry', 'mid', 'senior', 'lead'],
+    default: 'entry'
+  },
   employer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -42,12 +59,16 @@ const jobSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  postedAt: {
-    type: String,
-    default: () => new Date().toLocaleDateString()
+  applicationsCount: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true
 });
+
+// Index for search optimization
+jobSchema.index({ title: 'text', description: 'text', companyName: 'text' });
+jobSchema.index({ employer: 1, isActive: 1 });
 
 module.exports = mongoose.model('Job', jobSchema);

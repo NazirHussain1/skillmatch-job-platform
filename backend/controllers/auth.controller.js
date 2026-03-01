@@ -1,87 +1,109 @@
-const jwt = require('jsonwebtoken');
+const asyncHandler = require('../utils/asyncHandler');
+const ApiResponse = require('../utils/ApiResponse');
+const generateToken = require('../utils/generateToken');
 const User = require('../models/User.model');
-
-// Generate JWT Token
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d'
-  });
-};
 
 // @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
-const register = async (req, res) => {
-  try {
-    const { name, email, password, role, companyName } = req.body;
+const register = asyncHandler(async (req, res) => {
+  const { name, email, password, role, companyName } = req.body;
 
-    // Check if user exists
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
-    }
+  // Check if user exists
+  const userExists = await User.findOne({ email });
+  if (userExists) {
+    return ApiResponse.error(res, 'User already exists with this email', 400);
+  }
 
-    // Create user
-    const user = await User.create({
-      name,
-      email,
-      password,
-      role: role || 'JOB_SEEKER',
-      companyName
-    });
+  // Create user
+  const user = await User.create({
+    name,
+    email,
+    password,
+    role: role || 'jobseeker',
+    companyName: role === 'employer' ? companyName : undefined
+  });
 
-    if (user) {
-      res.status(201).json({
+  if (user) {
+    return ApiResponse.success(
+      res,
+      'User registered successfully',
+      {
         _id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
         token: generateToken(user._id)
-      });
-    }
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+      },
+      201
+    );
   }
-};
+
+  return ApiResponse.error(res, 'Invalid user data', 400);
+});
 
 // @desc    Login user
 // @route   POST /api/auth/login
 // @access  Public
-const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+const login = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
 
-    // Check for user
-    const user = await User.findOne({ email }).select('+password');
-    
-    if (user && (await user.matchPassword(password))) {
-      res.json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        skills: user.skills,
-        companyName: user.companyName,
-        token: generateToken(user._id)
-      });
-    } else {
-      res.status(401).json({ message: 'Invalid email or password' });
-    }
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+  // Check for user
+  const user = await User.findOne({ email }).select('+password');
+  
+  if (!user) {
+    return ApiResponse.error(res, 'Invalid email or password', 401);
   }
-};
+
+  if (!user.isActive) {
+    return ApiResponse.error(res, 'Your account has been deactivated', 403);
+  }
+
+  // Check password
+  const isPasswordMatch = await user.matchPassword(password);
+  
+  if (!isPasswordMatch) {
+    return ApiResponse.error(res, 'Invalid email or password', 401);
+  }
+
+  return ApiResponse.success(
+    res,
+    'Login successful',
+    {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      skills: user.skills,
+      companyName: user.companyName,
+      avatar: user.avatar,
+      token: generateToken(user._id)
+    }
+  );
+});
 
 // @desc    Get current user
 // @route   GET /api/auth/me
 // @access  Private
-const getMe = async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id);
-    res.json(user);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
+const getMe = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  
+  return ApiResponse.success(
+    res,
+    'User retrieved successfully',
+    user
+  );
+});
 
-module.exports = { register, login, getMe };
+// @desc    Logout user
+// @route   POST /api/auth/logout
+// @access  Private
+const logout = asyncHandler(async (req, res) => {
+  return ApiResponse.success(
+    res,
+    'Logout successful',
+    null
+  );
+});
+
+module.exports = { register, login, getMe, logout };
