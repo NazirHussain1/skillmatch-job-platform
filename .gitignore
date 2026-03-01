@@ -33,6 +33,9 @@ Thumbs.db
 
 # Testing
 coverage/
+*.test.js
+*.spec.js
+test-*.js
 
 # Misc
 *.pem
