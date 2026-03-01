@@ -1,17 +1,15 @@
 const { body, param } = require('express-validator');
 
-const createApplicationValidator = [
-  body('jobId')
-    .notEmpty()
-    .withMessage('Job ID is required')
+const jobIdValidator = [
+  param('jobId')
     .isMongoId()
-    .withMessage('Invalid job ID'),
-  
-  body('coverLetter')
-    .optional()
-    .trim()
-    .isLength({ max: 1000 })
-    .withMessage('Cover letter must not exceed 1000 characters')
+    .withMessage('Invalid job ID')
+];
+
+const applicationIdValidator = [
+  param('id')
+    .isMongoId()
+    .withMessage('Invalid application ID')
 ];
 
 const updateApplicationStatusValidator = [
@@ -22,24 +20,12 @@ const updateApplicationStatusValidator = [
   body('status')
     .notEmpty()
     .withMessage('Status is required')
-    .isIn(['pending', 'reviewing', 'shortlisted', 'rejected', 'accepted'])
-    .withMessage('Invalid status value'),
-  
-  body('notes')
-    .optional()
-    .trim()
-    .isLength({ max: 500 })
-    .withMessage('Notes must not exceed 500 characters')
-];
-
-const applicationIdValidator = [
-  param('id')
-    .isMongoId()
-    .withMessage('Invalid application ID')
+    .isIn(['pending', 'accepted', 'rejected'])
+    .withMessage('Status must be pending, accepted, or rejected')
 ];
 
 module.exports = {
-  createApplicationValidator,
-  updateApplicationStatusValidator,
-  applicationIdValidator
+  jobIdValidator,
+  applicationIdValidator,
+  updateApplicationStatusValidator
 };

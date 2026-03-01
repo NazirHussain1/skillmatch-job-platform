@@ -3,77 +3,18 @@ const ApiResponse = require('../utils/ApiResponse');
 const Application = require('../models/Application.model');
 const Job = require('../models/Job.model');
 
-// @desc    Get all applications for a user
-// @route   GET /api/applications
-// @access  Private
-const getApplications = asyncHandler(async (req, res) => {
-  let query = {};
-  
-  // If jobseeker, get their applications
-  if (req.user.role === 'jobseeker') {
-    query.applicant = req.user._id;
-  }
-  // If employer, get applications for their jobs
-  else if (req.user.role === 'employer') {
-    const employerJobs = await Job.find({ employer: req.user._id }).select('_id');
-    const jobIds = employerJobs.map(job => job._id);
-    query.job = { $in: jobIds };
-  }
-  
-  const applications = await Application.find(query)
-    .populate('job', 'title companyName location salary type')
-    .populate('applicant', 'name email skills avatar')
-    .sort({ createdAt: -1 });
-  
-  return ApiResponse.success(
-    res,
-    'Applications retrieved successfully',
-    applications
-  );
-});
-
-// @desc    Get single application
-// @route   GET /api/applications/:id
-// @access  Private
-const getApplication = asyncHandler(async (req, res) => {
-  const application = await Application.findById(req.params.id)
-    .populate('job', 'title companyName location salary type employer')
-    .populate('applicant', 'name email skills avatar bio');
-  
-  if (!application) {
-    return ApiResponse.error(res, 'Application not found', 404);
-  }
-  
-  // Check authorization
-  const isApplicant = application.applicant._id.toString() === req.user._id.toString();
-  const isEmployer = application.job.employer.toString() === req.user._id.toString();
-  const isAdmin = req.user.role === 'admin';
-  
-  if (!isApplicant && !isEmployer && !isAdmin) {
-    return ApiResponse.error(res, 'Not authorized to view this application', 403);
-  }
-  
-  return ApiResponse.success(
-    res,
-    'Application retrieved successfully',
-    application
-  );
-});
-
 // @desc    Create application
-// @route   POST /api/applications
+// @route   POST /api/applications/:jobId
 // @access  Private (Jobseeker only)
 const createApplication = asyncHandler(async (req, res) => {
-  const { jobId, coverLetter, resume } = req.body;
+  const { jobId } = req.params;
   
   // Check if job exists
   const job = await Job.findById(jobId);
   if (!job) {
-    return ApiResponse.error(res, 'Job not found', 404);
-  }
-  
-  if (!job.isActive) {
-    return ApiResponse.error(res, 'This job is no longer active', 400);
+    return res.status(404).json(
+      ApiResponse.error('Job not found', 404)
+    );
   }
   
   // Check if already applied
@@ -83,90 +24,111 @@ const createApplication = asyncHandler(async (req, res) => {
   });
   
   if (existingApplication) {
-    return ApiResponse.error(res, 'You have already applied to this job', 400);
+    return res.status(400).json(
+      ApiResponse.error('You have already applied to this job', 400)
+    );
   }
   
+  // Create application
   const application = await Application.create({
     job: jobId,
-    applicant: req.user._id,
-    coverLetter,
-    resume
+    applicant: req.user._id
   });
   
+  // Populate and return
   const populatedApplication = await Application.findById(application._id)
-    .populate('job', 'title companyName location salary type')
-    .populate('applicant', 'name email skills avatar');
+    .populate('job', 'title company location salary')
+    .populate('applicant', 'name email');
   
-  return ApiResponse.success(
-    res,
-    'Application submitted successfully',
-    populatedApplication,
-    201
+  return res.status(201).json(
+    ApiResponse.success('Application submitted successfully', populatedApplication)
+  );
+});
+
+// @desc    Get my applications
+// @route   GET /api/applications/my
+// @access  Private
+const getMyApplications = asyncHandler(async (req, res) => {
+  const applications = await Application.find({ applicant: req.user._id })
+    .populate('job', 'title company location salary')
+    .sort({ createdAt: -1 });
+  
+  return res.status(200).json(
+    ApiResponse.success('Applications retrieved successfully', applications)
+  );
+});
+
+// @desc    Get applications for a job
+// @route   GET /api/applications/job/:jobId
+// @access  Private (Employer only)
+const getJobApplications = asyncHandler(async (req, res) => {
+  const { jobId } = req.params;
+  
+  // Check if job exists
+  const job = await Job.findById(jobId);
+  if (!job) {
+    return res.status(404).json(
+      ApiResponse.error('Job not found', 404)
+    );
+  }
+  
+  // Check if user is the job owner
+  if (job.employer.toString() !== req.user._id.toString()) {
+    return res.status(403).json(
+      ApiResponse.error('Not authorized to view applications for this job', 403)
+    );
+  }
+  
+  // Get applications
+  const applications = await Application.find({ job: jobId })
+    .populate('applicant', 'name email')
+    .sort({ createdAt: -1 });
+  
+  return res.status(200).json(
+    ApiResponse.success('Applications retrieved successfully', applications)
   );
 });
 
 // @desc    Update application status
-// @route   PUT /api/applications/:id/status
-// @access  Private (Employer/Admin only)
+// @route   PUT /api/applications/:id
+// @access  Private (Employer only)
 const updateApplicationStatus = asyncHandler(async (req, res) => {
-  const { status, notes } = req.body;
+  const { status } = req.body;
   
+  // Find application and populate job
   const application = await Application.findById(req.params.id)
     .populate('job');
   
   if (!application) {
-    return ApiResponse.error(res, 'Application not found', 404);
+    return res.status(404).json(
+      ApiResponse.error('Application not found', 404)
+    );
   }
   
-  // Check if user is the job owner or admin
-  const isEmployer = application.job.employer.toString() === req.user._id.toString();
-  const isAdmin = req.user.role === 'admin';
-  
-  if (!isEmployer && !isAdmin) {
-    return ApiResponse.error(res, 'Not authorized to update this application', 403);
+  // Check if user is the job owner
+  if (application.job.employer.toString() !== req.user._id.toString()) {
+    return res.status(403).json(
+      ApiResponse.error('Not authorized to update this application', 403)
+    );
   }
   
+  // Update status
   application.status = status;
-  if (notes) {
-    application.notes = notes;
-  }
-  
   await application.save();
   
-  return ApiResponse.success(
-    res,
-    'Application status updated successfully',
-    application
+  // Return updated application with populated fields
+  const updatedApplication = await Application.findById(application._id)
+    .populate('job', 'title company location salary')
+    .populate('applicant', 'name email');
+  
+  return res.status(200).json(
+    ApiResponse.success('Application status updated successfully', updatedApplication)
   );
 });
 
-// @desc    Delete application
-// @route   DELETE /api/applications/:id
-// @access  Private
-const deleteApplication = asyncHandler(async (req, res) => {
-  const application = await Application.findById(req.params.id);
-  
-  if (!application) {
-    return ApiResponse.error(res, 'Application not found', 404);
-  }
-  
-  // Check if user is the applicant or admin
-  const isApplicant = application.applicant.toString() === req.user._id.toString();
-  const isAdmin = req.user.role === 'admin';
-  
-  if (!isApplicant && !isAdmin) {
-    return ApiResponse.error(res, 'Not authorized to delete this application', 403);
-  }
-  
-  await application.deleteOne();
-  
-  return ApiResponse.success(res, 'Application deleted successfully', null);
-});
-
 module.exports = {
-  getApplications,
-  getApplication,
   createApplication,
-  updateApplicationStatus,
-  deleteApplication
+  getMyApplications,
+  getJobApplications,
+  updateApplicationStatus
 };
