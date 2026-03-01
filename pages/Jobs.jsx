@@ -10,9 +10,9 @@ import { EmptyState } from '../components/EmptyState';
 import { StaggerContainer, StaggerItem } from '../components/PageTransition';
 import { Search, Filter, MapPin, Briefcase, Clock, Loader2 } from 'lucide-react';
 
-const Jobs: React.FC = () => {
+const Jobs = () => {
   const { user } = useAuth();
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
@@ -34,13 +34,13 @@ const Jobs: React.FC = () => {
       const jobsData = await apiService.getJobs(filters);
       setJobs(jobsData);
     } catch (error) {
-      console.error('Error loading jobs:', error);
+      console.error('Error loading jobs);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleApply = async (jobId: string) => {
+  const handleApply = async (jobId) => {
     if (!user) return;
     
     try {
@@ -48,17 +48,11 @@ const Jobs: React.FC = () => {
       if (!job) return;
 
       await apiService.createApplication({
-        jobId: job.id,
-        userId: user.id,
-        jobTitle: job.title,
-        companyName: job.companyName,
-        status: 'Pending',
-        matchScore: 85,
-      });
+        jobId);
 
       toast.success('Application submitted successfully!');
-    } catch (error: any) {
-      console.error('Error applying to job:', error);
+    } catch (error) {
+      console.error('Error applying to job);
       toast.error(error.message || 'Failed to submit application');
     }
   };
@@ -70,24 +64,8 @@ const Jobs: React.FC = () => {
     <>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Find Your Next Opportunity</h1>
-        <p className="text-gray-600">
-          Discover jobs that match your skills and career goals with AI-powered recommendations.
-        </p>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="card bg-white p-4 sm:p-6 mb-8">
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Search Input */}
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Search jobs, companies, or skills..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+        <h1 className="text-2xl sm) => setSearchQuery(e.target.value)}
+              className="input pl-10"
             />
           </div>
 
@@ -97,7 +75,7 @@ const Jobs: React.FC = () => {
             <select
               value={locationFilter}
               onChange={(e) => setLocationFilter(e.target.value)}
-              className="pl-10 pr-8 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white min-w-[200px] transition-all duration-200"
+              className="select pl-10 min-w-[200px]"
             >
               <option value="">All Locations</option>
               {locations.map((location) => (
@@ -114,7 +92,7 @@ const Jobs: React.FC = () => {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="pl-10 pr-8 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white min-w-[150px] transition-all duration-200"
+              className="select pl-10 min-w-[150px]"
             >
               <option value="">All Types</option>
               {jobTypes.map((type) => (
@@ -128,7 +106,7 @@ const Jobs: React.FC = () => {
           {/* Filter Toggle */}
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="btn-secondary"
           >
             <Filter size={20} />
             <span className="hidden sm:inline">Filters</span>
@@ -138,46 +116,7 @@ const Jobs: React.FC = () => {
         {/* Advanced Filters */}
         {showFilters && (
           <div className="mt-6 pt-6 border-t border-gray-200">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Salary Range
-                </label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200">
-                  <option>Any Salary</option>
-                  <option>$50k - $75k</option>
-                  <option>$75k - $100k</option>
-                  <option>$100k - $150k</option>
-                  <option>$150k+</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Experience Level
-                </label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200">
-                  <option>Any Level</option>
-                  <option>Entry Level</option>
-                  <option>Mid Level</option>
-                  <option>Senior Level</option>
-                  <option>Executive</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Posted Date
-                </label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200">
-                  <option>Any Time</option>
-                  <option>Last 24 hours</option>
-                  <option>Last 3 days</option>
-                  <option>Last week</option>
-                  <option>Last month</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        )}
+            <div className="grid grid-cols-1 md)}
       </div>
 
       {/* Results Header */}
@@ -200,15 +139,13 @@ const Jobs: React.FC = () => {
 
       {/* Job Listings */}
       {loading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+        <div className="grid grid-cols-1 lg) => (
             <JobCardSkeleton key={i} />
           ))}
         </div>
       ) : jobs.length > 0 ? (
         <StaggerContainer>
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {jobs.map((job) => user && (
+          <div className="grid grid-cols-1 lg) => user && (
               <StaggerItem key={job.id}>
                 <JobCard
                   job={job}
@@ -225,8 +162,7 @@ const Jobs: React.FC = () => {
           title="No jobs found"
           description="Try adjusting your search criteria or filters to find more opportunities."
           action={{
-            label: 'Clear Filters',
-            onClick: () => {
+            label) => {
               setSearchQuery('');
               setLocationFilter('');
               setTypeFilter('');
@@ -238,7 +174,7 @@ const Jobs: React.FC = () => {
       {/* Load More Button */}
       {jobs.length > 0 && jobs.length % 12 === 0 && (
         <div className="text-center mt-12">
-          <button className="px-8 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500">
+          <button className="btn-secondary px-8">
             Load More Jobs
           </button>
         </div>

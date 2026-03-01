@@ -14,38 +14,20 @@ import {
   CheckCircle2
 } from 'lucide-react';
 
-const Settings: React.FC = () => {
+const Settings = () => {
   const { user, updateUser } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState(null);
 
   const [profileData, setProfileData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    bio: user?.bio || '',
-    location: '',
-    website: '',
-    linkedin: '',
-    github: '',
-  });
+    name);
 
   const [notificationSettings, setNotificationSettings] = useState({
-    emailNotifications: true,
-    pushNotifications: true,
-    jobAlerts: true,
-    applicationUpdates: true,
-    marketingEmails: false,
-    weeklyDigest: true,
-  });
+    emailNotifications);
 
   const [privacySettings, setPrivacySettings] = useState({
-    profileVisibility: 'public',
-    showEmail: false,
-    showLocation: true,
-    allowMessaging: true,
-    showActivity: false,
-  });
+    profileVisibility);
 
   const tabs = [
     { id: 'profile', name: 'Profile', icon: User },
@@ -64,14 +46,12 @@ const Settings: React.FC = () => {
       
       if (activeTab === 'profile') {
         updateUser({
-          name: profileData.name,
-          bio: profileData.bio,
-        });
+          name);
       }
 
-      setMessage({ type: 'success', text: 'Settings saved successfully!' });
+      setMessage({ type);
     } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to save settings. Please try again.' });
+      setMessage({ type);
     } finally {
       setSaving(false);
     }
@@ -81,15 +61,7 @@ const Settings: React.FC = () => {
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Full Name
-            </label>
-            <input
-              type="text"
-              value={profileData.name}
-              onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+        <div className="grid grid-cols-1 md) => setProfileData({ ...profileData, name)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
             />
           </div>
@@ -100,7 +72,7 @@ const Settings: React.FC = () => {
             <input
               type="email"
               value={profileData.email}
-              onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+              onChange={(e) => setProfileData({ ...profileData, email)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
             />
           </div>
@@ -111,7 +83,7 @@ const Settings: React.FC = () => {
             <textarea
               rows={4}
               value={profileData.bio}
-              onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
+              onChange={(e) => setProfileData({ ...profileData, bio)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
               placeholder="Tell us about yourself..."
             />
@@ -123,7 +95,7 @@ const Settings: React.FC = () => {
             <input
               type="text"
               value={profileData.location}
-              onChange={(e) => setProfileData({ ...profileData, location: e.target.value })}
+              onChange={(e) => setProfileData({ ...profileData, location)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
               placeholder="City, Country"
             />
@@ -135,7 +107,7 @@ const Settings: React.FC = () => {
             <input
               type="url"
               value={profileData.website}
-              onChange={(e) => setProfileData({ ...profileData, website: e.target.value })}
+              onChange={(e) => setProfileData({ ...profileData, website)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
               placeholder="https://yourwebsite.com"
             />
@@ -153,7 +125,7 @@ const Settings: React.FC = () => {
             <input
               type="url"
               value={profileData.linkedin}
-              onChange={(e) => setProfileData({ ...profileData, linkedin: e.target.value })}
+              onChange={(e) => setProfileData({ ...profileData, linkedin)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
               placeholder="https://linkedin.com/in/username"
             />
@@ -165,7 +137,7 @@ const Settings: React.FC = () => {
             <input
               type="url"
               value={profileData.github}
-              onChange={(e) => setProfileData({ ...profileData, github: e.target.value })}
+              onChange={(e) => setProfileData({ ...profileData, github)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
               placeholder="https://github.com/username"
             />
@@ -201,8 +173,7 @@ const Settings: React.FC = () => {
                   checked={value}
                   onChange={(e) => setNotificationSettings({
                     ...notificationSettings,
-                    [key]: e.target.checked
-                  })}
+                    [key])}
                   className="sr-only peer"
                 />
                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
@@ -227,8 +198,7 @@ const Settings: React.FC = () => {
               value={privacySettings.profileVisibility}
               onChange={(e) => setPrivacySettings({
                 ...privacySettings,
-                profileVisibility: e.target.value
-              })}
+                profileVisibility)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200"
             >
               <option value="public">Everyone</option>
@@ -256,8 +226,7 @@ const Settings: React.FC = () => {
                   checked={value as boolean}
                   onChange={(e) => setPrivacySettings({
                     ...privacySettings,
-                    [key]: e.target.checked
-                  })}
+                    [key])}
                   className="sr-only peer"
                 />
                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
@@ -273,61 +242,12 @@ const Settings: React.FC = () => {
     <div className="space-y-6">
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Password & Security</h3>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <button className="btn-primary px-6 py-3">
-            Change Password
-          </button>
-          <button className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500">
-            Enable Two-Factor Authentication
-          </button>
-        </div>
-      </div>
-
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Data & Privacy</h3>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <button className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500">
-            Download My Data
-          </button>
-          <button className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500">
-            Request Data Deletion
-          </button>
-        </div>
-      </div>
-
-      <div className="border-t border-gray-200 pt-6">
-        <h3 className="text-lg font-semibold text-red-600 mb-4">Danger Zone</h3>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="text-red-500 mt-0.5 flex-shrink-0" size={20} />
-            <div className="flex-1">
-              <h4 className="font-medium text-red-900">Delete Account</h4>
-              <p className="text-sm text-red-700 mt-1">
-                Once you delete your account, there is no going back. Please be certain.
-              </p>
-              <button className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
-                <Trash2 size={16} />
-                <span>Delete Account</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+        <div className="flex flex-col sm);
 
   return (
     <>
       <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Settings</h1>
-        <p className="text-gray-600">Manage your account settings and preferences.</p>
-      </div>
-
-      <div className="flex flex-col lg:flex-row gap-6 sm:gap-8">
-        {/* Sidebar */}
-        <div className="lg:w-64">
-          <nav className="card bg-white p-2">
-            {tabs.map((tab) => {
+        <h1 className="text-2xl sm) => {
               const Icon = tab.icon;
               return (
                 <button
@@ -354,11 +274,7 @@ const Settings: React.FC = () => {
               <div className={`mb-6 p-4 rounded-lg flex items-center gap-2 ${
                 message.type === 'success' 
                   ? 'bg-green-50 border border-green-200' 
-                  : 'bg-red-50 border border-red-200'
-              }`}>
-                {message.type === 'success' ? (
-                  <CheckCircle2 className="text-green-500 flex-shrink-0" size={20} />
-                ) : (
+                  ) : (
                   <AlertCircle className="text-red-500 flex-shrink-0" size={20} />
                 )}
                 <span className={message.type === 'success' ? 'text-green-700' : 'text-red-700'}>
@@ -378,14 +294,7 @@ const Settings: React.FC = () => {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="btn-primary px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {saving ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      <span>Saving...</span>
-                    </>
-                  ) : (
+                  className="btn-primary px-6 py-3 disabled) : (
                     <>
                       <Save size={16} />
                       <span>Save Changes</span>

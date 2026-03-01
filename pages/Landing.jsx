@@ -13,7 +13,7 @@ import {
   Clock
 } from 'lucide-react';
 
-const Landing: React.FC = () => {
+const Landing = () => {
   const features = [
     {
       icon: Zap,
@@ -86,53 +86,9 @@ const Landing: React.FC = () => {
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-indigo-900 via-indigo-800 to-purple-800 text-white overflow-hidden">
         <div className="absolute inset-0 bg-black bg-opacity-20"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-              Find Your Perfect
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
-                Career Match
-              </span>
-            </h1>
-            <p className="text-xl md:text-2xl text-indigo-100 mb-8 max-w-3xl mx-auto">
-              Revolutionary AI-powered platform that connects talent with opportunity through intelligent skill matching and career insights.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link
-                to="/signup"
-                className="bg-white text-indigo-900 px-8 py-4 rounded-xl font-bold text-lg hover:bg-indigo-50 transition-colors flex items-center space-x-2"
-              >
-                <span>Get Started Free</span>
-                <ArrowRight size={20} />
-              </Link>
-              <Link
-                to="/login"
-                className="border-2 border-white text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-white hover:text-indigo-900 transition-colors"
-              >
-                Sign In
-              </Link>
-            </div>
-          </div>
-        </div>
-        
-        {/* Floating Elements */}
-        <div className="absolute top-20 left-10 w-20 h-20 bg-white bg-opacity-10 rounded-full animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-32 h-32 bg-purple-500 bg-opacity-20 rounded-full animate-bounce"></div>
-        <div className="absolute top-1/2 right-20 w-16 h-16 bg-yellow-400 bg-opacity-20 rounded-full animate-ping"></div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
+        <div className="relative max-w-7xl mx-auto px-4 sm) => (
               <div key={index} className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-indigo-600 mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-slate-600 font-medium">{stat.label}</div>
-              </div>
-            ))}
+                <div className="text-3xl md))}
           </div>
         </div>
       </section>
@@ -153,14 +109,7 @@ const Landing: React.FC = () => {
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <div key={index} className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-lg transition-shadow">
-                  <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-6">
-                    <Icon className="text-indigo-600" size={24} />
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-4">{feature.title}</h3>
-                  <p className="text-slate-600">{feature.description}</p>
-                </div>
-              );
+                <div key={index} className="bg-white rounded-2xl p-8 shadow-sm hover);
             })}
           </div>
         </div>

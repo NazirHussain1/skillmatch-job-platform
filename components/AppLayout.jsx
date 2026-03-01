@@ -43,14 +43,14 @@ const AppLayout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Top Navbar - Sticky */}
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
+      {/* Top Navbar - Sticky with Blur Effect */}
+      <header className="header-blur">
         <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
           {/* Left: Logo & Menu Toggle */}
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="hidden lg:block p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="hidden lg:block p-2 rounded-xl hover:bg-gray-100 transition duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
               aria-label="Toggle sidebar"
             >
               {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -58,14 +58,14 @@ const AppLayout = ({ children }) => {
             
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="lg:hidden p-2 rounded-xl hover:bg-gray-100 transition duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
               aria-label="Toggle mobile menu"
             >
               <Menu className="w-5 h-5" />
             </button>
 
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-primary-600 rounded-xl flex items-center justify-center">
                 <Briefcase className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl font-bold text-gray-900 hidden sm:block">SkillMatch</span>
@@ -79,14 +79,14 @@ const AppLayout = ({ children }) => {
               <input
                 type="text"
                 placeholder="Search jobs, companies..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                className="input pl-10"
               />
             </div>
           </div>
 
           {/* Right: Notifications & Profile */}
           <div className="flex items-center gap-2 sm:gap-4">
-            <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500">
+            <button className="relative p-2 rounded-xl hover:bg-gray-100 transition duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500">
               <Bell className="w-5 h-5 text-gray-700" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
@@ -122,8 +122,8 @@ const AppLayout = ({ children }) => {
                   key={item.name}
                   onClick={() => navigate(item.href)}
                   className={`
-                    w-full flex items-center gap-3 px-3 py-3 rounded-lg
-                    transition-all duration-200 ease-in-out
+                    w-full flex items-center gap-3 px-3 py-3 rounded-xl
+                    transition duration-200
                     ${isActive(item.href)
                       ? 'bg-primary-50 text-primary-700'
                       : 'text-gray-700 hover:bg-gray-100'
@@ -142,8 +142,8 @@ const AppLayout = ({ children }) => {
             <button
               onClick={handleLogout}
               className={`
-                w-full flex items-center gap-3 px-3 py-3 rounded-lg
-                text-red-600 hover:bg-red-50 transition-all duration-200 ease-in-out
+                w-full flex items-center gap-3 px-3 py-3 rounded-xl
+                text-red-600 hover:bg-red-50 transition duration-200
                 ${!sidebarOpen && 'justify-center'}
               `}
             >
@@ -171,8 +171,8 @@ const AppLayout = ({ children }) => {
                         setMobileMenuOpen(false);
                       }}
                       className={`
-                        w-full flex items-center gap-3 px-3 py-3 rounded-lg
-                        transition-all duration-200 ease-in-out
+                        w-full flex items-center gap-3 px-3 py-3 rounded-xl
+                        transition duration-200
                         ${isActive(item.href)
                           ? 'bg-primary-50 text-primary-700'
                           : 'text-gray-700 hover:bg-gray-100'
@@ -187,7 +187,7 @@ const AppLayout = ({ children }) => {
 
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200 ease-in-out"
+                  className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-red-600 hover:bg-red-50 transition duration-200"
                 >
                   <LogOut className="w-5 h-5" />
                   <span className="font-medium text-sm">Logout</span>
@@ -222,8 +222,8 @@ const AppLayout = ({ children }) => {
               key={item.name}
               onClick={() => navigate(item.href)}
               className={`
-                flex flex-col items-center gap-1 px-2 py-2 rounded-lg
-                transition-all duration-200 ease-in-out
+                flex flex-col items-center gap-1 px-2 py-2 rounded-xl
+                transition duration-200
                 ${isActive(item.href)
                   ? 'bg-primary-50 text-primary-700'
                   : 'text-gray-600 hover:bg-gray-100'

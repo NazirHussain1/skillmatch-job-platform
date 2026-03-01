@@ -3,25 +3,18 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Briefcase, Eye, EyeOff, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 
-const Signup: React.FC = () => {
+const Signup = () => {
   const { signup, loading } = useAuth();
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    role: 'JOB_SEEKER' as 'JOB_SEEKER' | 'EMPLOYER',
-    companyName: '',
-    agreeToTerms: false,
-  });
+    name);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [passwordStrength, setPasswordStrength] = useState(0);
 
-  const calculatePasswordStrength = (password: string) => {
+  const calculatePasswordStrength = (password) => {
     let strength = 0;
     if (password.length >= 8) strength++;
     if (/[A-Z]/.test(password)) strength++;
@@ -31,7 +24,7 @@ const Signup: React.FC = () => {
     return strength;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -62,12 +55,7 @@ const Signup: React.FC = () => {
     }
 
     const result = await signup({
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
-      role: formData.role,
-      companyName: formData.companyName || undefined,
-    });
+      name);
 
     if (result.success) {
       navigate('/dashboard');
@@ -76,14 +64,13 @@ const Signup: React.FC = () => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e) => {
     const { name, value, type } = e.target;
     const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
     
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : value,
-    });
+      [name]);
 
     if (name === 'password') {
       setPasswordStrength(calculatePasswordStrength(value));
@@ -105,61 +92,7 @@ const Signup: React.FC = () => {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Image/Illustration */}
-      <div className="hidden lg:block lg:w-1/2 bg-gradient-to-br from-purple-600 to-primary-700 relative overflow-hidden">
-        <div className="absolute inset-0 bg-black bg-opacity-20"></div>
-        <div className="relative h-full flex items-center justify-center p-12">
-          <div className="text-center text-white">
-            <h3 className="text-3xl sm:text-4xl font-bold mb-6">Join the Future of Hiring</h3>
-            <p className="text-lg sm:text-xl text-purple-100 mb-8 max-w-md">
-              Whether you're looking for talent or opportunities, our AI-powered platform connects the right people with the right roles.
-            </p>
-            <div className="space-y-4 text-left max-w-sm">
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="text-green-300 flex-shrink-0" size={20} />
-                <span>AI-powered skill matching</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="text-green-300 flex-shrink-0" size={20} />
-                <span>Real-time job recommendations</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="text-green-300 flex-shrink-0" size={20} />
-                <span>Advanced analytics dashboard</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="text-green-300 flex-shrink-0" size={20} />
-                <span>24/7 support and guidance</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Right Side - Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gray-50">
-        <div className="max-w-md w-full space-y-8 py-12">
-          {/* Header */}
-          <div className="text-center">
-            <Link to="/" className="inline-flex items-center gap-2 mb-8">
-              <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
-                <Briefcase className="text-white" size={24} />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">SkillMatch AI</span>
-            </Link>
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Create your account</h2>
-            <p className="mt-2 text-gray-600">
-              Start your journey to better career opportunities
-            </p>
-          </div>
-
-          {/* Form */}
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2">
-                <AlertCircle className="text-red-500 flex-shrink-0" size={20} />
-                <span className="text-red-700 text-sm">{error}</span>
-              </div>
-            )}
+      <div className="hidden lg)}
 
             {/* Role Selection */}
             <div>
@@ -251,11 +184,7 @@ const Signup: React.FC = () => {
                     required
                     value={formData.companyName}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
-                    placeholder="Enter your company name"
-                  />
-                </div>
-              )}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus)}
 
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">

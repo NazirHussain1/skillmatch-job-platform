@@ -4,31 +4,26 @@ import { useAuth } from '../contexts/AuthContext';
 import { UserRole } from '../types';
 import { Plus, X, Save, ShieldCheck, Loader2, CheckCircle2 } from 'lucide-react';
 
-const Profile: React.FC = () => {
+const Profile = () => {
   const { user, updateUser } = useAuth();
   const [newSkill, setNewSkill] = useState('');
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState(null);
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    bio: user?.bio || '',
-    skills: user?.skills || [],
-    companyName: user?.companyName || '',
-  });
+    name);
 
   if (!user) return null;
 
-  const addSkill = (e: React.FormEvent) => {
+  const addSkill = (e) => {
     e.preventDefault();
     if (newSkill && !formData.skills.includes(newSkill)) {
-      setFormData({ ...formData, skills: [...formData.skills, newSkill] });
+      setFormData({ ...formData, skills);
       setNewSkill('');
     }
   };
 
-  const removeSkill = (skill: string) => {
-    setFormData({ ...formData, skills: formData.skills.filter(s => s !== skill) });
+  const removeSkill = (skill) => {
+    setFormData({ ...formData, skills) });
   };
 
   const handleSave = async () => {
@@ -103,7 +98,7 @@ const Profile: React.FC = () => {
               <input 
                 type="text" 
                 value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                onChange={(e) => setFormData({...formData, name)}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200"
               />
             </div>
@@ -113,7 +108,7 @@ const Profile: React.FC = () => {
               <input 
                 type="email" 
                 value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                onChange={(e) => setFormData({...formData, email)}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200"
               />
             </div>
@@ -124,7 +119,7 @@ const Profile: React.FC = () => {
                 <input 
                   type="text" 
                   value={formData.companyName || ''}
-                  onChange={(e) => setFormData({...formData, companyName: e.target.value})}
+                  onChange={(e) => setFormData({...formData, companyName)}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200"
                 />
               </div>
@@ -135,7 +130,7 @@ const Profile: React.FC = () => {
               <textarea 
                 rows={4}
                 value={formData.bio || ''}
-                onChange={(e) => setFormData({...formData, bio: e.target.value})}
+                onChange={(e) => setFormData({...formData, bio)}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all duration-200 resize-none"
                 placeholder="Tell us about yourself..."
               />
@@ -168,11 +163,7 @@ const Profile: React.FC = () => {
               {formData.skills.map(skill => (
                 <div 
                   key={skill} 
-                  className="group flex items-center gap-2 px-3 py-1.5 bg-primary-50 border border-primary-100 text-primary-700 rounded-lg text-sm font-medium transition-all duration-200 hover:border-primary-300"
-                >
-                  {skill}
-                  <button 
-                    onClick={() => removeSkill(skill)}
+                  className="group flex items-center gap-2 px-3 py-1.5 bg-primary-50 border border-primary-100 text-primary-700 rounded-lg text-sm font-medium transition-all duration-200 hover) => removeSkill(skill)}
                     className="p-0.5 hover:bg-primary-100 rounded-full text-primary-400 group-hover:text-primary-600 focus:outline-none"
                   >
                     <X size={14} />
@@ -197,3 +188,4 @@ const Profile: React.FC = () => {
 };
 
 export default Profile;
+

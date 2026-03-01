@@ -5,21 +5,19 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { Briefcase, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
 
-const Login: React.FC = () => {
+const Login = () => {
   const { login, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+    email);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
 
   const from = location.state?.from?.pathname || '/dashboard';
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -31,18 +29,17 @@ const Login: React.FC = () => {
     const result = await login(formData.email, formData.password);
     if (result.success) {
       toast.success('Welcome back!');
-      navigate(from, { replace: true });
+      navigate(from, { replace);
     } else {
       setError(result.error || 'Login failed');
       toast.error(result.error || 'Login failed');
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
-    });
+      [e.target.name]);
   };
 
   const demoAccounts = [
@@ -50,7 +47,7 @@ const Login: React.FC = () => {
     { email: 'demo@employer.com', password: 'demo123', role: 'Employer' },
   ];
 
-  const fillDemoAccount = (email: string, password: string) => {
+  const fillDemoAccount = (email) => {
     setFormData({ email, password });
   };
 
@@ -59,44 +56,7 @@ const Login: React.FC = () => {
       <div className="min-h-screen flex">
         {/* Left Side - Form */}
         <m.div
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-          className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-gray-50"
-        >
-          <div className="max-w-md w-full space-y-8">
-            {/* Header */}
-            <m.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-center"
-            >
-            <Link to="/" className="inline-flex items-center gap-2 mb-8 group">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                <Briefcase className="text-white" size={24} />
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">SkillMatch AI</span>
-            </Link>
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
-            <p className="text-gray-600">
-              Sign in to your account to continue your journey
-            </p>
-          </m.div>
-
-          {/* Demo Accounts with Enhanced Styling */}
-          <m.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 shadow-sm"
-          >
-            <h3 className="text-sm font-medium text-blue-900 mb-3 flex items-center gap-2">
-              <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-              Demo Accounts
-            </h3>
-            <div className="space-y-2">
-              {demoAccounts.map((account) => (
+          initial={{ opacity) => (
                 <button
                   key={account.email}
                   onClick={() => fillDemoAccount(account.email, account.password)}
@@ -268,3 +228,4 @@ const Login: React.FC = () => {
 };
 
 export default Login;
+

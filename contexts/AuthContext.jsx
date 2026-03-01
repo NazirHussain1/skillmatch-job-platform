@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }) => {
           }
         }
       } catch (error) {
-        console.error('Error loading user session:', error);
+        console.error('Error loading user session);
         localStorage.removeItem('skillmatch_token');
         localStorage.removeItem('skillmatch_user');
       } finally {
@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email) => {
     try {
       setLoading(true);
       const result = await authService.login(email, password);
@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const signup = async (userData: SignupData) => {
+  const signup = async (userData) => {
     try {
       setLoading(true);
       const result = await authService.signup(userData);
@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }) => {
     authService.logout();
   };
 
-  const updateUser = (userData: Partial<User>) => {
+  const updateUser = (userData) => {
     if (user) {
       const updatedUser = { ...user, ...userData };
       setUser(updatedUser);
@@ -103,3 +103,4 @@ export const AuthProvider = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
