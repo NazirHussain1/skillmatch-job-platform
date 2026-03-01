@@ -7,12 +7,14 @@ const User = require('../models/User.model');
 // @route   POST /api/auth/register
 // @access  Public
 const register = asyncHandler(async (req, res) => {
-  const { name, email, password, role, companyName } = req.body;
+  const { name, email, password, role } = req.body;
 
   // Check if user exists
   const userExists = await User.findOne({ email });
   if (userExists) {
-    return ApiResponse.error(res, 'User already exists with this email', 400);
+    return res.status(400).json(
+      ApiResponse.error('User already exists with this email', 400)
+    );
   }
 
   // Create user
@@ -20,26 +22,24 @@ const register = asyncHandler(async (req, res) => {
     name,
     email,
     password,
-    role: role || 'jobseeker',
-    companyName: role === 'employer' ? companyName : undefined
+    role: role || 'jobseeker'
   });
 
   if (user) {
-    return ApiResponse.success(
-      res,
-      'User registered successfully',
-      {
+    return res.status(201).json(
+      ApiResponse.success('User registered successfully', {
         _id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
         token: generateToken(user._id)
-      },
-      201
+      })
     );
   }
 
-  return ApiResponse.error(res, 'Invalid user data', 400);
+  return res.status(400).json(
+    ApiResponse.error('Invalid user data', 400)
+  );
 });
 
 // @desc    Login user
@@ -52,58 +52,47 @@ const login = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email }).select('+password');
   
   if (!user) {
-    return ApiResponse.error(res, 'Invalid email or password', 401);
-  }
-
-  if (!user.isActive) {
-    return ApiResponse.error(res, 'Your account has been deactivated', 403);
+    return res.status(401).json(
+      ApiResponse.error('Invalid email or password', 401)
+    );
   }
 
   // Check password
   const isPasswordMatch = await user.matchPassword(password);
   
   if (!isPasswordMatch) {
-    return ApiResponse.error(res, 'Invalid email or password', 401);
+    return res.status(401).json(
+      ApiResponse.error('Invalid email or password', 401)
+    );
   }
 
-  return ApiResponse.success(
-    res,
-    'Login successful',
-    {
+  return res.status(200).json(
+    ApiResponse.success('Login successful', {
       _id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
-      skills: user.skills,
-      companyName: user.companyName,
-      avatar: user.avatar,
       token: generateToken(user._id)
-    }
+    })
   );
 });
 
-// @desc    Get current user
-// @route   GET /api/auth/me
+// @desc    Get current user profile
+// @route   GET /api/auth/profile
 // @access  Private
-const getMe = asyncHandler(async (req, res) => {
+const getProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
   
-  return ApiResponse.success(
-    res,
-    'User retrieved successfully',
-    user
+  return res.status(200).json(
+    ApiResponse.success('Profile retrieved successfully', {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
+    })
   );
 });
 
-// @desc    Logout user
-// @route   POST /api/auth/logout
-// @access  Private
-const logout = asyncHandler(async (req, res) => {
-  return ApiResponse.success(
-    res,
-    'Logout successful',
-    null
-  );
-});
-
-module.exports = { register, login, getMe, logout };
+module.exports = { register, login, getProfile };
