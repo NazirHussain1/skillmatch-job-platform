@@ -2,46 +2,59 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-// Get user applications
-const getApplications = async (token) => {
+// Get my applications
+const getMyApplications = async (token) => {
   const config = {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   };
   
-  const response = await axios.get(`${API_URL}/applications`, config);
-  return response.data;
+  const response = await axios.get(`${API_URL}/applications/my`, config);
+  return response.data.data;
 };
 
 // Create application
-const createApplication = async (applicationData, token) => {
+const createApplication = async (jobId, token) => {
   const config = {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   };
   
-  const response = await axios.post(`${API_URL}/applications`, applicationData, config);
-  return response.data;
+  const response = await axios.post(`${API_URL}/applications/${jobId}`, {}, config);
+  return response.data.data;
 };
 
-// Delete application
-const deleteApplication = async (id, token) => {
+// Get job applications (employer)
+const getJobApplications = async (jobId, token) => {
   const config = {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   };
   
-  const response = await axios.delete(`${API_URL}/applications/${id}`, config);
-  return response.data;
+  const response = await axios.get(`${API_URL}/applications/job/${jobId}`, config);
+  return response.data.data;
+};
+
+// Update application status (employer)
+const updateApplicationStatus = async (id, status, token) => {
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+  
+  const response = await axios.put(`${API_URL}/applications/${id}`, { status }, config);
+  return response.data.data;
 };
 
 const applicationService = {
-  getApplications,
+  getMyApplications,
   createApplication,
-  deleteApplication,
+  getJobApplications,
+  updateApplicationStatus,
 };
 
 export default applicationService;

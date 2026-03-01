@@ -33,7 +33,7 @@ const MainLayout = ({ children }) => {
               <Link to="/jobs" className="text-gray-700 hover:text-primary-600 transition duration-200">
                 Jobs
               </Link>
-              {user?.role === 'JOB_SEEKER' && (
+              {user?.role === 'jobseeker' && (
                 <Link to="/applications" className="text-gray-700 hover:text-primary-600 transition duration-200">
                   Applications
                 </Link>
@@ -73,7 +73,7 @@ const MainLayout = ({ children }) => {
             <Briefcase size={20} />
             <span className="text-xs">Jobs</span>
           </Link>
-          {user?.role === 'JOB_SEEKER' && (
+          {user?.role === 'jobseeker' && (
             <Link to="/applications" className="flex flex-col items-center gap-1 px-2 py-2 rounded-xl text-gray-600 hover:bg-gray-100 transition duration-200">
               <FileText size={20} />
               <span className="text-xs">Applications</span>
