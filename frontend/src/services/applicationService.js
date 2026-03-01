@@ -1,52 +1,26 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import api from './api';
 
 // Get my applications
-const getMyApplications = async (token) => {
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-  
-  const response = await axios.get(`${API_URL}/applications/my`, config);
+const getMyApplications = async () => {
+  const response = await api.get('/applications/my');
   return response.data.data;
 };
 
 // Create application
-const createApplication = async (jobId, token) => {
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-  
-  const response = await axios.post(`${API_URL}/applications/${jobId}`, {}, config);
+const createApplication = async (jobId) => {
+  const response = await api.post(`/applications/${jobId}`);
   return response.data.data;
 };
 
 // Get job applications (employer)
-const getJobApplications = async (jobId, token) => {
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-  
-  const response = await axios.get(`${API_URL}/applications/job/${jobId}`, config);
+const getJobApplications = async (jobId) => {
+  const response = await api.get(`/applications/job/${jobId}`);
   return response.data.data;
 };
 
 // Update application status (employer)
-const updateApplicationStatus = async (id, status, token) => {
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-  
-  const response = await axios.put(`${API_URL}/applications/${id}`, { status }, config);
+const updateApplicationStatus = async (id, status) => {
+  const response = await api.put(`/applications/${id}`, { status });
   return response.data.data;
 };
 

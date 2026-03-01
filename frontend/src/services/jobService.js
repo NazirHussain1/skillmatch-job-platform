@@ -1,52 +1,32 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import api from './api';
 
 // Get all jobs
-const getJobs = async (filters = {}) => {
-  const response = await axios.get(`${API_URL}/jobs`);
+const getJobs = async () => {
+  const response = await api.get('/jobs');
   return response.data.data;
 };
 
 // Get single job
 const getJob = async (id) => {
-  const response = await axios.get(`${API_URL}/jobs/${id}`);
+  const response = await api.get(`/jobs/${id}`);
   return response.data.data;
 };
 
 // Create job
-const createJob = async (jobData, token) => {
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-  
-  const response = await axios.post(`${API_URL}/jobs`, jobData, config);
+const createJob = async (jobData) => {
+  const response = await api.post('/jobs', jobData);
   return response.data.data;
 };
 
 // Update job
-const updateJob = async (id, jobData, token) => {
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-  
-  const response = await axios.put(`${API_URL}/jobs/${id}`, jobData, config);
+const updateJob = async (id, jobData) => {
+  const response = await api.put(`/jobs/${id}`, jobData);
   return response.data.data;
 };
 
 // Delete job
-const deleteJob = async (id, token) => {
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-  
-  const response = await axios.delete(`${API_URL}/jobs/${id}`, config);
+const deleteJob = async (id) => {
+  const response = await api.delete(`/jobs/${id}`);
   return response.data.data;
 };
 

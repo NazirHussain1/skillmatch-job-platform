@@ -14,8 +14,7 @@ export const getApplications = createAsyncThunk(
   'applications/getAll',
   async (_, thunkAPI) => {
     try {
-      const token = thunkAPI.getState().auth.user.token;
-      return await applicationService.getMyApplications(token);
+      return await applicationService.getMyApplications();
     } catch (error) {
       const message = error.response?.data?.message || error.message;
       return thunkAPI.rejectWithValue(message);
@@ -28,8 +27,7 @@ export const createApplication = createAsyncThunk(
   'applications/create',
   async (jobId, thunkAPI) => {
     try {
-      const token = thunkAPI.getState().auth.user.token;
-      return await applicationService.createApplication(jobId, token);
+      return await applicationService.createApplication(jobId);
     } catch (error) {
       const message = error.response?.data?.message || error.message;
       return thunkAPI.rejectWithValue(message);
