@@ -2,10 +2,14 @@
 node_modules/
 */node_modules/
 
-# Environment variables
+# Environment variables - NEVER COMMIT THESE
 .env
 .env.local
 .env.*.local
+backend/.env
+backend/.env.local
+frontend/.env
+frontend/.env.local
 
 # Build outputs
 dist/

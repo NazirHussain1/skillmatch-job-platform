@@ -1,4 +1,10 @@
-require('dotenv').config();
+// Load environment variables from .env.local or .env
+require('dotenv').config({ path: '.env.local' });
+// Fallback to .env if .env.local doesn't exist
+if (!process.env.MONGODB_URI) {
+  require('dotenv').config();
+}
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
