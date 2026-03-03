@@ -70,8 +70,8 @@ skillmatch/
 ```bash
 cd backend
 npm install
-cp .env.example .env
-# Edit .env with your MongoDB URI and JWT secret
+cp .env.example .env.local
+# Edit .env.local with your MongoDB URI and JWT secret
 npm run dev
 ```
 
@@ -80,25 +80,28 @@ npm run dev
 ```bash
 cd frontend
 npm install
+cp .env.example .env.local
 npm run dev
 ```
 
 ## ⚙️ Environment Variables
 
-### Backend (.env)
+### Backend (.env.local)
 ```env
 NODE_ENV=development
 PORT=5000
-MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/skillmatch
+MONGODB_URI=your-mongodb-atlas-connection-string
 JWT_SECRET=your-super-secret-jwt-key-min-32-chars
 JWT_EXPIRES_IN=7d
-CORS_ORIGIN=http://localhost:5173
+CORS_ORIGIN=http://localhost:3000
 ```
 
-### Frontend (.env)
+### Frontend (.env.local)
 ```env
 VITE_API_URL=http://localhost:5000/api
 ```
+
+**IMPORTANT**: Never commit `.env.local` files to Git. Use `.env.example` for reference only.
 
 ## 📡 API Endpoints
 

@@ -34,9 +34,12 @@ const updateProfile = asyncHandler(async (req, res) => {
   // Update allowed fields
   user.name = req.body.name || user.name;
   user.email = req.body.email || user.email;
-  user.bio = req.body.bio || user.bio;
-  user.skills = req.body.skills || user.skills;
-  user.companyName = req.body.companyName || user.companyName;
+  user.bio = req.body.bio !== undefined ? req.body.bio : user.bio;
+  user.skills = req.body.skills !== undefined ? req.body.skills : user.skills;
+  user.experience = req.body.experience !== undefined ? req.body.experience : user.experience;
+  user.education = req.body.education !== undefined ? req.body.education : user.education;
+  user.location = req.body.location !== undefined ? req.body.location : user.location;
+  user.profilePicture = req.body.profilePicture !== undefined ? req.body.profilePicture : user.profilePicture;
   
   // Update password if provided
   if (req.body.password) {

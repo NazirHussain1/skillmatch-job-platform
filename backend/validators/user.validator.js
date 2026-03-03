@@ -30,11 +30,27 @@ const updateProfileValidator = [
     .isArray()
     .withMessage('Skills must be an array'),
   
-  body('companyName')
+  body('experience')
+    .optional()
+    .isArray()
+    .withMessage('Experience must be an array'),
+  
+  body('education')
+    .optional()
+    .isArray()
+    .withMessage('Education must be an array'),
+  
+  body('location')
     .optional()
     .trim()
     .isLength({ max: 100 })
-    .withMessage('Company name must not exceed 100 characters')
+    .withMessage('Location must not exceed 100 characters'),
+  
+  body('profilePicture')
+    .optional()
+    .trim()
+    .isURL()
+    .withMessage('Profile picture must be a valid URL')
 ];
 
 const updateUserValidator = [

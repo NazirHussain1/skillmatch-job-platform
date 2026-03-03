@@ -25,6 +25,40 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['admin', 'employer', 'jobseeker'],
     default: 'jobseeker'
+  },
+  bio: {
+    type: String,
+    default: ''
+  },
+  skills: {
+    type: [String],
+    default: []
+  },
+  experience: [{
+    title: String,
+    company: String,
+    location: String,
+    from: Date,
+    to: Date,
+    current: Boolean,
+    description: String
+  }],
+  education: [{
+    school: String,
+    degree: String,
+    fieldOfStudy: String,
+    from: Date,
+    to: Date,
+    current: Boolean,
+    description: String
+  }],
+  location: {
+    type: String,
+    default: ''
+  },
+  profilePicture: {
+    type: String,
+    default: ''
   }
 }, {
   timestamps: true
