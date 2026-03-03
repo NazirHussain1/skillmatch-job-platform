@@ -8,7 +8,7 @@ const {
   deleteUser
 } = require('../controllers/user.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
-const { validate } = require('../middleware/validate.middleware');
+const validate = require('../middleware/validate.middleware');
 const {
   updateProfileValidator,
   updateUserValidator,
