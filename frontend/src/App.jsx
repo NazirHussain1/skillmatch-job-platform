@@ -16,6 +16,9 @@ import MainLayout from './layouts/MainLayout';
 const Landing = lazy(() => import('./pages/Landing'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
+const RegistrationSuccess = lazy(() => import('./pages/RegistrationSuccess'));
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
+const ResendVerification = lazy(() => import('./pages/ResendVerification'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -46,6 +49,33 @@ function App() {
             element={
               <PublicRoute>
                 <Register />
+              </PublicRoute>
+            } 
+          />
+
+          <Route 
+            path="/registration-success" 
+            element={
+              <PublicRoute>
+                <RegistrationSuccess />
+              </PublicRoute>
+            } 
+          />
+
+          <Route 
+            path="/verify-email/:token" 
+            element={
+              <PublicRoute>
+                <VerifyEmail />
+              </PublicRoute>
+            } 
+          />
+
+          <Route 
+            path="/resend-verification" 
+            element={
+              <PublicRoute>
+                <ResendVerification />
               </PublicRoute>
             } 
           />

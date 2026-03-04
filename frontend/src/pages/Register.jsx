@@ -22,12 +22,13 @@ function Register() {
       toast.error(message);
     }
 
-    if (isSuccess || user) {
-      navigate('/dashboard');
+    if (isSuccess) {
+      // Redirect to registration success page instead of dashboard
+      navigate('/registration-success', { state: { email: formData.email } });
     }
 
     dispatch(reset());
-  }, [user, isError, isSuccess, message, navigate, dispatch]);
+  }, [isError, isSuccess, message, navigate, dispatch, formData.email]);
 
   const onChange = (e) => {
     setFormData((prev) => ({

@@ -21,7 +21,33 @@ function Login() {
 
   useEffect(() => {
     if (isError) {
-      toast.error(message);
+      // Check if error is about email verification
+      if (message && message.toLowerCase().includes('verify your email')) {
+        toast.error(message, {
+          duration: 5000,
+        });
+        // Show resend verification link
+        setTimeout(() => {
+          toast((t) => (
+            <div className="flex flex-col gap-2">
+              <span>Need a new verification link?</span>
+              <button
+                onClick={() => {
+                  toast.dismiss(t.id);
+                  navigate('/resend-verification');
+                }}
+                className="text-primary-600 hover:text-primary-700 font-medium text-sm"
+              >
+                Resend Verification Email
+              </button>
+            </div>
+          ), {
+            duration: 8000,
+          });
+        }, 1000);
+      } else {
+        toast.error(message);
+      }
     }
 
     if (isSuccess || user) {
