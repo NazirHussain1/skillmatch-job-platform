@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { User, Mail, Briefcase, Calendar, MapPin, Edit2, Save, X, Plus, Trash2 } from 'lucide-react';
+import { User, Mail, Briefcase, Calendar, MapPin, Edit2, Save, X, Plus, Trash2, Camera } from 'lucide-react';
 import { getUserProfile, updateUserProfile, reset } from '../features/user/userSlice';
 import { toast } from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
+import api from '../services/api';
 
 function Profile() {
   const dispatch = useDispatch();
@@ -23,6 +24,9 @@ function Profile() {
   });
 
   const [newSkill, setNewSkill] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     dispatch(getUserProfile());
@@ -40,6 +44,7 @@ function Profile() {
         experience: profile.experience || [],
         education: profile.education || [],
       });
+      setImagePreview(profile.profilePicture || '');
     }
   }, [profile]);
 
@@ -148,6 +153,59 @@ function Profile() {
     });
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
+      
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file');
+        return;
+      }
+
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUploadImage = async () => {
+    if (!imageFile) {
+      toast.error('Please select an image first');
+      return;
+    }
+
+    const formDataImage = new FormData();
+    formDataImage.append('profilePicture', imageFile);
+
+    setUploadingImage(true);
+    try {
+      const response = await api.post('/users/profile/picture', formDataImage, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      toast.success('Profile picture updated successfully');
+      setFormData({
+        ...formData,
+        profilePicture: response.data.data.profilePicture,
+      });
+      setImageFile(null);
+      dispatch(getUserProfile());
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     dispatch(updateUserProfile(formData));
@@ -165,6 +223,8 @@ function Profile() {
         experience: profile.experience || [],
         education: profile.education || [],
       });
+      setImagePreview(profile.profilePicture || '');
+      setImageFile(null);
     }
     setIsEditing(false);
   };
@@ -213,19 +273,52 @@ function Profile() {
         {/* Basic Info Card */}
         <div className="card">
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-20 h-20 bg-gradient-to-br from-primary-600 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-              {formData.name?.charAt(0).toUpperCase() || user?.name?.charAt(0).toUpperCase()}
+            <div className="relative">
+              {imagePreview || formData.profilePicture ? (
+                <img
+                  src={imagePreview || formData.profilePicture}
+                  alt="Profile"
+                  className="w-20 h-20 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-20 h-20 bg-gradient-to-br from-primary-600 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                  {formData.name?.charAt(0).toUpperCase() || user?.name?.charAt(0).toUpperCase()}
+                </div>
+              )}
+              {isEditing && (
+                <label className="absolute bottom-0 right-0 bg-primary-600 text-white p-2 rounded-full cursor-pointer hover:bg-primary-700 transition-colors">
+                  <Camera className="w-4 h-4" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                </label>
+              )}
             </div>
             <div className="flex-1">
               {isEditing ? (
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="input-field text-xl font-bold"
-                  placeholder="Your Name"
-                />
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className="input-field text-xl font-bold"
+                    placeholder="Your Name"
+                  />
+                  {imageFile && (
+                    <button
+                      type="button"
+                      onClick={handleUploadImage}
+                      disabled={uploadingImage}
+                      className="btn-secondary text-sm"
+                    >
+                      {uploadingImage ? 'Uploading...' : 'Upload Photo'}
+                    </button>
+                  )}
+                </div>
               ) : (
                 <>
                   <h2 className="text-2xl font-bold text-gray-900">{profile?.name}</h2>
