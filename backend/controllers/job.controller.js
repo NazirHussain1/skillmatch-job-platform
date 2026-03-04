@@ -6,12 +6,55 @@ const Job = require('../models/Job.model');
 // @route   GET /api/jobs
 // @access  Public
 const getJobs = asyncHandler(async (req, res) => {
-  const jobs = await Job.find()
+  const { keyword, location, salary, page = 1, limit = 10 } = req.query;
+  
+  // Build filter object
+  const filter = {};
+  
+  // Keyword search (searches in title, company, and description)
+  if (keyword) {
+    filter.$or = [
+      { title: { $regex: keyword, $options: 'i' } },
+      { company: { $regex: keyword, $options: 'i' } },
+      { description: { $regex: keyword, $options: 'i' } }
+    ];
+  }
+  
+  // Location filter
+  if (location) {
+    filter.location = { $regex: location, $options: 'i' };
+  }
+  
+  // Salary filter (minimum salary)
+  if (salary) {
+    filter.salary = { $gte: parseInt(salary) };
+  }
+  
+  // Pagination
+  const pageNum = parseInt(page);
+  const limitNum = parseInt(limit);
+  const skip = (pageNum - 1) * limitNum;
+  
+  // Get total count for pagination
+  const total = await Job.countDocuments(filter);
+  
+  // Get jobs with filters
+  const jobs = await Job.find(filter)
     .populate('employer', 'name email')
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .limit(limitNum)
+    .skip(skip);
   
   return res.status(200).json(
-    ApiResponse.success('Jobs retrieved successfully', jobs)
+    ApiResponse.success('Jobs retrieved successfully', {
+      jobs,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum)
+      }
+    })
   );
 });
 
