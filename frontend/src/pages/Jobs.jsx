@@ -198,7 +198,7 @@ function Jobs() {
                 <button
                   onClick={() => {
                     setFilters({ ...filters, keyword: '' });
-                    setSearchParams({ ...searchParams, keyword: '' });
+                    setSearchParams({ ...searchParams, keyword: '', page: 1 });
                   }}
                   className="hover:text-primary-900"
                 >
@@ -212,7 +212,7 @@ function Jobs() {
                 <button
                   onClick={() => {
                     setFilters({ ...filters, location: '' });
-                    setSearchParams({ ...searchParams, location: '' });
+                    setSearchParams({ ...searchParams, location: '', page: 1 });
                   }}
                   className="hover:text-primary-900"
                 >
@@ -226,7 +226,7 @@ function Jobs() {
                 <button
                   onClick={() => {
                     setFilters({ ...filters, salary: '' });
-                    setSearchParams({ ...searchParams, salary: '' });
+                    setSearchParams({ ...searchParams, salary: '', page: 1 });
                   }}
                   className="hover:text-primary-900"
                 >
@@ -247,9 +247,13 @@ function Jobs() {
           {/* Results Count */}
           <div className="flex items-center justify-between">
             <p className="text-gray-600">
-              {jobs?.length > 0 ? (
+              {pagination?.total > 0 ? (
                 <>
-                  Showing <span className="font-semibold">{jobs.length}</span> job{jobs.length !== 1 ? 's' : ''}
+                  Showing <span className="font-semibold">{((pagination.page - 1) * pagination.limit) + 1}</span> to{' '}
+                  <span className="font-semibold">
+                    {Math.min(pagination.page * pagination.limit, pagination.total)}
+                  </span>{' '}
+                  of <span className="font-semibold">{pagination.total}</span> job{pagination.total !== 1 ? 's' : ''}
                 </>
               ) : (
                 'No jobs found'
@@ -259,33 +263,42 @@ function Jobs() {
 
           {/* Jobs Grid */}
           {jobs?.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {jobs.map((job) => (
-                <div key={job._id} className="card hover-lift">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{job.title}</h3>
-                  <p className="text-gray-600 mb-4">{job.company}</p>
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <MapPin className="w-4 h-4" />
-                      <span className="text-sm">{job.location}</span>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {jobs.map((job) => (
+                  <div key={job._id} className="card hover-lift">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">{job.title}</h3>
+                    <p className="text-gray-600 mb-4">{job.company}</p>
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <MapPin className="w-4 h-4" />
+                        <span className="text-sm">{job.location}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <DollarSign className="w-4 h-4" />
+                        <span className="text-sm">${job.salary?.toLocaleString()}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <DollarSign className="w-4 h-4" />
-                      <span className="text-sm">${job.salary?.toLocaleString()}</span>
-                    </div>
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-3">{job.description}</p>
+                    {user?.role === 'jobseeker' && (
+                      <button
+                        onClick={() => handleApply(job._id)}
+                        className="btn-primary w-full"
+                      >
+                        Apply Now
+                      </button>
+                    )}
                   </div>
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-3">{job.description}</p>
-                  {user?.role === 'jobseeker' && (
-                    <button
-                      onClick={() => handleApply(job._id)}
-                      className="btn-primary w-full"
-                    >
-                      Apply Now
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              <Pagination
+                currentPage={pagination?.page || 1}
+                totalPages={pagination?.pages || 1}
+                onPageChange={handlePageChange}
+              />
+            </>
           ) : (
             <div className="text-center py-12">
               <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />

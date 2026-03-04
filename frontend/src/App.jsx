@@ -16,6 +16,8 @@ import MainLayout from './layouts/MainLayout';
 const Landing = lazy(() => import('./pages/Landing'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Jobs = lazy(() => import('./pages/Jobs'));
 const Applications = lazy(() => import('./pages/Applications'));
@@ -44,6 +46,24 @@ function App() {
             element={
               <PublicRoute>
                 <Register />
+              </PublicRoute>
+            } 
+          />
+
+          <Route 
+            path="/forgot-password" 
+            element={
+              <PublicRoute>
+                <ForgotPassword />
+              </PublicRoute>
+            } 
+          />
+
+          <Route 
+            path="/reset-password/:token" 
+            element={
+              <PublicRoute>
+                <ResetPassword />
               </PublicRoute>
             } 
           />
