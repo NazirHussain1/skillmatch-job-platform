@@ -5,10 +5,12 @@ const {
   getUsers,
   getUserById,
   updateUser,
-  deleteUser
+  deleteUser,
+  uploadProfilePicture
 } = require('../controllers/user.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 const validate = require('../middleware/validate.middleware');
+const upload = require('../middleware/upload.middleware');
 const {
   updateProfileValidator,
   updateUserValidator,
@@ -21,6 +23,9 @@ const router = express.Router();
 router.route('/profile')
   .get(protect, getProfile)
   .put(protect, updateProfileValidator, validate, updateProfile);
+
+// Profile picture upload
+router.post('/profile/picture', protect, upload.single('profilePicture'), uploadProfilePicture);
 
 // Admin routes
 router.route('/')

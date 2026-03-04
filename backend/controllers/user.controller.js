@@ -1,6 +1,7 @@
 const User = require('../models/User.model');
 const asyncHandler = require('../utils/asyncHandler');
 const ApiResponse = require('../utils/ApiResponse');
+const cloudinary = require('../config/cloudinary');
 
 // @desc    Get user profile
 // @route   GET /api/users/profile
@@ -151,11 +152,79 @@ const deleteUser = asyncHandler(async (req, res) => {
   );
 });
 
+// @desc    Upload profile picture
+// @route   POST /api/users/profile/picture
+// @access  Private
+const uploadProfilePicture = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json(
+      ApiResponse.error('Please upload an image file', 400)
+    );
+  }
+
+  const user = await User.findById(req.user._id);
+  
+  if (!user) {
+    return res.status(404).json(
+      ApiResponse.error('User not found', 404)
+    );
+  }
+
+  // Delete old image from cloudinary if exists
+  if (user.profilePicture) {
+    try {
+      const publicId = user.profilePicture.split('/').pop().split('.')[0];
+      await cloudinary.uploader.destroy(`skillmatch/profiles/${publicId}`);
+    } catch (error) {
+      console.log('Error deleting old image:', error.message);
+    }
+  }
+
+  // Upload to cloudinary
+  const uploadStream = () => {
+    return new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'skillmatch/profiles',
+          transformation: [
+            { width: 500, height: 500, crop: 'fill', gravity: 'face' },
+            { quality: 'auto' }
+          ]
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      stream.end(req.file.buffer);
+    });
+  };
+
+  try {
+    const result = await uploadStream();
+    
+    // Update user profile picture
+    user.profilePicture = result.secure_url;
+    await user.save();
+
+    res.status(200).json(
+      ApiResponse.success('Profile picture uploaded successfully', {
+        profilePicture: result.secure_url
+      })
+    );
+  } catch (error) {
+    res.status(500).json(
+      ApiResponse.error('Error uploading image to cloudinary', 500)
+    );
+  }
+});
+
 module.exports = {
   getProfile,
   updateProfile,
   getUsers,
   getUserById,
   updateUser,
-  deleteUser
+  deleteUser,
+  uploadProfilePicture
 };
