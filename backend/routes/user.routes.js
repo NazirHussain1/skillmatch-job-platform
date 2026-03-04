@@ -6,7 +6,8 @@ const {
   getUserById,
   updateUser,
   deleteUser,
-  uploadProfilePicture
+  uploadProfilePicture,
+  uploadCompanyLogo
 } = require('../controllers/user.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 const validate = require('../middleware/validate.middleware');
@@ -26,6 +27,9 @@ router.route('/profile')
 
 // Profile picture upload
 router.post('/profile/picture', protect, upload.single('profilePicture'), uploadProfilePicture);
+
+// Company logo upload (employer only)
+router.post('/profile/company-logo', protect, authorize('employer'), upload.single('companyLogo'), uploadCompanyLogo);
 
 // Admin routes
 router.route('/')

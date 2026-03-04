@@ -42,6 +42,14 @@ const updateProfile = asyncHandler(async (req, res) => {
   user.location = req.body.location !== undefined ? req.body.location : user.location;
   user.profilePicture = req.body.profilePicture !== undefined ? req.body.profilePicture : user.profilePicture;
   
+  // Update employer-specific fields
+  if (user.role === 'employer') {
+    user.companyName = req.body.companyName !== undefined ? req.body.companyName : user.companyName;
+    user.companyWebsite = req.body.companyWebsite !== undefined ? req.body.companyWebsite : user.companyWebsite;
+    user.companyDescription = req.body.companyDescription !== undefined ? req.body.companyDescription : user.companyDescription;
+    user.companyLogo = req.body.companyLogo !== undefined ? req.body.companyLogo : user.companyLogo;
+  }
+  
   // Update password if provided
   if (req.body.password) {
     user.password = req.body.password;
@@ -154,6 +162,8 @@ const deleteUser = asyncHandler(async (req, res) => {
 
 // @desc    Upload profile picture
 // @route   POST /api/users/profile/picture
+// @desc    Upload profile picture
+// @route   POST /api/users/profile/picture
 // @access  Private
 const uploadProfilePicture = asyncHandler(async (req, res) => {
   if (!req.file) {
@@ -219,6 +229,79 @@ const uploadProfilePicture = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Upload company logo
+// @route   POST /api/users/profile/company-logo
+// @access  Private (Employer only)
+const uploadCompanyLogo = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json(
+      ApiResponse.error('Please upload an image file', 400)
+    );
+  }
+
+  const user = await User.findById(req.user._id);
+  
+  if (!user) {
+    return res.status(404).json(
+      ApiResponse.error('User not found', 404)
+    );
+  }
+
+  if (user.role !== 'employer') {
+    return res.status(403).json(
+      ApiResponse.error('Only employers can upload company logos', 403)
+    );
+  }
+
+  // Delete old logo from cloudinary if exists
+  if (user.companyLogo) {
+    try {
+      const publicId = user.companyLogo.split('/').pop().split('.')[0];
+      await cloudinary.uploader.destroy(`skillmatch/company-logos/${publicId}`);
+    } catch (error) {
+      console.log('Error deleting old logo:', error.message);
+    }
+  }
+
+  // Upload to cloudinary
+  const uploadStream = () => {
+    return new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'skillmatch/company-logos',
+          transformation: [
+            { width: 400, height: 400, crop: 'fit' },
+            { quality: 'auto' }
+          ]
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      stream.end(req.file.buffer);
+    });
+  };
+
+  try {
+    const result = await uploadStream();
+    
+    // Update company logo
+    user.companyLogo = result.secure_url;
+    await user.save();
+
+    res.status(200).json(
+      ApiResponse.success('Company logo uploaded successfully', {
+        companyLogo: result.secure_url
+      })
+    );
+  } catch (error) {
+    res.status(500).json(
+      ApiResponse.error('Error uploading image to cloudinary', 500)
+    );
+  }
+});
+
 module.exports = {
   getProfile,
   updateProfile,
@@ -226,5 +309,6 @@ module.exports = {
   getUserById,
   updateUser,
   deleteUser,
-  uploadProfilePicture
+  uploadProfilePicture,
+  uploadCompanyLogo
 };

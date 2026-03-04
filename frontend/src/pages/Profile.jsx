@@ -21,12 +21,20 @@ function Profile() {
     profilePicture: '',
     experience: [],
     education: [],
+    // Employer fields
+    companyName: '',
+    companyWebsite: '',
+    companyDescription: '',
+    companyLogo: '',
   });
 
   const [newSkill, setNewSkill] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [logoFile, setLogoFile] = useState(null);
+  const [logoPreview, setLogoPreview] = useState('');
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   useEffect(() => {
     dispatch(getUserProfile());
@@ -43,8 +51,14 @@ function Profile() {
         profilePicture: profile.profilePicture || '',
         experience: profile.experience || [],
         education: profile.education || [],
+        // Employer fields
+        companyName: profile.companyName || '',
+        companyWebsite: profile.companyWebsite || '',
+        companyDescription: profile.companyDescription || '',
+        companyLogo: profile.companyLogo || '',
       });
       setImagePreview(profile.profilePicture || '');
+      setLogoPreview(profile.companyLogo || '');
     }
   }, [profile]);
 
@@ -206,6 +220,59 @@ function Profile() {
     }
   };
 
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
+      
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file');
+        return;
+      }
+
+      setLogoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUploadLogo = async () => {
+    if (!logoFile) {
+      toast.error('Please select a logo first');
+      return;
+    }
+
+    const formDataLogo = new FormData();
+    formDataLogo.append('companyLogo', logoFile);
+
+    setUploadingLogo(true);
+    try {
+      const response = await api.post('/users/profile/company-logo', formDataLogo, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      toast.success('Company logo updated successfully');
+      setFormData({
+        ...formData,
+        companyLogo: response.data.data.companyLogo,
+      });
+      setLogoFile(null);
+      dispatch(getUserProfile());
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to upload logo');
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     dispatch(updateUserProfile(formData));
@@ -220,11 +287,18 @@ function Profile() {
         skills: profile.skills || [],
         location: profile.location || '',
         profilePicture: profile.profilePicture || '',
-        experience: profile.experience || [],
+        experience: profile.experience || '',
         education: profile.education || [],
+        // Employer fields
+        companyName: profile.companyName || '',
+        companyWebsite: profile.companyWebsite || '',
+        companyDescription: profile.companyDescription || '',
+        companyLogo: profile.companyLogo || '',
       });
       setImagePreview(profile.profilePicture || '');
       setImageFile(null);
+      setLogoPreview(profile.companyLogo || '');
+      setLogoFile(null);
     }
     setIsEditing(false);
   };
@@ -403,6 +477,124 @@ function Profile() {
             <p className="text-gray-700">{profile?.bio || 'No bio added yet.'}</p>
           )}
         </div>
+
+        {/* Employer Company Information */}
+        {user?.role === 'employer' && (
+          <div className="card">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Company Information</h3>
+            
+            {/* Company Logo */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Company Logo
+              </label>
+              <div className="flex items-center gap-4">
+                {logoPreview || formData.companyLogo ? (
+                  <img
+                    src={logoPreview || formData.companyLogo}
+                    alt="Company Logo"
+                    className="w-24 h-24 rounded-lg object-contain border border-gray-200"
+                  />
+                ) : (
+                  <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <Briefcase className="w-10 h-10 text-gray-400" />
+                  </div>
+                )}
+                {isEditing && (
+                  <div className="flex-1">
+                    <label className="btn-secondary cursor-pointer inline-block">
+                      <Camera className="w-4 h-4 inline mr-2" />
+                      Choose Logo
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoChange}
+                        className="hidden"
+                      />
+                    </label>
+                    {logoFile && (
+                      <button
+                        type="button"
+                        onClick={handleUploadLogo}
+                        disabled={uploadingLogo}
+                        className="btn-primary ml-2"
+                      >
+                        {uploadingLogo ? 'Uploading...' : 'Upload Logo'}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Company Name
+                </label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="companyName"
+                    value={formData.companyName}
+                    onChange={handleChange}
+                    className="input-field"
+                    placeholder="Your Company Name"
+                  />
+                ) : (
+                  <p className="text-gray-700">{profile?.companyName || 'Not specified'}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Company Website
+                </label>
+                {isEditing ? (
+                  <input
+                    type="url"
+                    name="companyWebsite"
+                    value={formData.companyWebsite}
+                    onChange={handleChange}
+                    className="input-field"
+                    placeholder="https://www.example.com"
+                  />
+                ) : (
+                  profile?.companyWebsite ? (
+                    <a
+                      href={profile.companyWebsite}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary-600 hover:text-primary-700"
+                    >
+                      {profile.companyWebsite}
+                    </a>
+                  ) : (
+                    <p className="text-gray-700">Not specified</p>
+                  )
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Company Description
+                </label>
+                {isEditing ? (
+                  <textarea
+                    name="companyDescription"
+                    value={formData.companyDescription}
+                    onChange={handleChange}
+                    rows="4"
+                    className="input-field"
+                    placeholder="Tell us about your company..."
+                  />
+                ) : (
+                  <p className="text-gray-700">{profile?.companyDescription || 'No description added yet.'}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Skills Section */}
         <div className="card">

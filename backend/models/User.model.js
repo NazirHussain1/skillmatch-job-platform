@@ -61,6 +61,23 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  // Employer-specific fields
+  companyName: {
+    type: String,
+    default: ''
+  },
+  companyWebsite: {
+    type: String,
+    default: ''
+  },
+  companyDescription: {
+    type: String,
+    default: ''
+  },
+  companyLogo: {
+    type: String,
+    default: ''
+  },
   isEmailVerified: {
     type: Boolean,
     default: false
