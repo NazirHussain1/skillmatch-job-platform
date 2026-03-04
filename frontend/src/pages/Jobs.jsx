@@ -4,11 +4,12 @@ import { toast } from 'react-hot-toast';
 import { getJobs, createJob } from '../features/jobs/jobSlice';
 import { createApplication } from '../features/applications/applicationSlice';
 import { Briefcase, MapPin, DollarSign, Plus, X, Search, Filter } from 'lucide-react';
+import Pagination from '../components/Pagination';
 
 function Jobs() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const { jobs, isLoading } = useSelector((state) => state.jobs);
+  const { jobs, pagination, isLoading } = useSelector((state) => state.jobs);
   const [showModal, setShowModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [formData, setFormData] = useState({
@@ -30,6 +31,8 @@ function Jobs() {
     keyword: '',
     location: '',
     salary: '',
+    page: 1,
+    limit: 9,
   });
 
   useEffect(() => {
@@ -59,7 +62,11 @@ function Jobs() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    setSearchParams(filters);
+    setSearchParams({
+      ...filters,
+      page: 1, // Reset to page 1 when searching
+      limit: 9,
+    });
   };
 
   const handleClearFilters = () => {
@@ -72,6 +79,8 @@ function Jobs() {
       keyword: '',
       location: '',
       salary: '',
+      page: 1,
+      limit: 9,
     });
   };
 
@@ -80,6 +89,15 @@ function Jobs() {
       ...filters,
       [field]: value,
     });
+  };
+
+  const handlePageChange = (page) => {
+    setSearchParams({
+      ...searchParams,
+      page,
+    });
+    // Scroll to top when page changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (

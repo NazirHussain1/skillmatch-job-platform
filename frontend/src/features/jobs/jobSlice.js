@@ -4,6 +4,12 @@ import jobService from '../../services/jobService';
 const initialState = {
   jobs: [],
   job: null,
+  pagination: {
+    page: 1,
+    limit: 9,
+    total: 0,
+    pages: 0
+  },
   isLoading: false,
   isSuccess: false,
   isError: false,
@@ -63,7 +69,13 @@ export const jobSlice = createSlice({
       .addCase(getJobs.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        state.jobs = action.payload;
+        // Handle both array response (old) and object response (new with pagination)
+        if (Array.isArray(action.payload)) {
+          state.jobs = action.payload;
+        } else {
+          state.jobs = action.payload.jobs || action.payload;
+          state.pagination = action.payload.pagination || state.pagination;
+        }
       })
       .addCase(getJobs.rejected, (state, action) => {
         state.isLoading = false;

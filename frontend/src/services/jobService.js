@@ -15,7 +15,9 @@ const getJobs = async (filters = {}) => {
   const url = queryString ? `/jobs?${queryString}` : '/jobs';
   
   const response = await api.get(url);
-  return response.data.data.jobs || response.data.data;
+  
+  // Return the full data object (includes jobs and pagination)
+  return response.data.data;
 };
 
 // Get single job
