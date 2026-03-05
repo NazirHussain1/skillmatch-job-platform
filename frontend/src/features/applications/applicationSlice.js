@@ -3,6 +3,7 @@ import applicationService from '../../services/applicationService';
 
 const initialState = {
   applications: [],
+  jobApplications: [],
   isLoading: false,
   isSuccess: false,
   isError: false,
@@ -101,7 +102,7 @@ export const applicationSlice = createSlice({
       .addCase(getJobApplications.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        state.applications = action.payload;
+        state.jobApplications = action.payload;
       })
       .addCase(getJobApplications.rejected, (state, action) => {
         state.isLoading = false;
@@ -117,6 +118,10 @@ export const applicationSlice = createSlice({
         const index = state.applications.findIndex(app => app._id === action.payload._id);
         if (index !== -1) {
           state.applications[index] = action.payload;
+        }
+        const jobAppIndex = state.jobApplications.findIndex(app => app._id === action.payload._id);
+        if (jobAppIndex !== -1) {
+          state.jobApplications[jobAppIndex] = action.payload;
         }
       })
       .addCase(updateApplicationStatus.rejected, (state, action) => {

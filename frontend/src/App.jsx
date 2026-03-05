@@ -183,7 +183,7 @@ function App() {
           />
 
           <Route 
-            path="/my-jobs/:jobId/applicants" 
+            path="/job-applicants/:jobId" 
             element={
               <RoleBasedRoute allowedRoles={['employer']}>
                 <MainLayout>

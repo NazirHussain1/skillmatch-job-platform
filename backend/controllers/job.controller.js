@@ -46,6 +46,7 @@ const getJobs = asyncHandler(async (req, res) => {
   // Get jobs with filters
   const jobs = await Job.find(filter)
     .populate('employer', 'name email')
+    .populate('applicationCount')
     .sort({ createdAt: -1 })
     .limit(limitNum)
     .skip(skip);

@@ -3,6 +3,7 @@ import jobService from '../../services/jobService';
 
 const initialState = {
   jobs: [],
+  employerJobs: [],
   job: null,
   pagination: {
     page: 1,
@@ -22,6 +23,23 @@ export const getJobs = createAsyncThunk(
   async (filters, thunkAPI) => {
     try {
       return await jobService.getJobs(filters);
+    } catch (error) {
+      const message = error.response?.data?.message || error.message;
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+// Get employer jobs
+export const getEmployerJobs = createAsyncThunk(
+  'jobs/getEmployerJobs',
+  async (_, thunkAPI) => {
+    try {
+      const user = thunkAPI.getState().auth.user;
+      if (!user) {
+        return thunkAPI.rejectWithValue('User not authenticated');
+      }
+      return await jobService.getJobs({ employer: user._id });
     } catch (error) {
       const message = error.response?.data?.message || error.message;
       return thunkAPI.rejectWithValue(message);
@@ -160,6 +178,23 @@ export const jobSlice = createSlice({
         state.jobs = state.jobs.filter(job => job._id !== action.payload);
       })
       .addCase(deleteJob.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      .addCase(getEmployerJobs.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getEmployerJobs.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        if (Array.isArray(action.payload)) {
+          state.employerJobs = action.payload;
+        } else {
+          state.employerJobs = action.payload.jobs || action.payload;
+        }
+      })
+      .addCase(getEmployerJobs.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;
