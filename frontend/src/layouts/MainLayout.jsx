@@ -38,6 +38,11 @@ const MainLayout = ({ children }) => {
                   Applications
                 </Link>
               )}
+              {user?.role === 'employer' && (
+                <Link to="/my-jobs" className="text-gray-700 hover:text-primary-600 transition duration-200">
+                  My Jobs
+                </Link>
+              )}
               <Link to="/profile" className="text-gray-700 hover:text-primary-600 transition duration-200">
                 Profile
               </Link>
@@ -64,7 +69,7 @@ const MainLayout = ({ children }) => {
 
       {/* Mobile Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
-        <div className="grid grid-cols-4 gap-1 px-2 py-2">
+        <div className={`grid ${user?.role === 'employer' ? 'grid-cols-4' : 'grid-cols-4'} gap-1 px-2 py-2`}>
           <Link to="/dashboard" className="flex flex-col items-center gap-1 px-2 py-2 rounded-xl text-gray-600 hover:bg-gray-100 transition duration-200">
             <LayoutDashboard size={20} />
             <span className="text-xs">Dashboard</span>
@@ -77,6 +82,12 @@ const MainLayout = ({ children }) => {
             <Link to="/applications" className="flex flex-col items-center gap-1 px-2 py-2 rounded-xl text-gray-600 hover:bg-gray-100 transition duration-200">
               <FileText size={20} />
               <span className="text-xs">Applications</span>
+            </Link>
+          )}
+          {user?.role === 'employer' && (
+            <Link to="/my-jobs" className="flex flex-col items-center gap-1 px-2 py-2 rounded-xl text-gray-600 hover:bg-gray-100 transition duration-200">
+              <FileText size={20} />
+              <span className="text-xs">My Jobs</span>
             </Link>
           )}
           <Link to="/profile" className="flex flex-col items-center gap-1 px-2 py-2 rounded-xl text-gray-600 hover:bg-gray-100 transition duration-200">

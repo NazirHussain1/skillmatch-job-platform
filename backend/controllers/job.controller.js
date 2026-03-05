@@ -6,10 +6,15 @@ const Job = require('../models/Job.model');
 // @route   GET /api/jobs
 // @access  Public
 const getJobs = asyncHandler(async (req, res) => {
-  const { keyword, location, salary, page = 1, limit = 10 } = req.query;
+  const { keyword, location, salary, page = 1, limit = 10, employer } = req.query;
   
   // Build filter object
   const filter = {};
+  
+  // Filter by employer if provided
+  if (employer) {
+    filter.employer = employer;
+  }
   
   // Keyword search (searches in title, company, and description)
   if (keyword) {
