@@ -43,6 +43,19 @@ const MainLayout = ({ children }) => {
                   My Jobs
                 </Link>
               )}
+              {user?.role === 'admin' && (
+                <>
+                  <Link to="/admin" className="text-gray-700 hover:text-primary-600 transition duration-200">
+                    Analytics
+                  </Link>
+                  <Link to="/admin/users" className="text-gray-700 hover:text-primary-600 transition duration-200">
+                    Users
+                  </Link>
+                  <Link to="/admin/jobs" className="text-gray-700 hover:text-primary-600 transition duration-200">
+                    All Jobs
+                  </Link>
+                </>
+              )}
               <Link to="/profile" className="text-gray-700 hover:text-primary-600 transition duration-200">
                 Profile
               </Link>
