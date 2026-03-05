@@ -44,12 +44,26 @@ const deleteJob = async (id) => {
   return response.data.data;
 };
 
+// Update job status
+const updateJobStatus = async (id, status) => {
+  const response = await api.patch(`/jobs/${id}/status`, { status });
+  return response.data.data;
+};
+
+// Get job statistics (employer)
+const getJobStats = async () => {
+  const response = await api.get('/jobs/stats');
+  return response.data.data;
+};
+
 const jobService = {
   getJobs,
   getJob,
   createJob,
   updateJob,
   deleteJob,
+  updateJobStatus,
+  getJobStats,
 };
 
 export default jobService;

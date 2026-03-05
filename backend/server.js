@@ -20,6 +20,7 @@ const jobRoutes = require('./routes/job.routes');
 const applicationRoutes = require('./routes/application.routes');
 const adminRoutes = require('./routes/admin.routes');
 const chatRoutes = require('./routes/chat.routes');
+const companyRoutes = require('./routes/company.routes');
 
 // Import middleware
 const { errorHandler, notFound } = require('./middleware/error.middleware');
@@ -62,6 +63,7 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/company', companyRoutes);
 
 // Error handling
 app.use(notFound);
