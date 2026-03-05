@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { getJobApplications, updateApplicationStatus } from '../features/applications/applicationSlice';
 import { getJob } from '../features/jobs/jobSlice';
-import { ArrowLeft, Mail, User, Calendar, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Mail, User, Calendar, CheckCircle, XCircle, Clock, MessageCircle } from 'lucide-react';
 
 function JobApplicants() {
   const { jobId } = useParams();
@@ -205,6 +205,14 @@ function JobApplicants() {
                     </button>
                   </div>
                 )}
+                
+                <button
+                  onClick={() => navigate(`/chat?application=${application._id}`)}
+                  className="btn-secondary flex items-center gap-2"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Chat
+                </button>
               </div>
             </div>
           ))}

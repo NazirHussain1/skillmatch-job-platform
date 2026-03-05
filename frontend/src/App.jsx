@@ -31,6 +31,7 @@ const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminUsers = lazy(() => import('./pages/AdminUsers'));
 const AdminJobs = lazy(() => import('./pages/AdminJobs'));
 const SavedJobs = lazy(() => import('./pages/SavedJobs'));
+const Chat = lazy(() => import('./pages/Chat'));
 
 function App() {
   useAuthPersist();
@@ -156,6 +157,17 @@ function App() {
                   <SavedJobs />
                 </MainLayout>
               </RoleBasedRoute>
+            } 
+          />
+
+          <Route 
+            path="/chat" 
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <Chat />
+                </MainLayout>
+              </ProtectedRoute>
             } 
           />
 

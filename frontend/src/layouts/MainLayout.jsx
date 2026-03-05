@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../features/auth/authSlice';
-import { Briefcase, LayoutDashboard, FileText, User, LogOut, Bookmark } from 'lucide-react';
+import { Briefcase, LayoutDashboard, FileText, User, LogOut, Bookmark, MessageCircle } from 'lucide-react';
 
 const MainLayout = ({ children }) => {
   const navigate = useNavigate();
@@ -32,6 +32,9 @@ const MainLayout = ({ children }) => {
               </Link>
               <Link to="/jobs" className="text-gray-700 hover:text-primary-600 transition duration-200">
                 Jobs
+              </Link>
+              <Link to="/chat" className="text-gray-700 hover:text-primary-600 transition duration-200">
+                Messages
               </Link>
               {user?.role === 'jobseeker' && (
                 <>

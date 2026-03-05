@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { getApplications } from '../features/applications/applicationSlice';
-import { FileText, MapPin, DollarSign, Calendar } from 'lucide-react';
+import { FileText, MapPin, DollarSign, Calendar, MessageCircle } from 'lucide-react';
 
 function Applications() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { applications, isLoading } = useSelector((state) => state.applications);
 
   useEffect(() => {
@@ -64,9 +66,18 @@ function Applications() {
                     </div>
                   </div>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(app.status)}`}>
-                  {app.status}
-                </span>
+                <div className="flex flex-col items-end gap-2">
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(app.status)}`}>
+                    {app.status}
+                  </span>
+                  <button
+                    onClick={() => navigate(`/chat?application=${app._id}`)}
+                    className="btn-secondary flex items-center gap-2"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Chat
+                  </button>
+                </div>
               </div>
             </div>
           ))}
