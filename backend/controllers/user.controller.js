@@ -186,7 +186,7 @@ const uploadProfilePicture = asyncHandler(async (req, res) => {
       const publicId = user.profilePicture.split('/').pop().split('.')[0];
       await cloudinary.uploader.destroy(`skillmatch/profiles/${publicId}`);
     } catch (error) {
-      console.log('Error deleting old image:', error.message);
+      // Silently handle old image deletion errors
     }
   }
 
@@ -259,7 +259,7 @@ const uploadCompanyLogo = asyncHandler(async (req, res) => {
       const publicId = user.companyLogo.split('/').pop().split('.')[0];
       await cloudinary.uploader.destroy(`skillmatch/company-logos/${publicId}`);
     } catch (error) {
-      console.log('Error deleting old logo:', error.message);
+      // Silently handle old logo deletion errors
     }
   }
 
@@ -332,7 +332,7 @@ const uploadResume = asyncHandler(async (req, res) => {
       const publicId = user.resume.split('/').pop().split('.')[0];
       await cloudinary.uploader.destroy(`skillmatch/resumes/${publicId}`, { resource_type: 'raw' });
     } catch (error) {
-      console.log('Error deleting old resume:', error.message);
+      // Silently handle old resume deletion errors
     }
   }
 

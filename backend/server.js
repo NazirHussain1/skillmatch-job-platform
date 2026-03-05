@@ -73,25 +73,20 @@ app.use(errorHandler);
 const onlineUsers = new Map();
 
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
-  
   // User joins with their ID
   socket.on('join', (userId) => {
     onlineUsers.set(userId, socket.id);
     socket.userId = userId;
-    console.log(`User ${userId} joined`);
   });
   
   // Join conversation room
   socket.on('join-conversation', (conversationId) => {
     socket.join(conversationId);
-    console.log(`User ${socket.userId} joined conversation ${conversationId}`);
   });
   
   // Leave conversation room
   socket.on('leave-conversation', (conversationId) => {
     socket.leave(conversationId);
-    console.log(`User ${socket.userId} left conversation ${conversationId}`);
   });
   
   // Send message
@@ -116,7 +111,6 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     if (socket.userId) {
       onlineUsers.delete(socket.userId);
-      console.log(`User ${socket.userId} disconnected`);
     }
   });
 });
