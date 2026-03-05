@@ -3,6 +3,7 @@ import userService from '../../services/userService';
 
 const initialState = {
   profile: null,
+  savedJobs: [],
   isLoading: false,
   isSuccess: false,
   isError: false,
@@ -31,6 +32,70 @@ export const updateUserProfile = createAsyncThunk(
   async (profileData, thunkAPI) => {
     try {
       return await userService.updateUserProfile(profileData);
+    } catch (error) {
+      const message =
+        (error.response && error.response.data && error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+// Upload resume
+export const uploadResume = createAsyncThunk(
+  'user/uploadResume',
+  async (file, thunkAPI) => {
+    try {
+      return await userService.uploadResume(file);
+    } catch (error) {
+      const message =
+        (error.response && error.response.data && error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+// Save job
+export const saveJob = createAsyncThunk(
+  'user/saveJob',
+  async (jobId, thunkAPI) => {
+    try {
+      return await userService.saveJob(jobId);
+    } catch (error) {
+      const message =
+        (error.response && error.response.data && error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+// Unsave job
+export const unsaveJob = createAsyncThunk(
+  'user/unsaveJob',
+  async (jobId, thunkAPI) => {
+    try {
+      return await userService.unsaveJob(jobId);
+    } catch (error) {
+      const message =
+        (error.response && error.response.data && error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+// Get saved jobs
+export const getSavedJobs = createAsyncThunk(
+  'user/getSavedJobs',
+  async (_, thunkAPI) => {
+    try {
+      return await userService.getSavedJobs();
     } catch (error) {
       const message =
         (error.response && error.response.data && error.response.data.message) ||
@@ -78,6 +143,68 @@ export const userSlice = createSlice({
         state.profile = action.payload;
       })
       .addCase(updateUserProfile.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      // Upload resume
+      .addCase(uploadResume.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(uploadResume.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        if (state.profile) {
+          state.profile.resume = action.payload.resume;
+        }
+      })
+      .addCase(uploadResume.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      // Save job
+      .addCase(saveJob.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(saveJob.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        if (state.profile) {
+          state.profile.savedJobs = action.payload.savedJobs;
+        }
+      })
+      .addCase(saveJob.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      // Unsave job
+      .addCase(unsaveJob.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(unsaveJob.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        if (state.profile) {
+          state.profile.savedJobs = action.payload.savedJobs;
+        }
+      })
+      .addCase(unsaveJob.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      // Get saved jobs
+      .addCase(getSavedJobs.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getSavedJobs.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.savedJobs = action.payload;
+      })
+      .addCase(getSavedJobs.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;

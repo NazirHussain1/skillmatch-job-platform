@@ -61,6 +61,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  resume: {
+    type: String,
+    default: ''
+  },
+  savedJobs: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Job'
+  }],
   // Employer-specific fields
   companyName: {
     type: String,

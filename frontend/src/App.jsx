@@ -30,6 +30,7 @@ const JobApplicants = lazy(() => import('./pages/JobApplicants'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminUsers = lazy(() => import('./pages/AdminUsers'));
 const AdminJobs = lazy(() => import('./pages/AdminJobs'));
+const SavedJobs = lazy(() => import('./pages/SavedJobs'));
 
 function App() {
   useAuthPersist();
@@ -142,6 +143,17 @@ function App() {
               <RoleBasedRoute allowedRoles={['jobseeker']}>
                 <MainLayout>
                   <Applications />
+                </MainLayout>
+              </RoleBasedRoute>
+            } 
+          />
+
+          <Route 
+            path="/saved-jobs" 
+            element={
+              <RoleBasedRoute allowedRoles={['jobseeker']}>
+                <MainLayout>
+                  <SavedJobs />
                 </MainLayout>
               </RoleBasedRoute>
             } 

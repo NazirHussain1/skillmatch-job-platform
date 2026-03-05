@@ -7,11 +7,16 @@ const {
   updateUser,
   deleteUser,
   uploadProfilePicture,
-  uploadCompanyLogo
+  uploadCompanyLogo,
+  uploadResume,
+  saveJob,
+  unsaveJob,
+  getSavedJobs
 } = require('../controllers/user.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 const validate = require('../middleware/validate.middleware');
 const upload = require('../middleware/upload.middleware');
+const { uploadDocument } = require('../middleware/upload.middleware');
 const {
   updateProfileValidator,
   updateUserValidator,
@@ -30,6 +35,14 @@ router.post('/profile/picture', protect, upload.single('profilePicture'), upload
 
 // Company logo upload (employer only)
 router.post('/profile/company-logo', protect, authorize('employer'), upload.single('companyLogo'), uploadCompanyLogo);
+
+// Resume upload (jobseeker only)
+router.post('/profile/resume', protect, authorize('jobseeker'), uploadDocument.single('resume'), uploadResume);
+
+// Saved jobs routes (jobseeker only)
+router.get('/saved-jobs', protect, authorize('jobseeker'), getSavedJobs);
+router.post('/saved-jobs/:jobId', protect, authorize('jobseeker'), saveJob);
+router.delete('/saved-jobs/:jobId', protect, authorize('jobseeker'), unsaveJob);
 
 // Admin routes
 router.route('/')

@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../features/auth/authSlice';
-import { Briefcase, LayoutDashboard, FileText, User, LogOut } from 'lucide-react';
+import { Briefcase, LayoutDashboard, FileText, User, LogOut, Bookmark } from 'lucide-react';
 
 const MainLayout = ({ children }) => {
   const navigate = useNavigate();
@@ -34,9 +34,14 @@ const MainLayout = ({ children }) => {
                 Jobs
               </Link>
               {user?.role === 'jobseeker' && (
-                <Link to="/applications" className="text-gray-700 hover:text-primary-600 transition duration-200">
-                  Applications
-                </Link>
+                <>
+                  <Link to="/applications" className="text-gray-700 hover:text-primary-600 transition duration-200">
+                    Applications
+                  </Link>
+                  <Link to="/saved-jobs" className="text-gray-700 hover:text-primary-600 transition duration-200">
+                    Saved Jobs
+                  </Link>
+                </>
               )}
               {user?.role === 'employer' && (
                 <Link to="/my-jobs" className="text-gray-700 hover:text-primary-600 transition duration-200">
@@ -82,7 +87,7 @@ const MainLayout = ({ children }) => {
 
       {/* Mobile Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
-        <div className={`grid ${user?.role === 'employer' ? 'grid-cols-4' : 'grid-cols-4'} gap-1 px-2 py-2`}>
+        <div className={`grid ${user?.role === 'jobseeker' ? 'grid-cols-5' : 'grid-cols-4'} gap-1 px-2 py-2`}>
           <Link to="/dashboard" className="flex flex-col items-center gap-1 px-2 py-2 rounded-xl text-gray-600 hover:bg-gray-100 transition duration-200">
             <LayoutDashboard size={20} />
             <span className="text-xs">Dashboard</span>
@@ -92,10 +97,16 @@ const MainLayout = ({ children }) => {
             <span className="text-xs">Jobs</span>
           </Link>
           {user?.role === 'jobseeker' && (
-            <Link to="/applications" className="flex flex-col items-center gap-1 px-2 py-2 rounded-xl text-gray-600 hover:bg-gray-100 transition duration-200">
-              <FileText size={20} />
-              <span className="text-xs">Applications</span>
-            </Link>
+            <>
+              <Link to="/applications" className="flex flex-col items-center gap-1 px-2 py-2 rounded-xl text-gray-600 hover:bg-gray-100 transition duration-200">
+                <FileText size={20} />
+                <span className="text-xs">Applications</span>
+              </Link>
+              <Link to="/saved-jobs" className="flex flex-col items-center gap-1 px-2 py-2 rounded-xl text-gray-600 hover:bg-gray-100 transition duration-200">
+                <Bookmark size={20} />
+                <span className="text-xs">Saved</span>
+              </Link>
+            </>
           )}
           {user?.role === 'employer' && (
             <Link to="/my-jobs" className="flex flex-col items-center gap-1 px-2 py-2 rounded-xl text-gray-600 hover:bg-gray-100 transition duration-200">

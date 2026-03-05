@@ -302,6 +302,169 @@ const uploadCompanyLogo = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Upload resume
+// @route   POST /api/users/profile/resume
+// @access  Private (Jobseeker only)
+const uploadResume = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json(
+      ApiResponse.error('Please upload a resume file', 400)
+    );
+  }
+
+  const user = await User.findById(req.user._id);
+  
+  if (!user) {
+    return res.status(404).json(
+      ApiResponse.error('User not found', 404)
+    );
+  }
+
+  if (user.role !== 'jobseeker') {
+    return res.status(403).json(
+      ApiResponse.error('Only jobseekers can upload resumes', 403)
+    );
+  }
+
+  // Delete old resume from cloudinary if exists
+  if (user.resume) {
+    try {
+      const publicId = user.resume.split('/').pop().split('.')[0];
+      await cloudinary.uploader.destroy(`skillmatch/resumes/${publicId}`, { resource_type: 'raw' });
+    } catch (error) {
+      console.log('Error deleting old resume:', error.message);
+    }
+  }
+
+  // Upload to cloudinary
+  const uploadStream = () => {
+    return new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'skillmatch/resumes',
+          resource_type: 'raw',
+          format: req.file.originalname.split('.').pop()
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      stream.end(req.file.buffer);
+    });
+  };
+
+  try {
+    const result = await uploadStream();
+    
+    // Update user resume
+    user.resume = result.secure_url;
+    await user.save();
+
+    res.status(200).json(
+      ApiResponse.success('Resume uploaded successfully', {
+        resume: result.secure_url
+      })
+    );
+  } catch (error) {
+    res.status(500).json(
+      ApiResponse.error('Error uploading resume to cloudinary', 500)
+    );
+  }
+});
+
+// @desc    Save/Bookmark job
+// @route   POST /api/users/saved-jobs/:jobId
+// @access  Private (Jobseeker only)
+const saveJob = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  
+  if (!user) {
+    return res.status(404).json(
+      ApiResponse.error('User not found', 404)
+    );
+  }
+
+  if (user.role !== 'jobseeker') {
+    return res.status(403).json(
+      ApiResponse.error('Only jobseekers can save jobs', 403)
+    );
+  }
+
+  const jobId = req.params.jobId;
+
+  // Check if job is already saved
+  if (user.savedJobs.includes(jobId)) {
+    return res.status(400).json(
+      ApiResponse.error('Job already saved', 400)
+    );
+  }
+
+  user.savedJobs.push(jobId);
+  await user.save();
+
+  res.status(200).json(
+    ApiResponse.success('Job saved successfully', { savedJobs: user.savedJobs })
+  );
+});
+
+// @desc    Unsave/Remove bookmark from job
+// @route   DELETE /api/users/saved-jobs/:jobId
+// @access  Private (Jobseeker only)
+const unsaveJob = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  
+  if (!user) {
+    return res.status(404).json(
+      ApiResponse.error('User not found', 404)
+    );
+  }
+
+  if (user.role !== 'jobseeker') {
+    return res.status(403).json(
+      ApiResponse.error('Only jobseekers can unsave jobs', 403)
+    );
+  }
+
+  const jobId = req.params.jobId;
+
+  user.savedJobs = user.savedJobs.filter(id => id.toString() !== jobId);
+  await user.save();
+
+  res.status(200).json(
+    ApiResponse.success('Job removed from saved', { savedJobs: user.savedJobs })
+  );
+});
+
+// @desc    Get saved jobs
+// @route   GET /api/users/saved-jobs
+// @access  Private (Jobseeker only)
+const getSavedJobs = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id).populate({
+    path: 'savedJobs',
+    populate: {
+      path: 'employer',
+      select: 'name email companyName'
+    }
+  });
+  
+  if (!user) {
+    return res.status(404).json(
+      ApiResponse.error('User not found', 404)
+    );
+  }
+
+  if (user.role !== 'jobseeker') {
+    return res.status(403).json(
+      ApiResponse.error('Only jobseekers can view saved jobs', 403)
+    );
+  }
+
+  res.status(200).json(
+    ApiResponse.success('Saved jobs retrieved successfully', user.savedJobs)
+  );
+});
+
 module.exports = {
   getProfile,
   updateProfile,
@@ -310,5 +473,9 @@ module.exports = {
   updateUser,
   deleteUser,
   uploadProfilePicture,
-  uploadCompanyLogo
+  uploadCompanyLogo,
+  uploadResume,
+  saveJob,
+  unsaveJob,
+  getSavedJobs
 };

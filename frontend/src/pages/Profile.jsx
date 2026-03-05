@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { User, Mail, Briefcase, Calendar, MapPin, Edit2, Save, X, Plus, Trash2, Camera } from 'lucide-react';
-import { getUserProfile, updateUserProfile, reset } from '../features/user/userSlice';
+import { User, Mail, Briefcase, Calendar, MapPin, Edit2, Save, X, Plus, Trash2, Camera, FileText, Upload } from 'lucide-react';
+import { getUserProfile, updateUserProfile, reset, uploadResume } from '../features/user/userSlice';
 import { toast } from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
 import api from '../services/api';
@@ -35,6 +35,8 @@ function Profile() {
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState('');
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [resumeFile, setResumeFile] = useState(null);
+  const [uploadingResume, setUploadingResume] = useState(false);
 
   useEffect(() => {
     dispatch(getUserProfile());
@@ -270,6 +272,43 @@ function Profile() {
       toast.error(error.response?.data?.message || 'Failed to upload logo');
     } finally {
       setUploadingLogo(false);
+    }
+  };
+
+  const handleResumeChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('Resume size should be less than 10MB');
+        return;
+      }
+      
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Please select a PDF, DOC, or DOCX file');
+        return;
+      }
+
+      setResumeFile(file);
+    }
+  };
+
+  const handleUploadResume = async () => {
+    if (!resumeFile) {
+      toast.error('Please select a resume first');
+      return;
+    }
+
+    setUploadingResume(true);
+    try {
+      await dispatch(uploadResume(resumeFile)).unwrap();
+      toast.success('Resume uploaded successfully');
+      setResumeFile(null);
+      dispatch(getUserProfile());
+    } catch (error) {
+      toast.error(error || 'Failed to upload resume');
+    } finally {
+      setUploadingResume(false);
     }
   };
 
@@ -591,6 +630,72 @@ function Profile() {
                 ) : (
                   <p className="text-gray-700">{profile?.companyDescription || 'No description added yet.'}</p>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Resume Upload Section (Jobseeker only) */}
+        {user?.role === 'jobseeker' && (
+          <div className="card">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Resume</h3>
+            
+            <div className="space-y-4">
+              {profile?.resume && (
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <FileText className="w-8 h-8 text-primary-600" />
+                    <div>
+                      <p className="font-medium text-gray-900">Current Resume</p>
+                      <a
+                        href={profile.resume}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary-600 hover:text-primary-700"
+                      >
+                        View Resume
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Upload New Resume (PDF, DOC, DOCX)
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleResumeChange}
+                    className="hidden"
+                    id="resume-upload"
+                  />
+                  <label
+                    htmlFor="resume-upload"
+                    className="btn-secondary cursor-pointer flex items-center gap-2"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Choose File
+                  </label>
+                  {resumeFile && (
+                    <>
+                      <span className="text-sm text-gray-600">{resumeFile.name}</span>
+                      <button
+                        type="button"
+                        onClick={handleUploadResume}
+                        disabled={uploadingResume}
+                        className="btn-primary"
+                      >
+                        {uploadingResume ? 'Uploading...' : 'Upload'}
+                      </button>
+                    </>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Maximum file size: 10MB. Supported formats: PDF, DOC, DOCX
+                </p>
               </div>
             </div>
           </div>

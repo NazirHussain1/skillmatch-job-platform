@@ -3,13 +3,15 @@ import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-hot-toast';
 import { getJobs, createJob } from '../features/jobs/jobSlice';
 import { createApplication } from '../features/applications/applicationSlice';
-import { Briefcase, MapPin, DollarSign, Plus, X, Search, Filter } from 'lucide-react';
+import { saveJob, unsaveJob } from '../features/user/userSlice';
+import { Briefcase, MapPin, DollarSign, Plus, X, Search, Filter, Bookmark, BookmarkCheck } from 'lucide-react';
 import Pagination from '../components/Pagination';
 
 function Jobs() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { jobs, pagination, isLoading } = useSelector((state) => state.jobs);
+  const { profile } = useSelector((state) => state.user);
   const [showModal, setShowModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [formData, setFormData] = useState({
@@ -58,6 +60,24 @@ function Jobs() {
     } catch (error) {
       toast.error(error || 'Failed to apply');
     }
+  };
+
+  const handleSaveJob = async (jobId) => {
+    try {
+      if (profile?.savedJobs?.includes(jobId)) {
+        await dispatch(unsaveJob(jobId)).unwrap();
+        toast.success('Job removed from saved');
+      } else {
+        await dispatch(saveJob(jobId)).unwrap();
+        toast.success('Job saved!');
+      }
+    } catch (error) {
+      toast.error(error || 'Failed to save job');
+    }
+  };
+
+  const isJobSaved = (jobId) => {
+    return profile?.savedJobs?.includes(jobId);
   };
 
   const handleSearch = (e) => {
@@ -266,8 +286,22 @@ function Jobs() {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {jobs.map((job) => (
-                  <div key={job._id} className="card hover-lift">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">{job.title}</h3>
+                  <div key={job._id} className="card hover-lift relative">
+                    {user?.role === 'jobseeker' && (
+                      <button
+                        onClick={() => handleSaveJob(job._id)}
+                        className="absolute top-4 right-4 p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                        title={isJobSaved(job._id) ? 'Remove from saved' : 'Save job'}
+                      >
+                        {isJobSaved(job._id) ? (
+                          <BookmarkCheck className="w-5 h-5 fill-current" />
+                        ) : (
+                          <Bookmark className="w-5 h-5" />
+                        )}
+                      </button>
+                    )}
+                    
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2 pr-10">{job.title}</h3>
                     <p className="text-gray-600 mb-4">{job.company}</p>
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center gap-2 text-gray-600">
