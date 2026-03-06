@@ -6,7 +6,7 @@ const Job = require('../models/Job.model');
 // @route   GET /api/jobs
 // @access  Public
 const getJobs = asyncHandler(async (req, res) => {
-  const { keyword, location, salary, page = 1, limit = 10, employer } = req.query;
+  const { keyword, location, salary, category, page = 1, limit = 10, employer } = req.query;
   
   // Build filter object
   const filter = {};
@@ -33,6 +33,11 @@ const getJobs = asyncHandler(async (req, res) => {
   // Salary filter (minimum salary)
   if (salary) {
     filter.salary = { $gte: parseInt(salary) };
+  }
+  
+  // Category filter
+  if (category) {
+    filter.category = category;
   }
   
   // Pagination

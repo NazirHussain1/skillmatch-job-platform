@@ -30,7 +30,13 @@ const createJobValidator = [
   body('jobType')
     .optional()
     .isIn(['full-time', 'part-time', 'remote', 'internship', 'contract'])
-    .withMessage('Invalid job type')
+    .withMessage('Invalid job type'),
+  
+  body('category')
+    .notEmpty()
+    .withMessage('Category is required')
+    .isIn(['Software Development', 'Design', 'Marketing', 'Sales', 'Customer Support', 'Finance', 'HR', 'Other'])
+    .withMessage('Invalid category')
 ];
 
 const updateJobValidator = [
@@ -70,7 +76,12 @@ const updateJobValidator = [
   body('jobType')
     .optional()
     .isIn(['full-time', 'part-time', 'remote', 'internship', 'contract'])
-    .withMessage('Invalid job type')
+    .withMessage('Invalid job type'),
+  
+  body('category')
+    .optional()
+    .isIn(['Software Development', 'Design', 'Marketing', 'Sales', 'Customer Support', 'Finance', 'HR', 'Other'])
+    .withMessage('Invalid category')
 ];
 
 const jobIdValidator = [

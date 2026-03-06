@@ -21,6 +21,7 @@ function Jobs() {
     location: '',
     salary: '',
     jobType: 'full-time',
+    category: '',
   });
 
   // Search and filter state
@@ -28,12 +29,14 @@ function Jobs() {
     keyword: '',
     location: '',
     salary: '',
+    category: '',
   });
 
   const [searchParams, setSearchParams] = useState({
     keyword: '',
     location: '',
     salary: '',
+    category: '',
     page: 1,
     limit: 9,
   });
@@ -48,7 +51,7 @@ function Jobs() {
       await dispatch(createJob({ ...formData, salary: Number(formData.salary) })).unwrap();
       toast.success('Job posted successfully!');
       setShowModal(false);
-      setFormData({ title: '', company: '', description: '', location: '', salary: '', jobType: 'full-time' });
+      setFormData({ title: '', company: '', description: '', location: '', salary: '', jobType: 'full-time', category: '' });
     } catch (error) {
       toast.error(error || 'Failed to post job');
     }
@@ -95,11 +98,13 @@ function Jobs() {
       keyword: '',
       location: '',
       salary: '',
+      category: '',
     });
     setSearchParams({
       keyword: '',
       location: '',
       salary: '',
+      category: '',
       page: 1,
       limit: 9,
     });
@@ -166,7 +171,7 @@ function Jobs() {
 
           {/* Filter Dropdowns */}
           {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Location
@@ -178,6 +183,26 @@ function Jobs() {
                   onChange={(e) => handleFilterChange('location', e.target.value)}
                   className="input-field"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Category
+                </label>
+                <select
+                  value={filters.category}
+                  onChange={(e) => handleFilterChange('category', e.target.value)}
+                  className="input-field"
+                >
+                  <option value="">All Categories</option>
+                  <option value="Software Development">Software Development</option>
+                  <option value="Design">Design</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="Sales">Sales</option>
+                  <option value="Customer Support">Customer Support</option>
+                  <option value="Finance">Finance</option>
+                  <option value="HR">HR</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -210,7 +235,7 @@ function Jobs() {
         </form>
 
         {/* Active Filters Display */}
-        {(searchParams.keyword || searchParams.location || searchParams.salary) && (
+        {(searchParams.keyword || searchParams.location || searchParams.salary || searchParams.category) && (
           <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
             <span className="text-sm text-gray-600">Active filters:</span>
             {searchParams.keyword && (
@@ -248,6 +273,20 @@ function Jobs() {
                   onClick={() => {
                     setFilters({ ...filters, salary: '' });
                     setSearchParams({ ...searchParams, salary: '', page: 1 });
+                  }}
+                  className="hover:text-primary-900"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {searchParams.category && (
+              <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm flex items-center gap-2">
+                Category: {searchParams.category}
+                <button
+                  onClick={() => {
+                    setFilters({ ...filters, category: '' });
+                    setSearchParams({ ...searchParams, category: '', page: 1 });
                   }}
                   className="hover:text-primary-900"
                 >
@@ -305,9 +344,9 @@ function Jobs() {
                     <h3 className="text-xl font-semibold text-gray-900 mb-2 pr-10">{job.title}</h3>
                     <p className="text-gray-600 mb-4">{job.company}</p>
                     
-                    {/* Job Type Badge */}
-                    {job.jobType && (
-                      <div className="mb-3">
+                    {/* Job Type and Category Badges */}
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {job.jobType && (
                         <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-700">
                           {job.jobType === 'full-time' && 'Full Time'}
                           {job.jobType === 'part-time' && 'Part Time'}
@@ -315,8 +354,13 @@ function Jobs() {
                           {job.jobType === 'internship' && 'Internship'}
                           {job.jobType === 'contract' && 'Contract'}
                         </span>
-                      </div>
-                    )}
+                      )}
+                      {job.category && (
+                        <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-700">
+                          {job.category}
+                        </span>
+                      )}
+                    </div>
                     
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center gap-2 text-gray-600">
@@ -420,6 +464,22 @@ function Jobs() {
                 <option value="remote">Remote</option>
                 <option value="internship">Internship</option>
                 <option value="contract">Contract</option>
+              </select>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                className="input"
+                required
+              >
+                <option value="">Select Category</option>
+                <option value="Software Development">Software Development</option>
+                <option value="Design">Design</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Sales">Sales</option>
+                <option value="Customer Support">Customer Support</option>
+                <option value="Finance">Finance</option>
+                <option value="HR">HR</option>
+                <option value="Other">Other</option>
               </select>
               <button type="submit" className="btn-primary w-full">
                 Post Job

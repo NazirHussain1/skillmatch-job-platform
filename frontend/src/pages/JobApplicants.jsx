@@ -105,9 +105,9 @@ const JobApplicants = () => {
             <p className="text-gray-600">
               {job.company} • {job.location}
             </p>
-            {/* Job Type Badge */}
-            {job.jobType && (
-              <div className="mt-2">
+            {/* Job Type and Category Badges */}
+            <div className="flex flex-wrap gap-2 mt-2">
+              {job.jobType && (
                 <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-700">
                   {job.jobType === 'full-time' && 'Full Time'}
                   {job.jobType === 'part-time' && 'Part Time'}
@@ -115,8 +115,13 @@ const JobApplicants = () => {
                   {job.jobType === 'internship' && 'Internship'}
                   {job.jobType === 'contract' && 'Contract'}
                 </span>
-              </div>
-            )}
+              )}
+              {job.category && (
+                <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-700">
+                  {job.category}
+                </span>
+              )}
+            </div>
           </div>
         )}
       </div>

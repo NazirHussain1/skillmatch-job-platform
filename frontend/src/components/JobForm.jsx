@@ -7,7 +7,8 @@ const JobForm = ({ initialData = {}, onSubmit, onCancel, isLoading = false }) =>
     description: '',
     location: '',
     salary: '',
-    jobType: 'full-time'
+    jobType: 'full-time',
+    category: ''
   });
 
   const [errors, setErrors] = useState({});
@@ -20,7 +21,8 @@ const JobForm = ({ initialData = {}, onSubmit, onCancel, isLoading = false }) =>
         description: initialData.description || '',
         location: initialData.location || '',
         salary: initialData.salary || '',
-        jobType: initialData.jobType || 'full-time'
+        jobType: initialData.jobType || 'full-time',
+        category: initialData.category || ''
       });
     }
   }, [initialData]);
@@ -66,6 +68,10 @@ const JobForm = ({ initialData = {}, onSubmit, onCancel, isLoading = false }) =>
       newErrors.salary = 'Salary must be a positive number';
     }
     
+    if (!formData.category) {
+      newErrors.category = 'Category is required';
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -89,7 +95,8 @@ const JobForm = ({ initialData = {}, onSubmit, onCancel, isLoading = false }) =>
       formData.location.trim() &&
       formData.salary &&
       !isNaN(formData.salary) &&
-      Number(formData.salary) > 0
+      Number(formData.salary) > 0 &&
+      formData.category
     );
   };
 
@@ -203,6 +210,32 @@ const JobForm = ({ initialData = {}, onSubmit, onCancel, isLoading = false }) =>
           <option value="internship">Internship</option>
           <option value="contract">Contract</option>
         </select>
+      </div>
+
+      <div>
+        <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+          Category <span className="text-red-500">*</span>
+        </label>
+        <select
+          id="category"
+          name="category"
+          value={formData.category}
+          onChange={handleChange}
+          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            errors.category ? 'border-red-500' : 'border-gray-300'
+          }`}
+        >
+          <option value="">Select a category</option>
+          <option value="Software Development">Software Development</option>
+          <option value="Design">Design</option>
+          <option value="Marketing">Marketing</option>
+          <option value="Sales">Sales</option>
+          <option value="Customer Support">Customer Support</option>
+          <option value="Finance">Finance</option>
+          <option value="HR">HR</option>
+          <option value="Other">Other</option>
+        </select>
+        {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
       </div>
 
       <div className="flex gap-3 pt-4">

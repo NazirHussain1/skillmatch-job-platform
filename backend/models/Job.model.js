@@ -30,6 +30,11 @@ const jobSchema = new mongoose.Schema({
     required: true,
     default: 'full-time'
   },
+  category: {
+    type: String,
+    enum: ['Software Development', 'Design', 'Marketing', 'Sales', 'Customer Support', 'Finance', 'HR', 'Other'],
+    required: true
+  },
   status: {
     type: String,
     enum: ['active', 'closed', 'draft'],

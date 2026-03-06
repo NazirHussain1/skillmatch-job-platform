@@ -155,9 +155,9 @@ const MyJobs = () => {
               
               <p className="text-gray-600 font-medium mb-2">{job.company}</p>
               
-              {/* Job Type Badge */}
-              {job.jobType && (
-                <div className="mb-2">
+              {/* Job Type and Category Badges */}
+              <div className="flex flex-wrap gap-2 mb-2">
+                {job.jobType && (
                   <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-700">
                     {job.jobType === 'full-time' && 'Full Time'}
                     {job.jobType === 'part-time' && 'Part Time'}
@@ -165,8 +165,13 @@ const MyJobs = () => {
                     {job.jobType === 'internship' && 'Internship'}
                     {job.jobType === 'contract' && 'Contract'}
                   </span>
-                </div>
-              )}
+                )}
+                {job.category && (
+                  <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-700">
+                    {job.category}
+                  </span>
+                )}
+              </div>
               
               <p className="text-gray-500 text-sm mb-2">{job.location}</p>
               <p className="text-green-600 font-semibold mb-2">{formatSalary(job.salary)}/year</p>

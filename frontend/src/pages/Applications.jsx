@@ -52,9 +52,9 @@ function Applications() {
                   </h3>
                   <p className="text-gray-600 mb-3">{app.job?.company}</p>
                   
-                  {/* Job Type Badge */}
-                  {app.job?.jobType && (
-                    <div className="mb-3">
+                  {/* Job Type and Category Badges */}
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {app.job?.jobType && (
                       <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-700">
                         {app.job.jobType === 'full-time' && 'Full Time'}
                         {app.job.jobType === 'part-time' && 'Part Time'}
@@ -62,8 +62,13 @@ function Applications() {
                         {app.job.jobType === 'internship' && 'Internship'}
                         {app.job.jobType === 'contract' && 'Contract'}
                       </span>
-                    </div>
-                  )}
+                    )}
+                    {app.job?.category && (
+                      <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-700">
+                        {app.job.category}
+                      </span>
+                    )}
+                  </div>
                   
                   <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                     <div className="flex items-center gap-2">
