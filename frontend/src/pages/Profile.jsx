@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { User, Mail, Briefcase, Calendar, MapPin, Edit2, Save, X, Plus, Trash2, Camera, FileText, Upload } from 'lucide-react';
+import { Mail, Briefcase, Calendar, MapPin, Edit2, Save, X, Plus, Trash2, Camera, FileText, Upload } from 'lucide-react';
 import { getUserProfile, updateUserProfile, reset, uploadResume } from '../features/user/userSlice';
 import { toast } from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';

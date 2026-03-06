@@ -8,7 +8,7 @@ class ApiResponse {
     };
   }
 
-  static error(message, statusCode = 500) {
+  static error(message) {
     return {
       success: false,
       message

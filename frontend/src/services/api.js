@@ -26,7 +26,7 @@ api.interceptors.request.use(
         if (user && user.token) {
           config.headers.Authorization = `Bearer ${user.token}`;
         }
-      } catch (error) {
+      } catch {
         // If localStorage data is corrupted, clear it
         localStorage.removeItem('user');
       }

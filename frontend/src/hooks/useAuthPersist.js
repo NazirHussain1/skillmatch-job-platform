@@ -42,7 +42,7 @@ const useAuthPersist = () => {
             dispatch(logout());
           }
         }
-      } catch (error) {
+      } catch {
         // If localStorage data is corrupted, clear it
         localStorage.removeItem('user');
         dispatch(logout());

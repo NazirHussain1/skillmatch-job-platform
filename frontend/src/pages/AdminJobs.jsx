@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import adminService from '../services/adminService';
-import { Briefcase, Trash2, CheckCircle, XCircle, Clock, Filter, Building2, MapPin, DollarSign } from 'lucide-react';
+import { Trash2, CheckCircle, XCircle, Filter, Building2, MapPin, DollarSign } from 'lucide-react';
 import ConfirmDialog from '../components/ConfirmDialog';
 import SkeletonLoader from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';

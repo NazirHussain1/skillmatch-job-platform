@@ -157,7 +157,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
     return res.status(200).json(
       ApiResponse.success('Password reset email sent', { email: user.email })
     );
-  } catch (error) {
+  } catch {
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
     await user.save({ validateBeforeSave: false });
@@ -306,7 +306,7 @@ const resendVerification = asyncHandler(async (req, res) => {
     return res.status(200).json(
       ApiResponse.success('Verification email sent', { email: user.email })
     );
-  } catch (error) {
+  } catch {
     user.emailVerificationToken = undefined;
     user.emailVerificationExpire = undefined;
     await user.save({ validateBeforeSave: false });

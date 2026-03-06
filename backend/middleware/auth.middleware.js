@@ -33,7 +33,7 @@ const protect = asyncHandler(async (req, res, next) => {
     }
 
     next();
-  } catch (error) {
+  } catch {
     return res.status(401).json(
       ApiResponse.error('Not authorized, token failed', 401)
     );

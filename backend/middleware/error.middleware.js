@@ -1,5 +1,3 @@
-const ApiResponse = require('../utils/ApiResponse');
-
 // Handle 404 errors
 const notFound = (req, res, next) => {
   const error = new Error(`Not Found - ${req.originalUrl}`);
@@ -8,7 +6,7 @@ const notFound = (req, res, next) => {
 };
 
 // Global error handler
-const errorHandler = (err, req, res, next) => {
+const errorHandler = (err, req, res, _next) => {
   let statusCode = res.statusCode === 200 ? 500 : res.statusCode;
   let message = err.message;
 

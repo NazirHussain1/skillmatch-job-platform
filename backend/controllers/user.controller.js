@@ -185,7 +185,7 @@ const uploadProfilePicture = asyncHandler(async (req, res) => {
     try {
       const publicId = user.profilePicture.split('/').pop().split('.')[0];
       await cloudinary.uploader.destroy(`skillmatch/profiles/${publicId}`);
-    } catch (error) {
+    } catch {
       // Silently handle old image deletion errors
     }
   }
@@ -222,7 +222,7 @@ const uploadProfilePicture = asyncHandler(async (req, res) => {
         profilePicture: result.secure_url
       })
     );
-  } catch (error) {
+  } catch {
     res.status(500).json(
       ApiResponse.error('Error uploading image to cloudinary', 500)
     );
@@ -258,7 +258,7 @@ const uploadCompanyLogo = asyncHandler(async (req, res) => {
     try {
       const publicId = user.companyLogo.split('/').pop().split('.')[0];
       await cloudinary.uploader.destroy(`skillmatch/company-logos/${publicId}`);
-    } catch (error) {
+    } catch {
       // Silently handle old logo deletion errors
     }
   }
@@ -295,7 +295,7 @@ const uploadCompanyLogo = asyncHandler(async (req, res) => {
         companyLogo: result.secure_url
       })
     );
-  } catch (error) {
+  } catch {
     res.status(500).json(
       ApiResponse.error('Error uploading image to cloudinary', 500)
     );
@@ -331,7 +331,7 @@ const uploadResume = asyncHandler(async (req, res) => {
     try {
       const publicId = user.resume.split('/').pop().split('.')[0];
       await cloudinary.uploader.destroy(`skillmatch/resumes/${publicId}`, { resource_type: 'raw' });
-    } catch (error) {
+    } catch {
       // Silently handle old resume deletion errors
     }
   }
@@ -366,7 +366,7 @@ const uploadResume = asyncHandler(async (req, res) => {
         resume: result.secure_url
       })
     );
-  } catch (error) {
+  } catch {
     res.status(500).json(
       ApiResponse.error('Error uploading resume to cloudinary', 500)
     );

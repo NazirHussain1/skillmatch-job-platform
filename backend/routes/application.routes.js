@@ -9,7 +9,6 @@ const { protect, authorize } = require('../middleware/auth.middleware');
 const validate = require('../middleware/validate.middleware');
 const {
   jobIdValidator,
-  applicationIdValidator,
   updateApplicationStatusValidator
 } = require('../validators/application.validator');
 

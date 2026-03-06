@@ -104,7 +104,7 @@ export const jobSlice = createSlice({
   name: 'jobs',
   initialState,
   reducers: {
-    reset: (state) => initialState,
+    reset: () => initialState,
   },
   extraReducers: (builder) => {
     builder

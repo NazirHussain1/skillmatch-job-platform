@@ -13,7 +13,7 @@ function Chat() {
   const applicationId = searchParams.get('application');
   
   const { user } = useSelector((state) => state.auth);
-  const { conversations, currentConversation, messages, isLoading } = useSelector((state) => state.chat);
+  const { conversations, messages } = useSelector((state) => state.chat);
   
   const [messageInput, setMessageInput] = useState('');
   const [selectedConversation, setSelectedConversation] = useState(null);

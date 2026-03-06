@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-hot-toast';
 import { getSavedJobs, unsaveJob } from '../features/user/userSlice';
-import { Briefcase, MapPin, DollarSign, Bookmark, BookmarkCheck } from 'lucide-react';
+import { MapPin, DollarSign, Bookmark, BookmarkCheck } from 'lucide-react';
 
 function SavedJobs() {
   const dispatch = useDispatch();

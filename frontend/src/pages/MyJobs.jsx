@@ -11,7 +11,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 const MyJobs = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { employerJobs, isLoading, isError, isSuccess, message } = useSelector(state => state.jobs);
+  const { employerJobs, isLoading, isError, message } = useSelector(state => state.jobs);
   
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -36,7 +36,7 @@ const MyJobs = () => {
   const handleCreateJob = async (jobData) => {
     setIsSubmitting(true);
     try {
-      const result = await dispatch(createJob(jobData)).unwrap();
+      await dispatch(createJob(jobData)).unwrap();
       toast.success('Job created successfully');
       setShowCreateModal(false);
       dispatch(getEmployerJobs());

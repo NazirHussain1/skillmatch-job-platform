@@ -66,7 +66,7 @@ export const applicationSlice = createSlice({
   name: 'applications',
   initialState,
   reducers: {
-    reset: (state) => initialState,
+    reset: () => initialState,
   },
   extraReducers: (builder) => {
     builder

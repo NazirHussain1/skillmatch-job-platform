@@ -80,7 +80,7 @@ export const chatSlice = createSlice({
   name: 'chat',
   initialState,
   reducers: {
-    reset: (state) => initialState,
+    reset: () => initialState,
     addMessage: (state, action) => {
       state.messages.push(action.payload);
     },

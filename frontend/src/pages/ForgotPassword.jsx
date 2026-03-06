@@ -20,7 +20,7 @@ function ForgotPassword() {
     setIsLoading(true);
 
     try {
-      const response = await api.post('/auth/forgot-password', { email });
+      await api.post('/auth/forgot-password', { email });
       setEmailSent(true);
       toast.success('Password reset email sent!');
     } catch (error) {
