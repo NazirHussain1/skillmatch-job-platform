@@ -15,11 +15,10 @@ function Dashboard() {
 
   useEffect(() => {
     if (user?.role === 'employer') {
-      // Fetch employer statistics
       api.get('/jobs/stats').then(response => {
         setEmployerStats(response.data.data);
-      }).catch(error => {
-        console.error('Failed to fetch stats:', error);
+      }).catch(() => {
+        setEmployerStats(null);
       });
     } else {
       dispatch(getJobs({ limit: 10 }));

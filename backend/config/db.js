@@ -2,13 +2,8 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI);
-
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`MongoDB Connected: ${conn.connection.host}`);
-    }
-  } catch (error) {
-    console.error(`Error: ${error.message}`);
+    await mongoose.connect(process.env.MONGODB_URI);
+  } catch {
     process.exit(1);
   }
 };

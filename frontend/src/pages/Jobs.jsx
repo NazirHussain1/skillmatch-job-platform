@@ -1,10 +1,22 @@
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-hot-toast';
+import {
+  Briefcase,
+  MapPin,
+  DollarSign,
+  Plus,
+  X,
+  Search,
+  Filter,
+  Bookmark,
+  BookmarkCheck,
+  Building2,
+  TrendingUp
+} from 'lucide-react';
 import { getJobs, createJob } from '../features/jobs/jobSlice';
 import { createApplication } from '../features/applications/applicationSlice';
 import { saveJob, unsaveJob } from '../features/user/userSlice';
-import { Briefcase, MapPin, DollarSign, Plus, X, Search, Filter, Bookmark, BookmarkCheck, Building2, TrendingUp } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import SkeletonLoader from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
@@ -14,6 +26,7 @@ function Jobs() {
   const { user } = useSelector((state) => state.auth);
   const { jobs, pagination, isLoading } = useSelector((state) => state.jobs);
   const { profile } = useSelector((state) => state.user);
+
   const [showModal, setShowModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [formData, setFormData] = useState({
@@ -23,16 +36,15 @@ function Jobs() {
     location: '',
     salary: '',
     jobType: 'full-time',
-    category: '',
+    category: ''
   });
 
-  // Search and filter state
   const [filters, setFilters] = useState({
     keyword: '',
     location: '',
     salary: '',
     category: '',
-    jobType: '',
+    jobType: ''
   });
 
   const [searchParams, setSearchParams] = useState({
@@ -42,20 +54,30 @@ function Jobs() {
     category: '',
     jobType: '',
     page: 1,
-    limit: 9,
+    limit: 9
   });
 
   useEffect(() => {
     dispatch(getJobs(searchParams));
   }, [dispatch, searchParams]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
     try {
       await dispatch(createJob({ ...formData, salary: Number(formData.salary) })).unwrap();
-      toast.success('Job posted successfully!');
+      toast.success('Job posted successfully');
       setShowModal(false);
-      setFormData({ title: '', company: '', description: '', location: '', salary: '', jobType: 'full-time', category: '' });
+      setFormData({
+        title: '',
+        company: '',
+        description: '',
+        location: '',
+        salary: '',
+        jobType: 'full-time',
+        category: ''
+      });
+      dispatch(getJobs(searchParams));
     } catch (error) {
       toast.error(error || 'Failed to post job');
     }
@@ -64,7 +86,7 @@ function Jobs() {
   const handleApply = async (jobId) => {
     try {
       await dispatch(createApplication(jobId)).unwrap();
-      toast.success('Application submitted!');
+      toast.success('Application submitted');
     } catch (error) {
       toast.error(error || 'Failed to apply');
     }
@@ -77,64 +99,59 @@ function Jobs() {
         toast.success('Job removed from saved');
       } else {
         await dispatch(saveJob(jobId)).unwrap();
-        toast.success('Job saved!');
+        toast.success('Job saved');
       }
     } catch (error) {
       toast.error(error || 'Failed to save job');
     }
   };
 
-  const isJobSaved = (jobId) => {
-    return profile?.savedJobs?.includes(jobId);
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
+  const handleSearch = (event) => {
+    event.preventDefault();
     setSearchParams({
       ...filters,
-      page: 1, // Reset to page 1 when searching
-      limit: 9,
-    });
-  };
-
-  const handleClearFilters = () => {
-    setFilters({
-      keyword: '',
-      location: '',
-      salary: '',
-      category: '',
-      jobType: '',
-    });
-    setSearchParams({
-      keyword: '',
-      location: '',
-      salary: '',
-      category: '',
-      jobType: '',
       page: 1,
-      limit: 9,
+      limit: 9
     });
   };
 
   const handleFilterChange = (field, value) => {
-    setFilters({
-      ...filters,
-      [field]: value,
+    setFilters((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleClearFilters = () => {
+    const clearedFilters = {
+      keyword: '',
+      location: '',
+      salary: '',
+      category: '',
+      jobType: ''
+    };
+
+    setFilters(clearedFilters);
+    setSearchParams({
+      ...clearedFilters,
+      page: 1,
+      limit: 9
     });
   };
 
   const handlePageChange = (page) => {
-    setSearchParams({
-      ...searchParams,
-      page,
-    });
-    // Scroll to top when page changes
+    setSearchParams((prev) => ({ ...prev, page }));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const isJobSaved = (jobId) => profile?.savedJobs?.includes(jobId);
+
+  const hasActiveFilters =
+    searchParams.keyword ||
+    searchParams.location ||
+    searchParams.salary ||
+    searchParams.category ||
+    searchParams.jobType;
+
   return (
     <div className="min-h-screen pb-24 lg:pb-8">
-      {/* Hero Header */}
       <div className="hero-gradient text-white py-8 sm:py-12 lg:py-16 mb-6 sm:mb-8 rounded-2xl sm:rounded-3xl shadow-2xl mx-4 sm:mx-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -148,7 +165,10 @@ function Jobs() {
               </p>
             </div>
             {user?.role === 'employer' && (
-              <button onClick={() => setShowModal(true)} className="btn bg-white text-blue-600 hover:bg-blue-50 shadow-xl w-full sm:w-auto">
+              <button
+                onClick={() => setShowModal(true)}
+                className="btn bg-white text-blue-600 hover:bg-blue-50 shadow-xl w-full sm:w-auto"
+              >
                 <Plus className="w-5 h-5" />
                 Post Job
               </button>
@@ -158,10 +178,8 @@ function Jobs() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6">
-        {/* Search and Filter Section */}
         <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xl">
           <form onSubmit={handleSearch} className="space-y-3 sm:space-y-4">
-            {/* Search Bar */}
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -169,198 +187,133 @@ function Jobs() {
                   type="text"
                   placeholder="Search jobs..."
                   value={filters.keyword}
-                onChange={(e) => handleFilterChange('keyword', e.target.value)}
-                className="input-field pl-10"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowFilters(!showFilters)}
-              className="btn-secondary flex items-center gap-2"
-            >
-              <Filter className="w-4 h-4" />
-              Filters
-            </button>
-            <button type="submit" className="btn-primary">
-              Search
-            </button>
-          </div>
-
-          {/* Filter Dropdowns */}
-          {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Location
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g., New York, Remote"
-                  value={filters.location}
-                  onChange={(e) => handleFilterChange('location', e.target.value)}
-                  className="input-field"
+                  onChange={(event) => handleFilterChange('keyword', event.target.value)}
+                  className="input-field pl-10"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Job Type
-                </label>
-                <select
-                  value={filters.jobType}
-                  onChange={(e) => handleFilterChange('jobType', e.target.value)}
-                  className="input-field"
-                >
-                  <option value="">All Types</option>
-                  <option value="full-time">Full Time</option>
-                  <option value="part-time">Part Time</option>
-                  <option value="remote">Remote</option>
-                  <option value="internship">Internship</option>
-                  <option value="contract">Contract</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category
-                </label>
-                <select
-                  value={filters.category}
-                  onChange={(e) => handleFilterChange('category', e.target.value)}
-                  className="input-field"
-                >
-                  <option value="">All Categories</option>
-                  <option value="Software Development">Software Development</option>
-                  <option value="Design">Design</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="Sales">Sales</option>
-                  <option value="Customer Support">Customer Support</option>
-                  <option value="Finance">Finance</option>
-                  <option value="HR">HR</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Minimum Salary
-                </label>
-                <select
-                  value={filters.salary}
-                  onChange={(e) => handleFilterChange('salary', e.target.value)}
-                  className="input-field"
-                >
-                  <option value="">Any</option>
-                  <option value="30000">$30,000+</option>
-                  <option value="50000">$50,000+</option>
-                  <option value="70000">$70,000+</option>
-                  <option value="100000">$100,000+</option>
-                  <option value="150000">$150,000+</option>
-                </select>
-              </div>
-            </div>
-          )}
-          
-          {/* Clear Filters Button */}
-          {showFilters && (filters.location || filters.jobType || filters.category || filters.salary) && (
-            <div className="pt-4">
               <button
                 type="button"
-                onClick={handleClearFilters}
-                className="btn-secondary"
+                onClick={() => setShowFilters((prev) => !prev)}
+                className="btn-secondary flex items-center gap-2"
               >
-                Clear All Filters
+                <Filter className="w-4 h-4" />
+                Filters
+              </button>
+              <button type="submit" className="btn-primary">
+                Search
               </button>
             </div>
+
+            {showFilters && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                  <input
+                    type="text"
+                    placeholder="e.g., New York, Remote"
+                    value={filters.location}
+                    onChange={(event) => handleFilterChange('location', event.target.value)}
+                    className="input-field"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Job Type</label>
+                  <select
+                    value={filters.jobType}
+                    onChange={(event) => handleFilterChange('jobType', event.target.value)}
+                    className="input-field"
+                  >
+                    <option value="">All Types</option>
+                    <option value="full-time">Full Time</option>
+                    <option value="part-time">Part Time</option>
+                    <option value="remote">Remote</option>
+                    <option value="internship">Internship</option>
+                    <option value="contract">Contract</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                  <select
+                    value={filters.category}
+                    onChange={(event) => handleFilterChange('category', event.target.value)}
+                    className="input-field"
+                  >
+                    <option value="">All Categories</option>
+                    <option value="Software Development">Software Development</option>
+                    <option value="Design">Design</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="Sales">Sales</option>
+                    <option value="Customer Support">Customer Support</option>
+                    <option value="Finance">Finance</option>
+                    <option value="HR">HR</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Minimum Salary</label>
+                  <select
+                    value={filters.salary}
+                    onChange={(event) => handleFilterChange('salary', event.target.value)}
+                    className="input-field"
+                  >
+                    <option value="">Any</option>
+                    <option value="30000">$30,000+</option>
+                    <option value="50000">$50,000+</option>
+                    <option value="70000">$70,000+</option>
+                    <option value="100000">$100,000+</option>
+                    <option value="150000">$150,000+</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {showFilters && (filters.location || filters.jobType || filters.category || filters.salary) && (
+              <div className="pt-4">
+                <button type="button" onClick={handleClearFilters} className="btn-secondary">
+                  Clear All Filters
+                </button>
+              </div>
+            )}
+          </form>
+
+          {hasActiveFilters && (
+            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
+              <span className="text-sm text-gray-600">Active filters:</span>
+              {searchParams.keyword && (
+                <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm">
+                  Keyword: {searchParams.keyword}
+                </span>
+              )}
+              {searchParams.location && (
+                <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm">
+                  Location: {searchParams.location}
+                </span>
+              )}
+              {searchParams.salary && (
+                <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm">
+                  Salary: ${parseInt(searchParams.salary, 10).toLocaleString()}+
+                </span>
+              )}
+              {searchParams.category && (
+                <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm">
+                  Category: {searchParams.category}
+                </span>
+              )}
+              {searchParams.jobType && (
+                <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm">
+                  Type: {searchParams.jobType}
+                </span>
+              )}
+            </div>
           )}
-        </form>
-
-        {/* Active Filters Display */}
-        {(searchParams.keyword || searchParams.location || searchParams.salary || searchParams.category || searchParams.jobType) && (
-          <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
-            <span className="text-sm text-gray-600">Active filters:</span>
-            {searchParams.keyword && (
-              <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm flex items-center gap-2">
-                Keyword: {searchParams.keyword}
-                <button
-                  onClick={() => {
-                    setFilters({ ...filters, keyword: '' });
-                    setSearchParams({ ...searchParams, keyword: '', page: 1 });
-                  }}
-                  className="hover:text-primary-900"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            {searchParams.location && (
-              <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm flex items-center gap-2">
-                Location: {searchParams.location}
-                <button
-                  onClick={() => {
-                    setFilters({ ...filters, location: '' });
-                    setSearchParams({ ...searchParams, location: '', page: 1 });
-                  }}
-                  className="hover:text-primary-900"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            {searchParams.salary && (
-              <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm flex items-center gap-2">
-                Salary: ${parseInt(searchParams.salary).toLocaleString()}+
-                <button
-                  onClick={() => {
-                    setFilters({ ...filters, salary: '' });
-                    setSearchParams({ ...searchParams, salary: '', page: 1 });
-                  }}
-                  className="hover:text-primary-900"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            {searchParams.category && (
-              <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm flex items-center gap-2">
-                Category: {searchParams.category}
-                <button
-                  onClick={() => {
-                    setFilters({ ...filters, category: '' });
-                    setSearchParams({ ...searchParams, category: '', page: 1 });
-                  }}
-                  className="hover:text-primary-900"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            {searchParams.jobType && (
-              <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm flex items-center gap-2">
-                Type: {searchParams.jobType === 'full-time' ? 'Full Time' : 
-                       searchParams.jobType === 'part-time' ? 'Part Time' : 
-                       searchParams.jobType === 'remote' ? 'Remote' : 
-                       searchParams.jobType === 'internship' ? 'Internship' : 'Contract'}
-                <button
-                  onClick={() => {
-                    setFilters({ ...filters, jobType: '' });
-                    setSearchParams({ ...searchParams, jobType: '', page: 1 });
-                  }}
-                  className="hover:text-primary-900"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <SkeletonLoader type="card" count={9} />
         </div>
-      ) : (
-        <>
-          {/* Results Count */}
-          {jobs?.length > 0 && (
+
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <SkeletonLoader type="card" count={9} />
+          </div>
+        ) : jobs?.length > 0 ? (
+          <>
             <div className="flex items-center justify-between bg-white rounded-xl p-4 shadow-sm border border-gray-100">
               <p className="text-gray-700 font-medium flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-blue-600" />
@@ -375,110 +328,81 @@ function Jobs() {
                 )}
               </p>
             </div>
-          )}
 
-          {/* Jobs Grid */}
-          {jobs?.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {jobs.map((job) => (
-                  <div key={job._id} className="job-card group relative overflow-hidden">
-                    {/* Save Button */}
-                    {user?.role === 'jobseeker' && (
-                      <button
-                        onClick={() => handleSaveJob(job._id)}
-                        className="absolute top-4 right-4 p-2.5 bg-white/90 backdrop-blur-sm text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 shadow-md z-10"
-                        title={isJobSaved(job._id) ? 'Remove from saved' : 'Save job'}
-                      >
-                        {isJobSaved(job._id) ? (
-                          <BookmarkCheck className="w-5 h-5 fill-current" />
-                        ) : (
-                          <Bookmark className="w-5 h-5" />
-                        )}
-                      </button>
-                    )}
-                    
-                    {/* Company Logo */}
-                    <div className="flex items-start gap-4 mb-4">
-                      <div className="w-14 h-14 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
-                        <Building2 className="w-7 h-7 text-blue-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors line-clamp-1">
-                          {job.title}
-                        </h3>
-                        <p className="text-gray-600 font-medium line-clamp-1">{job.company}</p>
-                      </div>
-                    </div>
-                    
-                    {/* Job Type and Category Badges */}
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {job.jobType && (
-                        <span className="badge-primary">
-                          {job.jobType === 'full-time' && 'Full Time'}
-                          {job.jobType === 'part-time' && 'Part Time'}
-                          {job.jobType === 'remote' && 'Remote'}
-                          {job.jobType === 'internship' && 'Internship'}
-                          {job.jobType === 'contract' && 'Contract'}
-                        </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {jobs.map((job) => (
+                <div key={job._id} className="job-card group relative overflow-hidden">
+                  {user?.role === 'jobseeker' && (
+                    <button
+                      onClick={() => handleSaveJob(job._id)}
+                      className="absolute top-4 right-4 p-2.5 bg-white/90 backdrop-blur-sm text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 shadow-md z-10"
+                      title={isJobSaved(job._id) ? 'Remove from saved' : 'Save job'}
+                    >
+                      {isJobSaved(job._id) ? (
+                        <BookmarkCheck className="w-5 h-5 fill-current" />
+                      ) : (
+                        <Bookmark className="w-5 h-5" />
                       )}
-                      {job.category && (
-                        <span className="badge-secondary">
-                          {job.category}
-                        </span>
-                      )}
+                    </button>
+                  )}
+
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
+                      <Building2 className="w-7 h-7 text-blue-600" />
                     </div>
-                    
-                    {/* Job Details */}
-                    <div className="space-y-2.5 mb-4">
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                        <span className="text-sm font-medium line-clamp-1">{job.location}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <DollarSign className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                        <span className="text-sm font-bold text-green-600">${job.salary?.toLocaleString()}/year</span>
-                      </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors line-clamp-1">
+                        {job.title}
+                      </h3>
+                      <p className="text-gray-600 font-medium line-clamp-1">{job.company}</p>
                     </div>
-                    
-                    {/* Description */}
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">
-                      {job.description}
-                    </p>
-                    
-                    {/* Apply Button */}
-                    {user?.role === 'jobseeker' && (
-                      <button
-                        onClick={() => handleApply(job._id)}
-                        className="btn-primary w-full group-hover:scale-105 transition-transform"
-                      >
-                        Apply Now
-                      </button>
-                    )}
                   </div>
-                ))}
-              </div>
 
-              {/* Pagination */}
-              <Pagination
-                currentPage={pagination?.page || 1}
-                totalPages={pagination?.pages || 1}
-                onPageChange={handlePageChange}
-              />
-            </>
-          ) : (
-            <EmptyState 
-              type="search"
-              title="No jobs found"
-              description="Try adjusting your search filters or check back later for new opportunities"
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {job.jobType && <span className="badge-primary">{job.jobType}</span>}
+                    {job.category && <span className="badge-secondary">{job.category}</span>}
+                  </div>
+
+                  <div className="space-y-2.5 mb-4">
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <span className="text-sm font-medium line-clamp-1">{job.location}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <DollarSign className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <span className="text-sm font-bold text-green-600">${job.salary?.toLocaleString()}/year</span>
+                    </div>
+                  </div>
+
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">{job.description}</p>
+
+                  {user?.role === 'jobseeker' && (
+                    <button
+                      onClick={() => handleApply(job._id)}
+                      className="btn-primary w-full group-hover:scale-105 transition-transform"
+                    >
+                      Apply Now
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <Pagination
+              currentPage={pagination?.page || 1}
+              totalPages={pagination?.pages || 1}
+              onPageChange={handlePageChange}
             />
-          )}
-        </>
-      )}
-    </div>
-    </div>
+          </>
+        ) : (
+          <EmptyState
+            type="search"
+            title="No jobs found"
+            description="Try adjusting your search filters or check back later for new opportunities"
+          />
+        )}
+      </div>
 
-      {/* Create Job Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md">
@@ -493,7 +417,7 @@ function Jobs() {
                 type="text"
                 placeholder="Job Title"
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(event) => setFormData((prev) => ({ ...prev, title: event.target.value }))}
                 className="input"
                 required
               />
@@ -501,14 +425,14 @@ function Jobs() {
                 type="text"
                 placeholder="Company"
                 value={formData.company}
-                onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                onChange={(event) => setFormData((prev) => ({ ...prev, company: event.target.value }))}
                 className="input"
                 required
               />
               <textarea
                 placeholder="Description"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(event) => setFormData((prev) => ({ ...prev, description: event.target.value }))}
                 className="input"
                 rows="3"
                 required
@@ -517,7 +441,7 @@ function Jobs() {
                 type="text"
                 placeholder="Location"
                 value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                onChange={(event) => setFormData((prev) => ({ ...prev, location: event.target.value }))}
                 className="input"
                 required
               />
@@ -525,13 +449,13 @@ function Jobs() {
                 type="number"
                 placeholder="Salary"
                 value={formData.salary}
-                onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
+                onChange={(event) => setFormData((prev) => ({ ...prev, salary: event.target.value }))}
                 className="input"
                 required
               />
               <select
                 value={formData.jobType}
-                onChange={(e) => setFormData({ ...formData, jobType: e.target.value })}
+                onChange={(event) => setFormData((prev) => ({ ...prev, jobType: event.target.value }))}
                 className="input"
                 required
               >
@@ -543,7 +467,7 @@ function Jobs() {
               </select>
               <select
                 value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                onChange={(event) => setFormData((prev) => ({ ...prev, category: event.target.value }))}
                 className="input"
                 required
               >

@@ -63,14 +63,6 @@ const login = asyncHandler(async (req, res) => {
     );
   }
 
-  // Check if email is verified (temporarily disabled for testing)
-  // TODO: Re-enable email verification in production with valid email credentials
-  // if (!user.isEmailVerified) {
-  //   return res.status(403).json(
-  //     ApiResponse.error('Please verify your email before logging in', 403)
-  //   );
-  // }
-
   // Check password
   const isPasswordMatch = await user.matchPassword(password);
   
@@ -166,7 +158,6 @@ const forgotPassword = asyncHandler(async (req, res) => {
       ApiResponse.success('Password reset email sent', { email: user.email })
     );
   } catch (error) {
-    console.error('Email error:', error);
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
     await user.save({ validateBeforeSave: false });
@@ -316,7 +307,6 @@ const resendVerification = asyncHandler(async (req, res) => {
       ApiResponse.success('Verification email sent', { email: user.email })
     );
   } catch (error) {
-    console.error('Email error:', error);
     user.emailVerificationToken = undefined;
     user.emailVerificationExpire = undefined;
     await user.save({ validateBeforeSave: false });

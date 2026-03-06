@@ -25,6 +25,7 @@ const notificationRoutes = require('./routes/notification.routes');
 
 // Import middleware
 const { errorHandler, notFound } = require('./middleware/error.middleware');
+const sanitizeInputs = require('./middleware/sanitize.middleware');
 
 const app = express();
 const server = http.createServer(app);
@@ -39,6 +40,8 @@ const io = new Server(server, {
 connectDB();
 
 // Middleware
+app.disable('x-powered-by');
+
 app.use(helmet());
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
@@ -50,8 +53,9 @@ if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '100kb' }));
+app.use(express.urlencoded({ extended: true, limit: '100kb' }));
+app.use(sanitizeInputs);
 
 // Routes
 app.get('/api/health', (req, res) => {
@@ -119,10 +123,6 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, () => {
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`Server running on port ${PORT}`);
-  }
-});
+server.listen(PORT);
 
 module.exports = app;

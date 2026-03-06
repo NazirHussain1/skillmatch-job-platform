@@ -37,8 +37,8 @@ const MainLayout = ({ children }) => {
       const data = await notificationService.getNotifications();
       setNotifications(data.notifications || []);
       setUnreadCount(data.unreadCount || 0);
-    } catch (error) {
-      console.error('Failed to fetch notifications:', error);
+    } catch {
+      setNotifications([]);
     } finally {
       setIsNotificationsLoading(false);
     }
@@ -71,8 +71,8 @@ const MainLayout = ({ children }) => {
       if (wasUnread) {
         setUnreadCount((prev) => Math.max(0, prev - 1));
       }
-    } catch (error) {
-      console.error('Failed to mark notification as read:', error);
+    } catch {
+      return;
     }
   };
 
