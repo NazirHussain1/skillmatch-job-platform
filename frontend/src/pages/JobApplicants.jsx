@@ -170,9 +170,9 @@ const JobApplicants = () => {
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <h3 className="text-xl font-semibold text-gray-900">
-                        {application.jobseeker?.name || 'Unknown Applicant'}
+                        {application.applicant?.name || 'Unknown Applicant'}
                       </h3>
-                      <p className="text-gray-600">{application.jobseeker?.email}</p>
+                      <p className="text-gray-600">{application.applicant?.email}</p>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(application.status)}`}>
                       {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
@@ -181,9 +181,9 @@ const JobApplicants = () => {
                   
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-500 mt-3">
                     <span>Applied on {formatDate(application.createdAt)}</span>
-                    {application.jobseeker?.resume && (
+                    {application.applicant?.resume && (
                       <a
-                        href={application.jobseeker.resume}
+                        href={application.applicant.resume}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-1 text-blue-600 hover:text-blue-800"

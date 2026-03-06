@@ -15,8 +15,8 @@ const getAllUsers = asyncHandler(async (req, res) => {
     filter.role = role;
   }
   
-  const pageNum = parseInt(page);
-  const limitNum = parseInt(limit);
+  const pageNum = Math.max(1, parseInt(page, 10) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 10));
   const skip = (pageNum - 1) * limitNum;
   
   const total = await User.countDocuments(filter);
@@ -92,8 +92,8 @@ const getAllJobs = asyncHandler(async (req, res) => {
     filter.status = status;
   }
   
-  const pageNum = parseInt(page);
-  const limitNum = parseInt(limit);
+  const pageNum = Math.max(1, parseInt(page, 10) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 10));
   const skip = (pageNum - 1) * limitNum;
   
   const total = await Job.countDocuments(filter);
@@ -332,8 +332,8 @@ const getJobsByStatus = asyncHandler(async (req, res) => {
     );
   }
   
-  const pageNum = parseInt(page);
-  const limitNum = parseInt(limit);
+  const pageNum = Math.max(1, parseInt(page, 10) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 10));
   const skip = (pageNum - 1) * limitNum;
   
   const total = await Job.countDocuments({ status });

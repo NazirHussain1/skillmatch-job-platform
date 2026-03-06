@@ -6,7 +6,7 @@ const validate = (req, res, next) => {
   
   if (!errors.isEmpty()) {
     const errorMessages = errors.array().map(err => err.msg).join(', ');
-    return ApiResponse.error(res, errorMessages, 400);
+    return res.status(400).json(ApiResponse.error(errorMessages));
   }
   
   next();

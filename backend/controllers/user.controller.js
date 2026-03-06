@@ -70,8 +70,8 @@ const updateProfile = asyncHandler(async (req, res) => {
 // @route   GET /api/users
 // @access  Private/Admin
 const getUsers = asyncHandler(async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 10));
   const skip = (page - 1) * limit;
 
   const users = await User.find()
@@ -160,8 +160,6 @@ const deleteUser = asyncHandler(async (req, res) => {
   );
 });
 
-// @desc    Upload profile picture
-// @route   POST /api/users/profile/picture
 // @desc    Upload profile picture
 // @route   POST /api/users/profile/picture
 // @access  Private

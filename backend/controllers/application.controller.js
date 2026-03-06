@@ -47,7 +47,7 @@ const createApplication = asyncHandler(async (req, res) => {
   // Populate and return
   const populatedApplication = await Application.findById(application._id)
     .populate('job', 'title company location salary')
-    .populate('applicant', 'name email');
+    .populate('applicant', 'name email resume');
   
   return res.status(201).json(
     ApiResponse.success('Application submitted successfully', populatedApplication)
@@ -90,7 +90,7 @@ const getJobApplications = asyncHandler(async (req, res) => {
   
   // Get applications
   const applications = await Application.find({ job: jobId })
-    .populate('applicant', 'name email')
+    .populate('applicant', 'name email resume')
     .sort({ createdAt: -1 });
   
   return res.status(200).json(
@@ -146,7 +146,7 @@ const updateApplicationStatus = asyncHandler(async (req, res) => {
   // Return updated application with populated fields
   const updatedApplication = await Application.findById(application._id)
     .populate('job', 'title company location salary')
-    .populate('applicant', 'name email');
+    .populate('applicant', 'name email resume');
   
   return res.status(200).json(
     ApiResponse.success('Application status updated successfully', updatedApplication)

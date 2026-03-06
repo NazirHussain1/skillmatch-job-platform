@@ -50,8 +50,8 @@ const getCompanyProfile = asyncHandler(async (req, res) => {
 const getAllCompanies = asyncHandler(async (req, res) => {
   const { page = 1, limit = 12 } = req.query;
   
-  const pageNum = parseInt(page);
-  const limitNum = parseInt(limit);
+  const pageNum = Math.max(1, parseInt(page, 10) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 12));
   const skip = (pageNum - 1) * limitNum;
   
   const total = await User.countDocuments({ role: 'employer', isEmailVerified: true });
