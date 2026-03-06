@@ -4,8 +4,10 @@ import { toast } from 'react-hot-toast';
 import { getJobs, createJob } from '../features/jobs/jobSlice';
 import { createApplication } from '../features/applications/applicationSlice';
 import { saveJob, unsaveJob } from '../features/user/userSlice';
-import { Briefcase, MapPin, DollarSign, Plus, X, Search, Filter, Bookmark, BookmarkCheck } from 'lucide-react';
+import { Briefcase, MapPin, DollarSign, Plus, X, Search, Filter, Bookmark, BookmarkCheck, Building2, TrendingUp } from 'lucide-react';
 import Pagination from '../components/Pagination';
+import SkeletonLoader from '../components/SkeletonLoader';
+import EmptyState from '../components/EmptyState';
 
 function Jobs() {
   const dispatch = useDispatch();
@@ -131,31 +133,42 @@ function Jobs() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Browse Jobs</h1>
-          <p className="text-gray-600 mt-1">Find your next opportunity</p>
+    <div className="min-h-screen">
+      {/* Hero Header */}
+      <div className="hero-gradient text-white py-12 mb-8 rounded-3xl shadow-2xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold mb-3 flex items-center gap-3">
+                <Briefcase className="w-10 h-10" />
+                Discover Your Dream Job
+              </h1>
+              <p className="text-blue-100 text-lg">
+                {pagination?.total || 0} opportunities waiting for you
+              </p>
+            </div>
+            {user?.role === 'employer' && (
+              <button onClick={() => setShowModal(true)} className="btn bg-white text-blue-600 hover:bg-blue-50 shadow-xl">
+                <Plus className="w-5 h-5" />
+                Post Job
+              </button>
+            )}
+          </div>
         </div>
-        {user?.role === 'employer' && (
-          <button onClick={() => setShowModal(true)} className="btn-primary">
-            <Plus className="w-5 h-5" />
-            Post Job
-          </button>
-        )}
       </div>
 
-      {/* Search and Filter Section */}
-      <div className="card">
-        <form onSubmit={handleSearch} className="space-y-4">
-          {/* Search Bar */}
-          <div className="flex gap-3">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search by job title, company, or keywords..."
-                value={filters.keyword}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        {/* Search and Filter Section */}
+        <div className="glass rounded-2xl p-6 shadow-xl">
+          <form onSubmit={handleSearch} className="space-y-4">
+            {/* Search Bar */}
+            <div className="flex gap-3">
+              <div className="flex-1 relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  placeholder="Search by job title, company, or keywords..."
+                  value={filters.keyword}
                 onChange={(e) => handleFilterChange('keyword', e.target.value)}
                 className="input-field pl-10"
               />
@@ -341,38 +354,40 @@ function Jobs() {
       </div>
 
       {isLoading ? (
-        <div className="text-center py-12">
-          <div className="inline-block w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <SkeletonLoader type="card" count={9} />
         </div>
       ) : (
         <>
           {/* Results Count */}
-          <div className="flex items-center justify-between">
-            <p className="text-gray-600">
-              {pagination?.total > 0 ? (
-                <>
-                  Showing <span className="font-semibold">{((pagination.page - 1) * pagination.limit) + 1}</span> to{' '}
-                  <span className="font-semibold">
-                    {Math.min(pagination.page * pagination.limit, pagination.total)}
-                  </span>{' '}
-                  of <span className="font-semibold">{pagination.total}</span> job{pagination.total !== 1 ? 's' : ''}
-                </>
-              ) : (
-                'No jobs found'
-              )}
-            </p>
-          </div>
+          {jobs?.length > 0 && (
+            <div className="flex items-center justify-between bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+              <p className="text-gray-700 font-medium flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-blue-600" />
+                {pagination?.total > 0 && (
+                  <>
+                    Showing <span className="font-bold text-blue-600">{((pagination.page - 1) * pagination.limit) + 1}</span> to{' '}
+                    <span className="font-bold text-blue-600">
+                      {Math.min(pagination.page * pagination.limit, pagination.total)}
+                    </span>{' '}
+                    of <span className="font-bold text-blue-600">{pagination.total}</span> opportunities
+                  </>
+                )}
+              </p>
+            </div>
+          )}
 
           {/* Jobs Grid */}
           {jobs?.length > 0 ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {jobs.map((job) => (
-                  <div key={job._id} className="card hover-lift relative">
+                  <div key={job._id} className="job-card group relative overflow-hidden">
+                    {/* Save Button */}
                     {user?.role === 'jobseeker' && (
                       <button
                         onClick={() => handleSaveJob(job._id)}
-                        className="absolute top-4 right-4 p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                        className="absolute top-4 right-4 p-2.5 bg-white/90 backdrop-blur-sm text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 shadow-md z-10"
                         title={isJobSaved(job._id) ? 'Remove from saved' : 'Save job'}
                       >
                         {isJobSaved(job._id) ? (
@@ -383,13 +398,23 @@ function Jobs() {
                       </button>
                     )}
                     
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2 pr-10">{job.title}</h3>
-                    <p className="text-gray-600 mb-4">{job.company}</p>
+                    {/* Company Logo */}
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="w-14 h-14 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <Building2 className="w-7 h-7 text-blue-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors line-clamp-1">
+                          {job.title}
+                        </h3>
+                        <p className="text-gray-600 font-medium line-clamp-1">{job.company}</p>
+                      </div>
+                    </div>
                     
                     {/* Job Type and Category Badges */}
-                    <div className="flex flex-wrap gap-2 mb-3">
+                    <div className="flex flex-wrap gap-2 mb-4">
                       {job.jobType && (
-                        <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-700">
+                        <span className="badge-primary">
                           {job.jobType === 'full-time' && 'Full Time'}
                           {job.jobType === 'part-time' && 'Part Time'}
                           {job.jobType === 'remote' && 'Remote'}
@@ -398,27 +423,34 @@ function Jobs() {
                         </span>
                       )}
                       {job.category && (
-                        <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-700">
+                        <span className="badge-secondary">
                           {job.category}
                         </span>
                       )}
                     </div>
                     
-                    <div className="space-y-2 mb-4">
+                    {/* Job Details */}
+                    <div className="space-y-2.5 mb-4">
                       <div className="flex items-center gap-2 text-gray-600">
-                        <MapPin className="w-4 h-4" />
-                        <span className="text-sm">{job.location}</span>
+                        <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        <span className="text-sm font-medium line-clamp-1">{job.location}</span>
                       </div>
                       <div className="flex items-center gap-2 text-gray-600">
-                        <DollarSign className="w-4 h-4" />
-                        <span className="text-sm">${job.salary?.toLocaleString()}</span>
+                        <DollarSign className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                        <span className="text-sm font-bold text-green-600">${job.salary?.toLocaleString()}/year</span>
                       </div>
                     </div>
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-3">{job.description}</p>
+                    
+                    {/* Description */}
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">
+                      {job.description}
+                    </p>
+                    
+                    {/* Apply Button */}
                     {user?.role === 'jobseeker' && (
                       <button
                         onClick={() => handleApply(job._id)}
-                        className="btn-primary w-full"
+                        className="btn-primary w-full group-hover:scale-105 transition-transform"
                       >
                         Apply Now
                       </button>
@@ -435,14 +467,16 @@ function Jobs() {
               />
             </>
           ) : (
-            <div className="text-center py-12">
-              <Briefcase className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No jobs found</h3>
-              <p className="text-gray-600">Try adjusting your search filters</p>
-            </div>
+            <EmptyState 
+              type="search"
+              title="No jobs found"
+              description="Try adjusting your search filters or check back later for new opportunities"
+            />
           )}
         </>
       )}
+    </div>
+    </div>
 
       {/* Create Job Modal */}
       {showModal && (
