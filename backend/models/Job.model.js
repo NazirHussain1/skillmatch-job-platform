@@ -51,6 +51,11 @@ const jobSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
+jobSchema.index({ title: 1 });
+jobSchema.index({ location: 1 });
+jobSchema.index({ jobType: 1 });
+jobSchema.index({ category: 1 });
+
 // Virtual field for application count
 jobSchema.virtual('applicationCount', {
   ref: 'Application',

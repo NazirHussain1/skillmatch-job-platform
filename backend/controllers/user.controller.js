@@ -198,7 +198,7 @@ const uploadProfilePicture = asyncHandler(async (req, res) => {
           folder: 'skillmatch/profiles',
           transformation: [
             { width: 500, height: 500, crop: 'fill', gravity: 'face' },
-            { quality: 'auto' }
+            { quality: 'auto', fetch_format: 'auto' }
           ]
         },
         (error, result) => {
@@ -271,7 +271,7 @@ const uploadCompanyLogo = asyncHandler(async (req, res) => {
           folder: 'skillmatch/company-logos',
           transformation: [
             { width: 400, height: 400, crop: 'fit' },
-            { quality: 'auto' }
+            { quality: 'auto', fetch_format: 'auto' }
           ]
         },
         (error, result) => {

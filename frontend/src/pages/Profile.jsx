@@ -5,6 +5,7 @@ import { getUserProfile, updateUserProfile, reset, uploadResume } from '../featu
 import { toast } from 'react-hot-toast';
 import LoadingSpinner from '../components/LoadingSpinner';
 import api from '../services/api';
+import { getOptimizedCloudinaryUrl } from '../utils/cloudinary';
 
 function Profile() {
   const dispatch = useDispatch();
@@ -389,7 +390,12 @@ function Profile() {
             <div className="relative">
               {imagePreview || formData.profilePicture ? (
                 <img
-                  src={imagePreview || formData.profilePicture}
+                  src={getOptimizedCloudinaryUrl(imagePreview || formData.profilePicture, {
+                    width: 160,
+                    height: 160,
+                    crop: 'fill',
+                    gravity: 'face'
+                  })}
                   alt="Profile"
                   className="w-20 h-20 rounded-full object-cover"
                 />
@@ -530,7 +536,11 @@ function Profile() {
               <div className="flex items-center gap-4">
                 {logoPreview || formData.companyLogo ? (
                   <img
-                    src={logoPreview || formData.companyLogo}
+                    src={getOptimizedCloudinaryUrl(logoPreview || formData.companyLogo, {
+                      width: 192,
+                      height: 192,
+                      crop: 'fit'
+                    })}
                     alt="Company Logo"
                     className="w-24 h-24 rounded-lg object-contain border border-gray-200"
                   />

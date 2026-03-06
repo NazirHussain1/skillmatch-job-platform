@@ -58,8 +58,8 @@ const getJobs = asyncHandler(async (req, res) => {
   }
   
   // Pagination
-  const pageNum = parseInt(page);
-  const limitNum = parseInt(limit);
+  const pageNum = Math.max(1, parseInt(page, 10) || 1);
+  const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10) || 10));
   const skip = (pageNum - 1) * limitNum;
   
   // Get total count for pagination

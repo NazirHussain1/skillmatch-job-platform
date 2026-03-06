@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import { getConversations, getOrCreateConversation, getMessages, sendMessage as sendMsg, addMessage, markMessagesAsRead } from '../features/chat/chatSlice';
 import { useSocket } from '../context/SocketContext';
 import { MessageCircle, Send, User } from 'lucide-react';
+import { getOptimizedCloudinaryUrl } from '../utils/cloudinary';
 
 function Chat() {
   const dispatch = useDispatch();
@@ -129,6 +130,8 @@ function Chat() {
     return conversation.participants.find(p => p._id !== user._id);
   };
 
+  const activeParticipant = selectedConversation ? getOtherParticipant(selectedConversation) : null;
+
   return (
     <div className="h-[calc(100vh-8rem)] flex gap-4">
       {/* Conversations List */}
@@ -153,7 +156,12 @@ function Chat() {
                     <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
                       {otherUser?.profilePicture ? (
                         <img
-                          src={otherUser.profilePicture}
+                          src={getOptimizedCloudinaryUrl(otherUser.profilePicture, {
+                            width: 96,
+                            height: 96,
+                            crop: 'fill',
+                            gravity: 'face'
+                          })}
                           alt={otherUser.name}
                           className="w-12 h-12 rounded-full object-cover"
                         />
@@ -195,10 +203,15 @@ function Chat() {
             <div className="border-b pb-4 mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                  {getOtherParticipant(selectedConversation)?.profilePicture ? (
+                  {activeParticipant?.profilePicture ? (
                     <img
-                      src={getOtherParticipant(selectedConversation).profilePicture}
-                      alt={getOtherParticipant(selectedConversation).name}
+                      src={getOptimizedCloudinaryUrl(activeParticipant.profilePicture, {
+                        width: 96,
+                        height: 96,
+                        crop: 'fill',
+                        gravity: 'face'
+                      })}
+                      alt={activeParticipant.name}
                       className="w-12 h-12 rounded-full object-cover"
                     />
                   ) : (
@@ -207,8 +220,7 @@ function Chat() {
                 </div>
                 <div>
                   <p className="font-semibold text-gray-900">
-                    {getOtherParticipant(selectedConversation)?.companyName ||
-                      getOtherParticipant(selectedConversation)?.name}
+                    {activeParticipant?.companyName || activeParticipant?.name}
                   </p>
                   <p className="text-sm text-gray-600">
                     {selectedConversation.application?.job?.title}
