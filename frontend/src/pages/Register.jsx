@@ -22,13 +22,14 @@ function Register() {
       toast.error(message);
     }
 
-    if (isSuccess) {
-      // Redirect to registration success page instead of dashboard
-      navigate('/registration-success', { state: { email: formData.email } });
+    if (isSuccess && user) {
+      // Auto-login after successful registration
+      toast.success('Registration successful! Welcome to SkillMatch!');
+      navigate('/dashboard');
     }
 
     dispatch(reset());
-  }, [isError, isSuccess, message, navigate, dispatch, formData.email]);
+  }, [isError, isSuccess, user, message, navigate, dispatch]);
 
   const onChange = (e) => {
     setFormData((prev) => ({

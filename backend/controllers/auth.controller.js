@@ -19,78 +19,28 @@ const register = asyncHandler(async (req, res) => {
     );
   }
 
-  // Create user
+  // Create user (email verification disabled for testing)
   const user = await User.create({
     name,
     email,
     password,
     role: role || 'jobseeker',
-    isEmailVerified: false
+    isEmailVerified: true // Auto-verify for testing (TODO: Remove in production)
   });
 
   if (user) {
-    // Generate verification token
-    const verificationToken = user.getEmailVerificationToken();
-    await user.save({ validateBeforeSave: false });
-
-    // Create verification URL
-    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
-
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #4F46E5;">Welcome to SkillMatch!</h2>
-        <p>Hi ${user.name},</p>
-        <p>Thank you for registering with SkillMatch. Please verify your email address to activate your account.</p>
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${verificationUrl}" 
-             style="background-color: #4F46E5; color: white; padding: 12px 30px; 
-                    text-decoration: none; border-radius: 5px; display: inline-block;">
-            Verify Email Address
-          </a>
-        </div>
-        <p>Or copy and paste this link in your browser:</p>
-        <p style="color: #4F46E5; word-break: break-all;">${verificationUrl}</p>
-        <p><strong>This link will expire in 24 hours.</strong></p>
-        <p>If you didn't create this account, please ignore this email.</p>
-        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
-        <p style="color: #6b7280; font-size: 12px;">
-          This is an automated email from SkillMatch. Please do not reply.
-        </p>
-      </div>
-    `;
-
-    try {
-      await sendEmail({
+    // Email verification temporarily disabled for testing
+    // TODO: Re-enable email verification in production with valid email credentials
+    return res.status(201).json(
+      ApiResponse.success('Registration successful. You can now login.', {
+        _id: user._id,
+        name: user.name,
         email: user.email,
-        subject: 'Verify Your Email - SkillMatch',
-        html
-      });
-
-      return res.status(201).json(
-        ApiResponse.success('Registration successful. Please check your email to verify your account.', {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          isEmailVerified: user.isEmailVerified
-        })
-      );
-    } catch (error) {
-      console.error('Email error:', error);
-      user.emailVerificationToken = undefined;
-      user.emailVerificationExpire = undefined;
-      await user.save({ validateBeforeSave: false });
-
-      return res.status(201).json(
-        ApiResponse.success('User registered but verification email could not be sent. Please contact support.', {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          isEmailVerified: user.isEmailVerified
-        })
-      );
-    }
+        role: user.role,
+        isEmailVerified: user.isEmailVerified,
+        token: generateToken(user._id)
+      })
+    );
   }
 
   return res.status(400).json(
@@ -113,12 +63,13 @@ const login = asyncHandler(async (req, res) => {
     );
   }
 
-  // Check if email is verified
-  if (!user.isEmailVerified) {
-    return res.status(403).json(
-      ApiResponse.error('Please verify your email before logging in', 403)
-    );
-  }
+  // Check if email is verified (temporarily disabled for testing)
+  // TODO: Re-enable email verification in production with valid email credentials
+  // if (!user.isEmailVerified) {
+  //   return res.status(403).json(
+  //     ApiResponse.error('Please verify your email before logging in', 403)
+  //   );
+  // }
 
   // Check password
   const isPasswordMatch = await user.matchPassword(password);

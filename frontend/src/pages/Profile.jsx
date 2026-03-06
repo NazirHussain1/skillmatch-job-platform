@@ -326,7 +326,7 @@ function Profile() {
         skills: profile.skills || [],
         location: profile.location || '',
         profilePicture: profile.profilePicture || '',
-        experience: profile.experience || '',
+        experience: profile.experience || [],
         education: profile.education || [],
         // Employer fields
         companyName: profile.companyName || '',
