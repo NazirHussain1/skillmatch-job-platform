@@ -1,24 +1,128 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { logout } from '../features/auth/authSlice';
-import { Briefcase, LayoutDashboard, FileText, User, LogOut, Bookmark, MessageCircle, Menu, X } from 'lucide-react';
+import { Briefcase, LayoutDashboard, FileText, User, LogOut, Bookmark, MessageCircle, Menu, X, Bell } from 'lucide-react';
+import notificationService from '../services/notificationService';
 
 const MainLayout = ({ children }) => {
+  const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isNotificationsLoading, setIsNotificationsLoading] = useState(false);
+  const desktopNotificationsRef = useRef(null);
+  const mobileNotificationsRef = useRef(null);
 
   const handleLogout = () => {
     dispatch(logout());
     navigate('/login');
     setMobileMenuOpen(false);
+    setNotificationsOpen(false);
   };
 
   const closeMobileMenu = () => {
     setMobileMenuOpen(false);
   };
+
+  const fetchNotifications = async () => {
+    if (!user) return;
+
+    try {
+      setIsNotificationsLoading(true);
+      const data = await notificationService.getNotifications();
+      setNotifications(data.notifications || []);
+      setUnreadCount(data.unreadCount || 0);
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    } finally {
+      setIsNotificationsLoading(false);
+    }
+  };
+
+  const handleToggleNotifications = async () => {
+    const nextOpen = !notificationsOpen;
+    setNotificationsOpen(nextOpen);
+
+    if (nextOpen) {
+      await fetchNotifications();
+    }
+  };
+
+  const handleMarkNotificationAsRead = async (notificationId) => {
+    try {
+      await notificationService.markNotificationAsRead(notificationId);
+
+      let wasUnread = false;
+      setNotifications((prev) =>
+        prev.map((notification) => {
+          if (notification._id === notificationId) {
+            wasUnread = !notification.isRead;
+            return { ...notification, isRead: true };
+          }
+          return notification;
+        })
+      );
+
+      if (wasUnread) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
+  };
+
+  const formatNotificationTime = (dateString) => {
+    const createdAt = new Date(dateString).getTime();
+    const now = Date.now();
+    const diffMs = Math.max(0, now - createdAt);
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+
+    if (diffMinutes < 1) return 'Just now';
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays}d ago`;
+  };
+
+  useEffect(() => {
+    if (!user) return undefined;
+
+    fetchNotifications();
+    const intervalId = setInterval(fetchNotifications, 30000);
+
+    return () => clearInterval(intervalId);
+  }, [user]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const clickedDesktopBell =
+        desktopNotificationsRef.current && desktopNotificationsRef.current.contains(event.target);
+      const clickedMobileBell =
+        mobileNotificationsRef.current && mobileNotificationsRef.current.contains(event.target);
+
+      if (!clickedDesktopBell && !clickedMobileBell) {
+        setNotificationsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    setNotificationsOpen(false);
+  }, [location.pathname]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
@@ -82,6 +186,65 @@ const MainLayout = ({ children }) => {
 
             {/* Desktop Actions */}
             <div className="hidden lg:flex items-center gap-3">
+              <div className="relative" ref={desktopNotificationsRef}>
+                <button
+                  onClick={handleToggleNotifications}
+                  className="relative p-2 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
+                  title="Notifications"
+                  aria-label="Notifications"
+                >
+                  <Bell size={20} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-red-600 text-white text-[10px] font-bold rounded-full">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {notificationsOpen && (
+                  <div className="absolute right-0 mt-2 w-96 max-w-[90vw] bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden z-[60]">
+                    <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+                        <span className="text-xs text-gray-500">{unreadCount} unread</span>
+                      </div>
+                    </div>
+
+                    <div className="max-h-96 overflow-y-auto">
+                      {isNotificationsLoading ? (
+                        <div className="p-4 text-sm text-gray-500">Loading notifications...</div>
+                      ) : notifications.length === 0 ? (
+                        <div className="p-4 text-sm text-gray-500">No notifications yet.</div>
+                      ) : (
+                        notifications.map((notification) => (
+                          <div
+                            key={notification._id}
+                            className={`p-4 border-b border-gray-100 ${
+                              notification.isRead ? 'bg-white' : 'bg-blue-50/60'
+                            }`}
+                          >
+                            <p className="text-sm text-gray-800">{notification.message}</p>
+                            <div className="mt-2 flex items-center justify-between">
+                              <span className="text-xs text-gray-500">
+                                {formatNotificationTime(notification.createdAt)}
+                              </span>
+                              {!notification.isRead && (
+                                <button
+                                  onClick={() => handleMarkNotificationAsRead(notification._id)}
+                                  className="text-xs font-medium text-blue-600 hover:text-blue-700"
+                                >
+                                  Mark as read
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <span className="text-sm text-gray-600 font-medium">{user?.name}</span>
               <button
                 onClick={handleLogout}
@@ -92,13 +255,74 @@ const MainLayout = ({ children }) => {
               </button>
             </div>
 
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-xl text-gray-700 hover:bg-gray-100 transition-colors z-50"
-            >
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
+            {/* Mobile Header Actions */}
+            <div className="lg:hidden flex items-center gap-1 z-50">
+              <div className="relative" ref={mobileNotificationsRef}>
+                <button
+                  onClick={handleToggleNotifications}
+                  className="relative p-2 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
+                  title="Notifications"
+                  aria-label="Notifications"
+                >
+                  <Bell size={22} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-red-600 text-white text-[10px] font-bold rounded-full">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+
+                {notificationsOpen && (
+                  <div className="absolute right-0 mt-2 w-80 max-w-[90vw] bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden z-[60]">
+                    <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+                        <span className="text-xs text-gray-500">{unreadCount} unread</span>
+                      </div>
+                    </div>
+
+                    <div className="max-h-96 overflow-y-auto">
+                      {isNotificationsLoading ? (
+                        <div className="p-4 text-sm text-gray-500">Loading notifications...</div>
+                      ) : notifications.length === 0 ? (
+                        <div className="p-4 text-sm text-gray-500">No notifications yet.</div>
+                      ) : (
+                        notifications.map((notification) => (
+                          <div
+                            key={notification._id}
+                            className={`p-4 border-b border-gray-100 ${
+                              notification.isRead ? 'bg-white' : 'bg-blue-50/60'
+                            }`}
+                          >
+                            <p className="text-sm text-gray-800">{notification.message}</p>
+                            <div className="mt-2 flex items-center justify-between">
+                              <span className="text-xs text-gray-500">
+                                {formatNotificationTime(notification.createdAt)}
+                              </span>
+                              {!notification.isRead && (
+                                <button
+                                  onClick={() => handleMarkNotificationAsRead(notification._id)}
+                                  className="text-xs font-medium text-blue-600 hover:text-blue-700"
+                                >
+                                  Mark as read
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 rounded-xl text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            </div>
           </div>
         </div>
 

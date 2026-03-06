@@ -2,6 +2,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const ApiResponse = require('../utils/ApiResponse');
 const Application = require('../models/Application.model');
 const Job = require('../models/Job.model');
+const Notification = require('../models/Notification.model');
 
 // @desc    Create application
 // @route   POST /api/applications/:jobId
@@ -34,6 +35,14 @@ const createApplication = asyncHandler(async (req, res) => {
     job: jobId,
     applicant: req.user._id
   });
+
+  if (job.employer.toString() !== req.user._id.toString()) {
+    await Notification.create({
+      userId: job.employer,
+      type: 'application_received',
+      message: `${req.user.name} applied to your job "${job.title}".`
+    });
+  }
   
   // Populate and return
   const populatedApplication = await Application.findById(application._id)
@@ -112,9 +121,27 @@ const updateApplicationStatus = asyncHandler(async (req, res) => {
     );
   }
   
+  const previousStatus = application.status;
+
   // Update status
   application.status = status;
   await application.save();
+
+  if (status !== previousStatus) {
+    if (status === 'accepted') {
+      await Notification.create({
+        userId: application.applicant,
+        type: 'application_accepted',
+        message: `Your application for "${application.job.title}" has been accepted.`
+      });
+    } else if (status === 'rejected') {
+      await Notification.create({
+        userId: application.applicant,
+        type: 'application_rejected',
+        message: `Your application for "${application.job.title}" has been rejected.`
+      });
+    }
+  }
   
   // Return updated application with populated fields
   const updatedApplication = await Application.findById(application._id)
