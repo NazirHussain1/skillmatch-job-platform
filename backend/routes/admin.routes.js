@@ -5,7 +5,10 @@ const {
   getAllJobs,
   deleteJobAdmin,
   getAnalytics,
-  updateUserRole
+  updateUserRole,
+  approveJob,
+  rejectJob,
+  getJobsByStatus
 } = require('../controllers/admin.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 
@@ -22,7 +25,10 @@ router.put('/users/:id/role', updateUserRole);
 
 // Job management
 router.get('/jobs', getAllJobs);
+router.get('/jobs/status/:status', getJobsByStatus);
 router.delete('/jobs/:id', deleteJobAdmin);
+router.put('/jobs/:id/approve', approveJob);
+router.put('/jobs/:id/reject', rejectJob);
 
 // Analytics
 router.get('/analytics', getAnalytics);

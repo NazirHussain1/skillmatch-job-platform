@@ -269,11 +269,92 @@ const updateUserRole = asyncHandler(async (req, res) => {
   );
 });
 
+// @desc    Approve job
+// @route   PUT /api/admin/jobs/:id/approve
+// @access  Private (Admin only)
+const approveJob = asyncHandler(async (req, res) => {
+  const job = await Job.findById(req.params.id);
+  
+  if (!job) {
+    return res.status(404).json(
+      ApiResponse.error('Job not found', 404)
+    );
+  }
+  
+  job.status = 'active';
+  await job.save();
+  
+  return res.status(200).json(
+    ApiResponse.success('Job approved successfully', job)
+  );
+});
+
+// @desc    Reject job
+// @route   PUT /api/admin/jobs/:id/reject
+// @access  Private (Admin only)
+const rejectJob = asyncHandler(async (req, res) => {
+  const job = await Job.findById(req.params.id);
+  
+  if (!job) {
+    return res.status(404).json(
+      ApiResponse.error('Job not found', 404)
+    );
+  }
+  
+  job.status = 'rejected';
+  await job.save();
+  
+  return res.status(200).json(
+    ApiResponse.success('Job rejected successfully', job)
+  );
+});
+
+// @desc    Get jobs by status
+// @route   GET /api/admin/jobs/status/:status
+// @access  Private (Admin only)
+const getJobsByStatus = asyncHandler(async (req, res) => {
+  const { status } = req.params;
+  const { page = 1, limit = 10 } = req.query;
+  
+  if (!['active', 'closed', 'draft', 'pending', 'rejected'].includes(status)) {
+    return res.status(400).json(
+      ApiResponse.error('Invalid status', 400)
+    );
+  }
+  
+  const pageNum = parseInt(page);
+  const limitNum = parseInt(limit);
+  const skip = (pageNum - 1) * limitNum;
+  
+  const total = await Job.countDocuments({ status });
+  
+  const jobs = await Job.find({ status })
+    .populate('employer', 'name email companyName')
+    .sort({ createdAt: -1 })
+    .limit(limitNum)
+    .skip(skip);
+  
+  return res.status(200).json(
+    ApiResponse.success('Jobs retrieved successfully', {
+      jobs,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum)
+      }
+    })
+  );
+});
+
 module.exports = {
   getAllUsers,
   deleteUser,
   getAllJobs,
   deleteJobAdmin,
   getAnalytics,
-  updateUserRole
+  updateUserRole,
+  approveJob,
+  rejectJob,
+  getJobsByStatus
 };

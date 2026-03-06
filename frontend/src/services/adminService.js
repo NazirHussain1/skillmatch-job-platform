@@ -53,6 +53,32 @@ const getAnalytics = async () => {
   return response.data.data;
 };
 
+// Get jobs by status
+const getJobsByStatus = async (status, filters = {}) => {
+  const params = new URLSearchParams();
+  
+  if (filters.page) params.append('page', filters.page);
+  if (filters.limit) params.append('limit', filters.limit);
+  
+  const queryString = params.toString();
+  const url = queryString ? `/admin/jobs/status/${status}?${queryString}` : `/admin/jobs/status/${status}`;
+  
+  const response = await api.get(url);
+  return response.data.data;
+};
+
+// Approve job
+const approveJob = async (id) => {
+  const response = await api.put(`/admin/jobs/${id}/approve`);
+  return response.data.data;
+};
+
+// Reject job
+const rejectJob = async (id) => {
+  const response = await api.put(`/admin/jobs/${id}/reject`);
+  return response.data.data;
+};
+
 const adminService = {
   getAllUsers,
   deleteUser,
@@ -60,6 +86,9 @@ const adminService = {
   getAllJobs,
   deleteJob,
   getAnalytics,
+  getJobsByStatus,
+  approveJob,
+  rejectJob
 };
 
 export default adminService;

@@ -133,22 +133,22 @@ function Jobs() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen pb-24 lg:pb-8">
       {/* Hero Header */}
-      <div className="hero-gradient text-white py-12 mb-8 rounded-3xl shadow-2xl">
+      <div className="hero-gradient text-white py-8 sm:py-12 lg:py-16 mb-6 sm:mb-8 rounded-2xl sm:rounded-3xl shadow-2xl mx-4 sm:mx-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold mb-3 flex items-center gap-3">
-                <Briefcase className="w-10 h-10" />
-                Discover Your Dream Job
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-2 sm:mb-3 flex items-center gap-2 sm:gap-3">
+                <Briefcase className="w-8 h-8 sm:w-10 sm:h-10" />
+                <span className="leading-tight">Discover Your Dream Job</span>
               </h1>
-              <p className="text-blue-100 text-lg">
+              <p className="text-blue-100 text-base sm:text-lg">
                 {pagination?.total || 0} opportunities waiting for you
               </p>
             </div>
             {user?.role === 'employer' && (
-              <button onClick={() => setShowModal(true)} className="btn bg-white text-blue-600 hover:bg-blue-50 shadow-xl">
+              <button onClick={() => setShowModal(true)} className="btn bg-white text-blue-600 hover:bg-blue-50 shadow-xl w-full sm:w-auto">
                 <Plus className="w-5 h-5" />
                 Post Job
               </button>
@@ -157,17 +157,17 @@ function Jobs() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6">
         {/* Search and Filter Section */}
-        <div className="glass rounded-2xl p-6 shadow-xl">
-          <form onSubmit={handleSearch} className="space-y-4">
+        <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xl">
+          <form onSubmit={handleSearch} className="space-y-3 sm:space-y-4">
             {/* Search Bar */}
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <div className="flex-1 relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Search by job title, company, or keywords..."
+                  placeholder="Search jobs..."
                   value={filters.keyword}
                 onChange={(e) => handleFilterChange('keyword', e.target.value)}
                 className="input-field pl-10"
