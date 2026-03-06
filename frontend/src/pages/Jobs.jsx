@@ -30,6 +30,7 @@ function Jobs() {
     location: '',
     salary: '',
     category: '',
+    jobType: '',
   });
 
   const [searchParams, setSearchParams] = useState({
@@ -37,6 +38,7 @@ function Jobs() {
     location: '',
     salary: '',
     category: '',
+    jobType: '',
     page: 1,
     limit: 9,
   });
@@ -99,12 +101,14 @@ function Jobs() {
       location: '',
       salary: '',
       category: '',
+      jobType: '',
     });
     setSearchParams({
       keyword: '',
       location: '',
       salary: '',
       category: '',
+      jobType: '',
       page: 1,
       limit: 9,
     });
@@ -171,7 +175,7 @@ function Jobs() {
 
           {/* Filter Dropdowns */}
           {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Location
@@ -183,6 +187,23 @@ function Jobs() {
                   onChange={(e) => handleFilterChange('location', e.target.value)}
                   className="input-field"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Job Type
+                </label>
+                <select
+                  value={filters.jobType}
+                  onChange={(e) => handleFilterChange('jobType', e.target.value)}
+                  className="input-field"
+                >
+                  <option value="">All Types</option>
+                  <option value="full-time">Full Time</option>
+                  <option value="part-time">Part Time</option>
+                  <option value="remote">Remote</option>
+                  <option value="internship">Internship</option>
+                  <option value="contract">Contract</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -221,21 +242,25 @@ function Jobs() {
                   <option value="150000">$150,000+</option>
                 </select>
               </div>
-              <div className="flex items-end">
-                <button
-                  type="button"
-                  onClick={handleClearFilters}
-                  className="btn-secondary w-full"
-                >
-                  Clear Filters
-                </button>
-              </div>
+            </div>
+          )}
+          
+          {/* Clear Filters Button */}
+          {showFilters && (filters.location || filters.jobType || filters.category || filters.salary) && (
+            <div className="pt-4">
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="btn-secondary"
+              >
+                Clear All Filters
+              </button>
             </div>
           )}
         </form>
 
         {/* Active Filters Display */}
-        {(searchParams.keyword || searchParams.location || searchParams.salary || searchParams.category) && (
+        {(searchParams.keyword || searchParams.location || searchParams.salary || searchParams.category || searchParams.jobType) && (
           <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
             <span className="text-sm text-gray-600">Active filters:</span>
             {searchParams.keyword && (
@@ -287,6 +312,23 @@ function Jobs() {
                   onClick={() => {
                     setFilters({ ...filters, category: '' });
                     setSearchParams({ ...searchParams, category: '', page: 1 });
+                  }}
+                  className="hover:text-primary-900"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+            {searchParams.jobType && (
+              <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm flex items-center gap-2">
+                Type: {searchParams.jobType === 'full-time' ? 'Full Time' : 
+                       searchParams.jobType === 'part-time' ? 'Part Time' : 
+                       searchParams.jobType === 'remote' ? 'Remote' : 
+                       searchParams.jobType === 'internship' ? 'Internship' : 'Contract'}
+                <button
+                  onClick={() => {
+                    setFilters({ ...filters, jobType: '' });
+                    setSearchParams({ ...searchParams, jobType: '', page: 1 });
                   }}
                   className="hover:text-primary-900"
                 >
