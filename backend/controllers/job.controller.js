@@ -6,7 +6,7 @@ const Job = require('../models/Job.model');
 // @route   GET /api/jobs
 // @access  Public
 const getJobs = asyncHandler(async (req, res) => {
-  const { keyword, location, salary, category, jobType, page = 1, limit = 10, employer } = req.query;
+  const { keyword, location, salary, category, jobType, status, page = 1, limit = 10, employer } = req.query;
   
   // Build filter object
   const filter = {};
@@ -14,6 +14,18 @@ const getJobs = asyncHandler(async (req, res) => {
   // Filter by employer if provided
   if (employer) {
     filter.employer = employer;
+  }
+
+  if (status) {
+    if (!['active', 'closed', 'pending', 'rejected'].includes(status)) {
+      return res.status(400).json(
+        ApiResponse.error('Invalid status', 400)
+      );
+    }
+    filter.status = status;
+  } else if (!employer) {
+    // Public jobs listing only shows moderated/approved jobs.
+    filter.status = 'active';
   }
   
   // Keyword search (searches in title, company, and description)
@@ -168,7 +180,7 @@ const deleteJob = asyncHandler(async (req, res) => {
 const updateJobStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
   
-  if (!['active', 'closed', 'draft'].includes(status)) {
+  if (!['closed', 'pending'].includes(status)) {
     return res.status(400).json(
       ApiResponse.error('Invalid status', 400)
     );
@@ -226,7 +238,7 @@ const getJobStats = asyncHandler(async (req, res) => {
   const totalJobs = jobs.length;
   const activeJobs = jobs.filter(job => job.status === 'active').length;
   const closedJobs = jobs.filter(job => job.status === 'closed').length;
-  const draftJobs = jobs.filter(job => job.status === 'draft').length;
+  const pendingJobs = jobs.filter(job => job.status === 'pending').length;
   
   // Recent applications (last 30 days)
   const thirtyDaysAgo = new Date();
@@ -243,7 +255,7 @@ const getJobStats = asyncHandler(async (req, res) => {
         total: totalJobs,
         active: activeJobs,
         closed: closedJobs,
-        draft: draftJobs
+        pending: pendingJobs
       },
       applications: {
         total: totalApplications,

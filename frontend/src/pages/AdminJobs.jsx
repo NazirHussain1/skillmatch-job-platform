@@ -80,8 +80,7 @@ function AdminJobs() {
       active: 'badge-success',
       pending: 'badge-warning',
       rejected: 'badge-danger',
-      closed: 'badge-secondary',
-      draft: 'badge-secondary'
+      closed: 'badge-secondary'
     };
     return badges[status] || 'badge-secondary';
   };
@@ -252,12 +251,12 @@ function AdminJobs() {
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         isOpen={deleteDialog.isOpen}
-        onClose={() => setDeleteDialog({ isOpen: false, jobId: null, jobTitle: '' })}
+        onCancel={() => setDeleteDialog({ isOpen: false, jobId: null, jobTitle: '' })}
         onConfirm={handleDelete}
         title="Delete Job"
         message={`Are you sure you want to delete "${deleteDialog.jobTitle}"? This action cannot be undone.`}
         confirmText="Delete"
-        confirmButtonClass="bg-red-600 hover:bg-red-700"
+        variant="danger"
       />
     </div>
   );

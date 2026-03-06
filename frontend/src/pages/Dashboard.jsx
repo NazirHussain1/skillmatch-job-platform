@@ -150,8 +150,8 @@ function Dashboard() {
                 <span className="font-semibold text-gray-600">{employerStats.jobs.closed}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-600">Draft</span>
-                <span className="font-semibold text-gray-600">{employerStats.jobs.draft}</span>
+                <span className="text-gray-600">Pending Review</span>
+                <span className="font-semibold text-yellow-600">{employerStats.jobs.pending}</span>
               </div>
             </div>
           </div>

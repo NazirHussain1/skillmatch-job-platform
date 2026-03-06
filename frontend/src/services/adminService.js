@@ -31,6 +31,7 @@ const updateUserRole = async (id, role) => {
 const getAllJobs = async (filters = {}) => {
   const params = new URLSearchParams();
   
+  if (filters.status) params.append('status', filters.status);
   if (filters.page) params.append('page', filters.page);
   if (filters.limit) params.append('limit', filters.limit);
   

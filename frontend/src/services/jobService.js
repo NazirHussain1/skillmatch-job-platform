@@ -8,6 +8,10 @@ const getJobs = async (filters = {}) => {
   if (filters.keyword) params.append('keyword', filters.keyword);
   if (filters.location) params.append('location', filters.location);
   if (filters.salary) params.append('salary', filters.salary);
+  if (filters.category) params.append('category', filters.category);
+  if (filters.jobType) params.append('jobType', filters.jobType);
+  if (filters.status) params.append('status', filters.status);
+  if (filters.employer) params.append('employer', filters.employer);
   if (filters.page) params.append('page', filters.page);
   if (filters.limit) params.append('limit', filters.limit);
   

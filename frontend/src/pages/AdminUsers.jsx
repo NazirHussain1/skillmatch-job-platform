@@ -235,12 +235,12 @@ function AdminUsers() {
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         isOpen={deleteDialog.isOpen}
-        onClose={() => setDeleteDialog({ isOpen: false, userId: null, userName: '' })}
+        onCancel={() => setDeleteDialog({ isOpen: false, userId: null, userName: '' })}
         onConfirm={handleDelete}
         title="Delete User"
         message={`Are you sure you want to delete "${deleteDialog.userName}"? This will also delete all their associated data.`}
         confirmText="Delete"
-        confirmButtonClass="bg-red-600 hover:bg-red-700"
+        variant="danger"
       />
 
       {/* Role Change Dialog */}

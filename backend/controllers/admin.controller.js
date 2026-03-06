@@ -80,15 +80,25 @@ const deleteUser = asyncHandler(async (req, res) => {
 // @route   GET /api/admin/jobs
 // @access  Private (Admin only)
 const getAllJobs = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10 } = req.query;
+  const { status, page = 1, limit = 10 } = req.query;
+  const filter = {};
+
+  if (status) {
+    if (!['active', 'closed', 'pending', 'rejected'].includes(status)) {
+      return res.status(400).json(
+        ApiResponse.error('Invalid status', 400)
+      );
+    }
+    filter.status = status;
+  }
   
   const pageNum = parseInt(page);
   const limitNum = parseInt(limit);
   const skip = (pageNum - 1) * limitNum;
   
-  const total = await Job.countDocuments();
+  const total = await Job.countDocuments(filter);
   
-  const jobs = await Job.find()
+  const jobs = await Job.find(filter)
     .populate('employer', 'name email companyName')
     .sort({ createdAt: -1 })
     .limit(limitNum)
@@ -316,7 +326,7 @@ const getJobsByStatus = asyncHandler(async (req, res) => {
   const { status } = req.params;
   const { page = 1, limit = 10 } = req.query;
   
-  if (!['active', 'closed', 'draft', 'pending', 'rejected'].includes(status)) {
+  if (!['active', 'closed', 'pending', 'rejected'].includes(status)) {
     return res.status(400).json(
       ApiResponse.error('Invalid status', 400)
     );
