@@ -133,9 +133,9 @@ function Chat() {
   const activeParticipant = selectedConversation ? getOtherParticipant(selectedConversation) : null;
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex gap-4">
+    <div className="h-[calc(100vh-8rem)] flex flex-col lg:flex-row gap-4">
       {/* Conversations List */}
-      <div className="w-1/3 card overflow-y-auto">
+      <div className="w-full lg:w-1/3 card overflow-y-auto max-h-72 lg:max-h-none">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Messages</h2>
         
         {conversations.length > 0 ? (
@@ -162,7 +162,7 @@ function Chat() {
                             crop: 'fill',
                             gravity: 'face'
                           })}
-                          alt={otherUser.name}
+                          alt={otherUser?.name || 'User'}
                           className="w-12 h-12 rounded-full object-cover"
                         />
                       ) : (
@@ -196,7 +196,7 @@ function Chat() {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 card flex flex-col">
+      <div className="flex-1 card flex flex-col min-h-0">
         {selectedConversation ? (
           <>
             {/* Chat Header */}
@@ -239,7 +239,7 @@ function Chat() {
                   }`}
                 >
                   <div
-                    className={`max-w-[70%] rounded-lg p-3 ${
+                    className={`max-w-[85%] sm:max-w-[70%] rounded-lg p-3 ${
                       message.sender._id === user._id
                         ? 'bg-primary-600 text-white'
                         : 'bg-gray-200 text-gray-900'
