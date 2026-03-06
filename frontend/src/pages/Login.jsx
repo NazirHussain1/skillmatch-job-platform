@@ -122,7 +122,7 @@ function Login() {
                   value={formData.password}
                   onChange={onChange}
                   className="input pl-10"
-                  placeholder="••••••••"
+                  placeholder="********"
                   required
                 />
               </div>
@@ -150,3 +150,4 @@ function Login() {
 }
 
 export default Login;
+

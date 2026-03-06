@@ -16,20 +16,17 @@ const ConfirmDialog = ({
     danger: {
       icon: AlertTriangle,
       iconColor: 'text-red-600',
-      buttonBg: 'bg-red-600 hover:bg-red-700',
-      borderColor: 'border-red-200'
+      buttonBg: 'bg-red-600 hover:bg-red-700'
     },
     warning: {
       icon: AlertCircle,
       iconColor: 'text-yellow-600',
-      buttonBg: 'bg-yellow-600 hover:bg-yellow-700',
-      borderColor: 'border-yellow-200'
+      buttonBg: 'bg-yellow-600 hover:bg-yellow-700'
     },
     info: {
       icon: Info,
       iconColor: 'text-blue-600',
-      buttonBg: 'bg-blue-600 hover:bg-blue-700',
-      borderColor: 'border-blue-200'
+      buttonBg: 'bg-blue-600 hover:bg-blue-700'
     }
   };
 

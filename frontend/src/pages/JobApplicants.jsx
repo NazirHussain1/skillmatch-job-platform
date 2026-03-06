@@ -103,7 +103,7 @@ const JobApplicants = () => {
         {job && (
           <div className="mt-2">
             <p className="text-gray-600">
-              {job.company} • {job.location}
+              {job.company} | {job.location}
             </p>
             {/* Job Type and Category Badges */}
             <div className="flex flex-wrap gap-2 mt-2">
@@ -226,3 +226,4 @@ const JobApplicants = () => {
 };
 
 export default JobApplicants;
+

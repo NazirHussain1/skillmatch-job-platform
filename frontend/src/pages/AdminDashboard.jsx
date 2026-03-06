@@ -199,7 +199,10 @@ function AdminDashboard() {
       setActionLoading(`approve-${jobId}`);
       await adminService.approveJob(jobId);
       toast.success('Job approved successfully');
-      await fetchJobs(statusFilter, jobsPage);
+      await Promise.all([
+        fetchJobs(statusFilter, jobsPage),
+        fetchAnalytics()
+      ]);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to approve job');
     } finally {
@@ -212,7 +215,10 @@ function AdminDashboard() {
       setActionLoading(`reject-${jobId}`);
       await adminService.rejectJob(jobId);
       toast.success('Job rejected successfully');
-      await fetchJobs(statusFilter, jobsPage);
+      await Promise.all([
+        fetchJobs(statusFilter, jobsPage),
+        fetchAnalytics()
+      ]);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to reject job');
     } finally {

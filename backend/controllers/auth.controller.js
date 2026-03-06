@@ -19,18 +19,16 @@ const register = asyncHandler(async (req, res) => {
     );
   }
 
-  // Create user (email verification disabled for testing)
+  // Create user
   const user = await User.create({
     name,
     email,
     password,
     role: role || 'jobseeker',
-    isEmailVerified: true // Auto-verify for testing (TODO: Remove in production)
+    isEmailVerified: true
   });
 
   if (user) {
-    // Email verification temporarily disabled for testing
-    // TODO: Re-enable email verification in production with valid email credentials
     return res.status(201).json(
       ApiResponse.success('Registration successful. You can now login.', {
         _id: user._id,

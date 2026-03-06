@@ -16,7 +16,7 @@ const {
 const { protect, authorize } = require('../middleware/auth.middleware');
 const validate = require('../middleware/validate.middleware');
 const upload = require('../middleware/upload.middleware');
-const { uploadDocument } = require('../middleware/upload.middleware');
+const { uploadDocument } = upload;
 const {
   updateProfileValidator,
   updateUserValidator,

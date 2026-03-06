@@ -105,7 +105,7 @@ function Register() {
                   value={formData.password}
                   onChange={onChange}
                   className="input pl-10"
-                  placeholder="••••••••"
+                  placeholder="********"
                   required
                   minLength={6}
                 />
@@ -149,3 +149,4 @@ function Register() {
 }
 
 export default Register;
+

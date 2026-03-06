@@ -82,7 +82,19 @@ export const chatSlice = createSlice({
   reducers: {
     reset: () => initialState,
     addMessage: (state, action) => {
-      state.messages.push(action.payload);
+      const incomingMessage = action.payload;
+      if (!incomingMessage?._id) {
+        state.messages.push(incomingMessage);
+        return;
+      }
+
+      const alreadyExists = state.messages.some(
+        (message) => message._id === incomingMessage._id
+      );
+
+      if (!alreadyExists) {
+        state.messages.push(incomingMessage);
+      }
     },
     setCurrentConversation: (state, action) => {
       state.currentConversation = action.payload;

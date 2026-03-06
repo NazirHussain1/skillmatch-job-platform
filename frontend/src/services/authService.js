@@ -37,17 +37,10 @@ const logout = () => {
   localStorage.removeItem('user');
 };
 
-// Get profile
-const getProfile = async () => {
-  const response = await api.get('/auth/profile');
-  return response.data.data;
-};
-
 const authService = {
   register,
   login,
-  logout,
-  getProfile,
+  logout
 };
 
 export default authService;

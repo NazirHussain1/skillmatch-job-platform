@@ -4,6 +4,15 @@ import { io } from 'socket.io-client';
 
 const SocketContext = createContext();
 
+const getSocketServerUrl = () => {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  if (!apiUrl) {
+    return 'http://localhost:5000';
+  }
+
+  return apiUrl.replace(/\/api\/?$/, '');
+};
+
 export const useSocket = () => {
   return useContext(SocketContext);
 };
@@ -13,26 +22,27 @@ export const SocketProvider = ({ children }) => {
   const { user } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    if (user) {
-      const newSocket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000', {
-        withCredentials: true
+    if (!user) {
+      setSocket((currentSocket) => {
+        currentSocket?.close();
+        return null;
       });
-
-      newSocket.on('connect', () => {
-        newSocket.emit('join', user._id);
-      });
-
-      setSocket(newSocket);
-
-      return () => {
-        newSocket.close();
-      };
-    } else {
-      if (socket) {
-        socket.close();
-        setSocket(null);
-      }
+      return;
     }
+
+    const newSocket = io(getSocketServerUrl(), {
+      withCredentials: true
+    });
+
+    newSocket.on('connect', () => {
+      newSocket.emit('join', user._id);
+    });
+
+    setSocket(newSocket);
+
+    return () => {
+      newSocket.close();
+    };
   }, [user]);
 
   return (

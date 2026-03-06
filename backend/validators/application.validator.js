@@ -6,12 +6,6 @@ const jobIdValidator = [
     .withMessage('Invalid job ID')
 ];
 
-const applicationIdValidator = [
-  param('id')
-    .isMongoId()
-    .withMessage('Invalid application ID')
-];
-
 const updateApplicationStatusValidator = [
   param('id')
     .isMongoId()
@@ -26,6 +20,5 @@ const updateApplicationStatusValidator = [
 
 module.exports = {
   jobIdValidator,
-  applicationIdValidator,
   updateApplicationStatusValidator
 };
