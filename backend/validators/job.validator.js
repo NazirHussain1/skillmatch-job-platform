@@ -25,7 +25,12 @@ const createJobValidator = [
     .notEmpty()
     .withMessage('Salary is required')
     .isNumeric()
-    .withMessage('Salary must be a number')
+    .withMessage('Salary must be a number'),
+  
+  body('jobType')
+    .optional()
+    .isIn(['full-time', 'part-time', 'remote', 'internship', 'contract'])
+    .withMessage('Invalid job type')
 ];
 
 const updateJobValidator = [
@@ -60,7 +65,12 @@ const updateJobValidator = [
   body('salary')
     .optional()
     .isNumeric()
-    .withMessage('Salary must be a number')
+    .withMessage('Salary must be a number'),
+  
+  body('jobType')
+    .optional()
+    .isIn(['full-time', 'part-time', 'remote', 'internship', 'contract'])
+    .withMessage('Invalid job type')
 ];
 
 const jobIdValidator = [

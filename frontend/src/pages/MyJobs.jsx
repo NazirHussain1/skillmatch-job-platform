@@ -154,6 +154,20 @@ const MyJobs = () => {
               </div>
               
               <p className="text-gray-600 font-medium mb-2">{job.company}</p>
+              
+              {/* Job Type Badge */}
+              {job.jobType && (
+                <div className="mb-2">
+                  <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-700">
+                    {job.jobType === 'full-time' && 'Full Time'}
+                    {job.jobType === 'part-time' && 'Part Time'}
+                    {job.jobType === 'remote' && 'Remote'}
+                    {job.jobType === 'internship' && 'Internship'}
+                    {job.jobType === 'contract' && 'Contract'}
+                  </span>
+                </div>
+              )}
+              
               <p className="text-gray-500 text-sm mb-2">{job.location}</p>
               <p className="text-green-600 font-semibold mb-2">{formatSalary(job.salary)}/year</p>
               <p className="text-gray-400 text-xs mb-4">Posted on {formatDate(job.createdAt)}</p>

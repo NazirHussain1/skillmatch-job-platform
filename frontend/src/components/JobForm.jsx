@@ -6,7 +6,8 @@ const JobForm = ({ initialData = {}, onSubmit, onCancel, isLoading = false }) =>
     company: '',
     description: '',
     location: '',
-    salary: ''
+    salary: '',
+    jobType: 'full-time'
   });
 
   const [errors, setErrors] = useState({});
@@ -18,7 +19,8 @@ const JobForm = ({ initialData = {}, onSubmit, onCancel, isLoading = false }) =>
         company: initialData.company || '',
         description: initialData.description || '',
         location: initialData.location || '',
-        salary: initialData.salary || ''
+        salary: initialData.salary || '',
+        jobType: initialData.jobType || 'full-time'
       });
     }
   }, [initialData]);
@@ -182,6 +184,25 @@ const JobForm = ({ initialData = {}, onSubmit, onCancel, isLoading = false }) =>
           min="0"
         />
         {errors.salary && <p className="text-red-500 text-sm mt-1">{errors.salary}</p>}
+      </div>
+
+      <div>
+        <label htmlFor="jobType" className="block text-sm font-medium text-gray-700 mb-1">
+          Job Type <span className="text-red-500">*</span>
+        </label>
+        <select
+          id="jobType"
+          name="jobType"
+          value={formData.jobType}
+          onChange={handleChange}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="full-time">Full Time</option>
+          <option value="part-time">Part Time</option>
+          <option value="remote">Remote</option>
+          <option value="internship">Internship</option>
+          <option value="contract">Contract</option>
+        </select>
       </div>
 
       <div className="flex gap-3 pt-4">

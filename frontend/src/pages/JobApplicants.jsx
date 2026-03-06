@@ -101,9 +101,23 @@ const JobApplicants = () => {
           {job ? job.title : 'Job Applicants'}
         </h1>
         {job && (
-          <p className="text-gray-600 mt-2">
-            {job.company} • {job.location}
-          </p>
+          <div className="mt-2">
+            <p className="text-gray-600">
+              {job.company} • {job.location}
+            </p>
+            {/* Job Type Badge */}
+            {job.jobType && (
+              <div className="mt-2">
+                <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-700">
+                  {job.jobType === 'full-time' && 'Full Time'}
+                  {job.jobType === 'part-time' && 'Part Time'}
+                  {job.jobType === 'remote' && 'Remote'}
+                  {job.jobType === 'internship' && 'Internship'}
+                  {job.jobType === 'contract' && 'Contract'}
+                </span>
+              </div>
+            )}
+          </div>
         )}
       </div>
 

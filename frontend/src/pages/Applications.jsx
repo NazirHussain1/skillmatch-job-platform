@@ -51,6 +51,20 @@ function Applications() {
                     {app.job?.title}
                   </h3>
                   <p className="text-gray-600 mb-3">{app.job?.company}</p>
+                  
+                  {/* Job Type Badge */}
+                  {app.job?.jobType && (
+                    <div className="mb-3">
+                      <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-700">
+                        {app.job.jobType === 'full-time' && 'Full Time'}
+                        {app.job.jobType === 'part-time' && 'Part Time'}
+                        {app.job.jobType === 'remote' && 'Remote'}
+                        {app.job.jobType === 'internship' && 'Internship'}
+                        {app.job.jobType === 'contract' && 'Contract'}
+                      </span>
+                    </div>
+                  )}
+                  
                   <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4" />

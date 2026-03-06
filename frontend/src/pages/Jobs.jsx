@@ -20,6 +20,7 @@ function Jobs() {
     description: '',
     location: '',
     salary: '',
+    jobType: 'full-time',
   });
 
   // Search and filter state
@@ -47,7 +48,7 @@ function Jobs() {
       await dispatch(createJob({ ...formData, salary: Number(formData.salary) })).unwrap();
       toast.success('Job posted successfully!');
       setShowModal(false);
-      setFormData({ title: '', company: '', description: '', location: '', salary: '' });
+      setFormData({ title: '', company: '', description: '', location: '', salary: '', jobType: 'full-time' });
     } catch (error) {
       toast.error(error || 'Failed to post job');
     }
@@ -303,6 +304,20 @@ function Jobs() {
                     
                     <h3 className="text-xl font-semibold text-gray-900 mb-2 pr-10">{job.title}</h3>
                     <p className="text-gray-600 mb-4">{job.company}</p>
+                    
+                    {/* Job Type Badge */}
+                    {job.jobType && (
+                      <div className="mb-3">
+                        <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-700">
+                          {job.jobType === 'full-time' && 'Full Time'}
+                          {job.jobType === 'part-time' && 'Part Time'}
+                          {job.jobType === 'remote' && 'Remote'}
+                          {job.jobType === 'internship' && 'Internship'}
+                          {job.jobType === 'contract' && 'Contract'}
+                        </span>
+                      </div>
+                    )}
+                    
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center gap-2 text-gray-600">
                         <MapPin className="w-4 h-4" />
@@ -394,6 +409,18 @@ function Jobs() {
                 className="input"
                 required
               />
+              <select
+                value={formData.jobType}
+                onChange={(e) => setFormData({ ...formData, jobType: e.target.value })}
+                className="input"
+                required
+              >
+                <option value="full-time">Full Time</option>
+                <option value="part-time">Part Time</option>
+                <option value="remote">Remote</option>
+                <option value="internship">Internship</option>
+                <option value="contract">Contract</option>
+              </select>
               <button type="submit" className="btn-primary w-full">
                 Post Job
               </button>

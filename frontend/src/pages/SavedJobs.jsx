@@ -47,6 +47,19 @@ function SavedJobs() {
               <h3 className="text-xl font-semibold text-gray-900 mb-2 pr-10">{job.title}</h3>
               <p className="text-gray-600 mb-4">{job.company}</p>
               
+              {/* Job Type Badge */}
+              {job.jobType && (
+                <div className="mb-3">
+                  <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-700">
+                    {job.jobType === 'full-time' && 'Full Time'}
+                    {job.jobType === 'part-time' && 'Part Time'}
+                    {job.jobType === 'remote' && 'Remote'}
+                    {job.jobType === 'internship' && 'Internship'}
+                    {job.jobType === 'contract' && 'Contract'}
+                  </span>
+                </div>
+              )}
+              
               <div className="space-y-2 mb-4">
                 <div className="flex items-center gap-2 text-gray-600">
                   <MapPin className="w-4 h-4" />
