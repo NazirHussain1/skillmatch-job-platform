@@ -27,11 +27,40 @@ const notificationRoutes = require('./routes/notification.routes');
 const { errorHandler, notFound } = require('./middleware/error.middleware');
 const sanitizeInputs = require('./middleware/sanitize.middleware');
 
+const parseOrigins = (value) =>
+  (value || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+const devOrigins = ['http://localhost:3000', 'http://localhost:5173'];
+const configuredOrigins = parseOrigins(process.env.CORS_ORIGIN);
+const allowedOrigins = [
+  ...new Set(
+    process.env.NODE_ENV === 'production'
+      ? configuredOrigins
+      : [...devOrigins, ...configuredOrigins]
+  )
+];
+
+const isAllowedOrigin = (origin) => !origin || allowedOrigins.includes(origin);
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (isAllowedOrigin(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`Origin ${origin} is not allowed by CORS`));
+  },
+  credentials: true
+};
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    origin: allowedOrigins,
     credentials: true
   }
 });
@@ -43,10 +72,7 @@ connectDB();
 app.disable('x-powered-by');
 
 app.use(helmet());
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
-  credentials: true
-}));
+app.use(cors(corsOptions));
 
 // Only use morgan in development
 if (process.env.NODE_ENV !== 'production') {

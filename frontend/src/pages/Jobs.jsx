@@ -61,6 +61,27 @@ function Jobs() {
     dispatch(getJobs(searchParams));
   }, [dispatch, searchParams]);
 
+  useEffect(() => {
+    if (!showModal) {
+      return undefined;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setShowModal(false);
+      }
+    };
+
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showModal]);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -404,10 +425,21 @@ function Jobs() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/55 backdrop-blur-sm"
+            onClick={() => setShowModal(false)}
+            aria-hidden="true"
+          />
+          <div
+            className="relative bg-white rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="post-job-title"
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold">Post a Job</h2>
+              <h2 id="post-job-title" className="text-2xl font-bold">Post a Job</h2>
               <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">
                 <X className="w-6 h-6" />
               </button>

@@ -18,6 +18,7 @@ const MyJobs = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isAnyOverlayOpen = showCreateModal || showEditModal || showDeleteDialog;
 
   useEffect(() => {
     dispatch(getEmployerJobs());
@@ -32,6 +33,43 @@ const MyJobs = () => {
       toast.error(message);
     }
   }, [isError, message]);
+
+  useEffect(() => {
+    if (!isAnyOverlayOpen) {
+      return undefined;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const handleEscapeClose = (event) => {
+      if (event.key !== 'Escape' || isSubmitting) {
+        return;
+      }
+
+      if (showDeleteDialog) {
+        setShowDeleteDialog(false);
+        setSelectedJob(null);
+        return;
+      }
+
+      if (showEditModal) {
+        setShowEditModal(false);
+        setSelectedJob(null);
+        return;
+      }
+
+      if (showCreateModal) {
+        setShowCreateModal(false);
+      }
+    };
+
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', handleEscapeClose);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleEscapeClose);
+    };
+  }, [isAnyOverlayOpen, isSubmitting, showCreateModal, showDeleteDialog, showEditModal]);
 
   const handleCreateJob = async (jobData) => {
     setIsSubmitting(true);
@@ -205,10 +243,16 @@ const MyJobs = () => {
 
       {/* Create Job Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => !isSubmitting && setShowCreateModal(false)} />
-          <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Create New Job</h2>
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/55 backdrop-blur-sm" onClick={() => !isSubmitting && setShowCreateModal(false)} />
+          <div
+            className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="create-job-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="create-job-modal-title" className="text-2xl font-bold text-gray-900 mb-6">Create New Job</h2>
             <JobForm
               onSubmit={handleCreateJob}
               onCancel={() => setShowCreateModal(false)}
@@ -220,10 +264,16 @@ const MyJobs = () => {
 
       {/* Edit Job Modal */}
       {showEditModal && selectedJob && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => !isSubmitting && setShowEditModal(false)} />
-          <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Edit Job</h2>
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/55 backdrop-blur-sm" onClick={() => !isSubmitting && setShowEditModal(false)} />
+          <div
+            className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-job-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="edit-job-modal-title" className="text-2xl font-bold text-gray-900 mb-6">Edit Job</h2>
             <JobForm
               initialData={selectedJob}
               onSubmit={handleEditJob}
