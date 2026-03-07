@@ -142,37 +142,9 @@ skill-match/
 
 ## Environment Variables
 
-### Backend (`backend/.env.local`)
-
-```env
-NODE_ENV=development
-PORT=5000
-
-MONGODB_URI=your_mongodb_connection_string
-
-JWT_SECRET=your_jwt_secret
-JWT_EXPIRES_IN=7d
-
-CORS_ORIGIN=http://localhost:3000
-FRONTEND_URL=http://localhost:3000
-
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=your_email
-EMAIL_PASS=your_app_password
-EMAIL_FROM=noreply@skillmatch.com
-EMAIL_FROM_NAME=SkillMatch
-
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-```
-
-### Frontend (`frontend/.env.local`)
-
-```env
-VITE_API_URL=http://localhost:5000/api
-```
+- Backend config is read from `backend/.env.local` (local-only, never commit it).
+- Frontend config is read from `frontend/.env.local`.
+- Keep all personal keys and private values out of documentation.
 
 ## Local Development
 
