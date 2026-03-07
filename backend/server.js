@@ -68,13 +68,15 @@ const io = new Server(server, {
 
 // Connect to database
 const startServer = async () => {
+  await connectDB();
+
   try {
-    await connectDB();
     await bootstrapAdmin();
-    server.listen(PORT);
   } catch {
-    process.exit(1);
+    // Do not block API startup if admin bootstrap fails.
   }
+
+  server.listen(PORT);
 };
 
 // Middleware
@@ -157,6 +159,8 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
-startServer();
+startServer().catch(() => {
+  process.exit(1);
+});
 
 module.exports = app;
