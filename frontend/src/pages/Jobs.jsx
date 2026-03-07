@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-hot-toast';
 import {
@@ -57,9 +57,20 @@ function Jobs() {
     limit: 9
   });
 
+  const effectiveSearchParams = useMemo(() => {
+    if (user?.role === 'employer' && user?._id) {
+      return {
+        ...searchParams,
+        employer: user._id
+      };
+    }
+
+    return searchParams;
+  }, [searchParams, user?._id, user?.role]);
+
   useEffect(() => {
-    dispatch(getJobs(searchParams));
-  }, [dispatch, searchParams]);
+    dispatch(getJobs(effectiveSearchParams));
+  }, [dispatch, effectiveSearchParams]);
 
   useEffect(() => {
     if (!showModal) {
@@ -86,8 +97,12 @@ function Jobs() {
     event.preventDefault();
 
     try {
-      await dispatch(createJob({ ...formData, salary: Number(formData.salary) })).unwrap();
-      toast.success('Job posted successfully');
+      const createdJob = await dispatch(createJob({ ...formData, salary: Number(formData.salary) })).unwrap();
+      if (createdJob?.status === 'pending') {
+        toast.success('Job created and sent for admin approval');
+      } else {
+        toast.success('Job posted successfully');
+      }
       setShowModal(false);
       setFormData({
         title: '',
@@ -98,7 +113,7 @@ function Jobs() {
         jobType: 'full-time',
         category: ''
       });
-      dispatch(getJobs(searchParams));
+      dispatch(getJobs(effectiveSearchParams));
     } catch (error) {
       toast.error(error || 'Failed to post job');
     }
@@ -382,6 +397,21 @@ function Jobs() {
                   <div className="flex flex-wrap gap-2 mb-4">
                     {job.jobType && <span className="badge-primary">{job.jobType}</span>}
                     {job.category && <span className="badge-secondary">{job.category}</span>}
+                    {user?.role === 'employer' && job.status && (
+                      <span
+                        className={`badge ${
+                          job.status === 'active'
+                            ? 'badge-success'
+                            : job.status === 'pending'
+                              ? 'badge-warning'
+                              : job.status === 'rejected'
+                                ? 'badge-danger'
+                                : 'badge-secondary'
+                        }`}
+                      >
+                        {job.status}
+                      </span>
+                    )}
                   </div>
 
                   <div className="space-y-2.5 mb-4">

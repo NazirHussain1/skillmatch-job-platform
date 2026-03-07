@@ -11,6 +11,12 @@ const crypto = require('crypto');
 const register = asyncHandler(async (req, res) => {
   const { name, email, password, role } = req.body;
 
+  if (role === 'admin') {
+    return res.status(403).json(
+      ApiResponse.error('Admin accounts cannot be created from public registration', 403)
+    );
+  }
+
   // Check if user exists
   const userExists = await User.findOne({ email });
   if (userExists) {

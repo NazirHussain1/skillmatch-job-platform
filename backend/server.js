@@ -12,6 +12,7 @@ const morgan = require('morgan');
 const http = require('http');
 const { Server } = require('socket.io');
 const connectDB = require('./config/db');
+const bootstrapAdmin = require('./utils/bootstrapAdmin');
 
 // Import routes
 const authRoutes = require('./routes/auth.routes');
@@ -66,7 +67,15 @@ const io = new Server(server, {
 });
 
 // Connect to database
-connectDB();
+const startServer = async () => {
+  try {
+    await connectDB();
+    await bootstrapAdmin();
+    server.listen(PORT);
+  } catch {
+    process.exit(1);
+  }
+};
 
 // Middleware
 app.disable('x-powered-by');
@@ -148,7 +157,6 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
-
-server.listen(PORT);
+startServer();
 
 module.exports = app;

@@ -24,8 +24,8 @@ const registerValidator = [
   
   body('role')
     .optional()
-    .isIn(['jobseeker', 'employer', 'admin'])
-    .withMessage('Role must be jobseeker, employer, or admin')
+    .isIn(['jobseeker', 'employer'])
+    .withMessage('Role must be jobseeker or employer')
 ];
 
 const loginValidator = [

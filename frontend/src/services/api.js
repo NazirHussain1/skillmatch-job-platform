@@ -46,6 +46,11 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+    if (!error.response) {
+      toast.error('Network error: Unable to reach server. Please check backend/CORS settings.');
+      return Promise.reject(error);
+    }
+
     const status = error.response?.status;
     const message = error.response?.data?.message || error.message;
 
