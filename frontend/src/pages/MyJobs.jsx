@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Plus, Edit, Trash2, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Users, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { getEmployerJobs, createJob, updateJob, deleteJob, reset } from '../features/jobs/jobSlice';
@@ -8,18 +8,88 @@ import JobForm from '../components/JobForm';
 import ConfirmDialog from '../components/ConfirmDialog';
 import SkeletonLoader from '../components/SkeletonLoader';
 
+const STATUS_FILTERS = [
+  { id: 'all', label: 'All' },
+  { id: 'active', label: 'Active' },
+  { id: 'pending', label: 'Pending' },
+  { id: 'closed', label: 'Closed' }
+];
+
+const JOB_TYPE_LABELS = {
+  'full-time': 'Full Time',
+  'part-time': 'Part Time',
+  remote: 'Remote',
+  internship: 'Internship',
+  contract: 'Contract'
+};
+
+const normalizeStatus = (status = '') => status.toLowerCase();
+
+const isClosedStatus = (status) => {
+  const normalizedStatus = normalizeStatus(status);
+  return normalizedStatus === 'closed' || normalizedStatus === 'rejected';
+};
+
+const matchesStatusFilter = (jobStatus, filterStatus) => {
+  if (filterStatus === 'all') {
+    return true;
+  }
+
+  if (filterStatus === 'closed') {
+    return isClosedStatus(jobStatus);
+  }
+
+  return normalizeStatus(jobStatus) === filterStatus;
+};
+
+const formatStatusLabel = (status) => {
+  const normalizedStatus = normalizeStatus(status);
+  if (!normalizedStatus) {
+    return 'Unknown';
+  }
+
+  if (normalizedStatus === 'rejected') {
+    return 'Rejected';
+  }
+
+  return normalizedStatus.charAt(0).toUpperCase() + normalizedStatus.slice(1);
+};
+
+const getStatusBadgeStyles = (status) => {
+  const normalizedStatus = normalizeStatus(status);
+
+  if (normalizedStatus === 'active') {
+    return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+  }
+
+  if (normalizedStatus === 'pending') {
+    return 'bg-amber-50 text-amber-700 border border-amber-200';
+  }
+
+  if (normalizedStatus === 'closed') {
+    return 'bg-gray-100 text-gray-700 border border-gray-200';
+  }
+
+  if (normalizedStatus === 'rejected') {
+    return 'bg-rose-50 text-rose-700 border border-rose-200';
+  }
+
+  return 'bg-slate-100 text-slate-700 border border-slate-200';
+};
+
 const JobsHeader = ({ onCreate }) => (
-  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+  <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
     <div>
       <h1 className="text-3xl font-bold text-gray-900">My Jobs</h1>
-      <p className="text-gray-600 mt-1 text-sm">
+      <p className="mt-1 text-sm text-gray-600">
         Manage your job listings and review applicants in one place.
       </p>
     </div>
     <button
       type="button"
       onClick={onCreate}
-      className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-medium shadow-sm hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white transition-colors"
+      aria-label="Create a new job posting"
+      className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
     >
       <Plus size={18} />
       Create Job
@@ -27,110 +97,116 @@ const JobsHeader = ({ onCreate }) => (
   </div>
 );
 
-const JobsFilterBar = ({ statusFilter, onChange, total }) => {
-  const filters = [
-    { id: 'all', label: 'All jobs' },
-    { id: 'active', label: 'Active' },
-    { id: 'pending', label: 'Pending' },
-    { id: 'closed', label: 'Closed' }
-  ];
+const JobsFilterBar = ({ statusFilter, onChange, total, counts }) => (
+  <section
+    className="mb-6 flex flex-col gap-3 rounded-2xl border border-gray-100 bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4"
+    aria-label="Job status filters"
+  >
+    <div className="flex flex-col gap-1">
+      <p className="text-sm font-medium text-gray-900">Filters</p>
+      <p className="text-xs text-gray-500">
+        Showing <span className="font-semibold text-blue-600">{counts[statusFilter] ?? 0}</span> of{' '}
+        <span className="font-semibold text-blue-600">{total}</span> jobs
+      </p>
+    </div>
+    <div className="flex flex-wrap gap-2" role="group" aria-label="Select job status">
+      {STATUS_FILTERS.map((filter) => {
+        const isActiveFilter = statusFilter === filter.id;
+        const count = counts[filter.id] ?? 0;
 
-  return (
-    <section
-      className="mb-6 bg-white/80 border border-gray-100 rounded-2xl px-4 py-3 sm:px-5 sm:py-4 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
-      aria-label="Filter jobs"
-    >
-      <div className="flex flex-col gap-1">
-        <p className="text-sm font-medium text-gray-900">Filters</p>
-        <p className="text-xs text-gray-500">
-          Showing <span className="font-semibold text-blue-600">{total}</span> job
-          {total === 1 ? '' : 's'}
-        </p>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {filters.map((filter) => (
+        return (
           <button
             key={filter.id}
             type="button"
             onClick={() => onChange(filter.id)}
-            className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all ${
-              statusFilter === filter.id
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'bg-gray-50 text-gray-700 border border-gray-200 hover:border-blue-300'
+            aria-label={`Show ${filter.label.toLowerCase()} jobs`}
+            aria-pressed={isActiveFilter}
+            className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-200 sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
+              isActiveFilter
+                ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+                : 'border-gray-200 bg-white text-gray-700 hover:border-blue-300 hover:text-blue-700'
             }`}
-            aria-pressed={statusFilter === filter.id}
           >
-            {filter.label}
+            <span>{filter.label}</span>
+            <span className={`text-[11px] ${isActiveFilter ? 'text-blue-100' : 'text-gray-500'}`}>
+              ({count})
+            </span>
           </button>
-        ))}
-      </div>
-    </section>
-  );
-};
+        );
+      })}
+    </div>
+  </section>
+);
 
-const EmptyJobsState = ({ onCreate }) => (
-  <div className="text-center py-16 bg-white rounded-2xl shadow-sm border border-dashed border-gray-200">
-    <div className="text-gray-300 mb-4 flex justify-center">
+const EmptyJobsState = ({ title, description, actionLabel, onAction }) => (
+  <div className="rounded-2xl border border-dashed border-gray-200 bg-white py-16 text-center shadow-sm">
+    <div className="mb-4 flex justify-center text-gray-300">
       <Users size={64} />
     </div>
-    <h2 className="text-2xl font-semibold text-gray-800 mb-2">No jobs posted yet</h2>
-    <p className="text-gray-500 mb-6 max-w-md mx-auto">
-      Start by creating your first job posting to attract qualified candidates.
-    </p>
-    <button
-      type="button"
-      onClick={onCreate}
-      className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl text-sm font-medium shadow-sm hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white transition-colors"
-    >
-      <Plus size={18} />
-      Create your first job
-    </button>
+    <h2 className="mb-2 text-2xl font-semibold text-gray-800">{title}</h2>
+    <p className="mx-auto mb-6 max-w-md text-gray-500">{description}</p>
+    {onAction && (
+      <button
+        type="button"
+        onClick={onAction}
+        className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+      >
+        <Plus size={18} />
+        {actionLabel}
+      </button>
+    )}
   </div>
 );
 
 const JobCard = ({ job, onViewApplicants, onEdit, onDelete, formatDate, formatSalary }) => (
-  <article className="group bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 focus-within:ring-offset-white">
-    <div className="flex justify-between items-start mb-4 gap-3">
+  <article className="group flex h-full flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 focus-within:ring-offset-white">
+    <div className="mb-4 flex items-start justify-between gap-3">
       <div className="min-w-0">
-        <h3 className="text-lg font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+        <h3 className="truncate text-lg font-semibold text-gray-900 transition-colors group-hover:text-blue-600">
           {job.title}
         </h3>
-        <p className="text-sm text-gray-600 font-medium truncate mt-1">{job.company}</p>
+        <p className="mt-1 truncate text-sm font-medium text-gray-600">{job.company}</p>
       </div>
-      <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 whitespace-nowrap">
-        {job.applicationCount || 0} applicants
-      </span>
+      <div className="flex flex-col items-end gap-2">
+        <span
+          className={`inline-flex items-center whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium ${getStatusBadgeStyles(job.status)}`}
+        >
+          {formatStatusLabel(job.status)}
+        </span>
+        <span className="inline-flex items-center whitespace-nowrap rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+          {job.applicationCount || 0} applicants
+        </span>
+      </div>
     </div>
 
-    <div className="flex flex-wrap gap-2 mb-3">
+    <div className="mb-3 flex flex-wrap gap-2">
       {job.jobType && (
-        <span className="inline-flex items-center px-3 py-1 text-[11px] font-medium rounded-full bg-primary-100 text-primary-700 capitalize">
-          {job.jobType === 'full-time' && 'Full Time'}
-          {job.jobType === 'part-time' && 'Part Time'}
-          {job.jobType === 'remote' && 'Remote'}
-          {job.jobType === 'internship' && 'Internship'}
-          {job.jobType === 'contract' && 'Contract'}
+        <span className="inline-flex items-center rounded-full bg-primary-100 px-3 py-1 text-[11px] font-medium capitalize text-primary-700">
+          {JOB_TYPE_LABELS[job.jobType] || job.jobType}
         </span>
       )}
       {job.category && (
-        <span className="inline-flex items-center px-3 py-1 text-[11px] font-medium rounded-full bg-purple-100 text-purple-700">
+        <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium text-slate-700">
           {job.category}
         </span>
       )}
     </div>
 
-    <p className="text-sm text-gray-600 mb-1 truncate">{job.location}</p>
-    <p className="text-sm font-semibold text-green-600 mb-1">
-      {formatSalary(job.salary)}
-      <span className="text-xs text-gray-500 font-normal"> / year</span>
-    </p>
-    <p className="text-xs text-gray-400 mb-4">Posted on {formatDate(job.createdAt)}</p>
+    <div className="mb-4 space-y-1">
+      <p className="truncate text-sm text-gray-600">{job.location}</p>
+      <p className="text-sm font-semibold text-green-600">
+        {formatSalary(job.salary)}
+        <span className="text-xs font-normal text-gray-500"> / year</span>
+      </p>
+      <p className="text-xs text-gray-400">Posted on {formatDate(job.createdAt)}</p>
+    </div>
 
-    <div className="border-t pt-4 flex items-center gap-2">
+    <div className="mt-auto flex items-center gap-2 border-t pt-4">
       <button
         type="button"
         onClick={onViewApplicants}
-        className="flex-1 inline-flex items-center justify-center gap-2 bg-gray-50 text-gray-800 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white transition-colors"
+        aria-label={`View applicants for ${job.title}`}
+        className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-gray-50 px-3 py-2 text-xs font-medium text-gray-800 transition-colors duration-200 hover:bg-gray-100 sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
       >
         <Users size={16} />
         View applicants
@@ -138,7 +214,7 @@ const JobCard = ({ job, onViewApplicants, onEdit, onDelete, formatDate, formatSa
       <button
         type="button"
         onClick={onEdit}
-        className="inline-flex items-center justify-center bg-blue-50 text-blue-700 px-3 py-2 rounded-xl hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white transition-colors"
+        className="inline-flex items-center justify-center rounded-xl bg-blue-50 px-3 py-2 text-blue-700 transition-colors duration-200 hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
         aria-label={`Edit job ${job.title}`}
       >
         <Edit size={16} />
@@ -146,7 +222,7 @@ const JobCard = ({ job, onViewApplicants, onEdit, onDelete, formatDate, formatSa
       <button
         type="button"
         onClick={onDelete}
-        className="inline-flex items-center justify-center bg-red-50 text-red-700 px-3 py-2 rounded-xl hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white transition-colors"
+        className="inline-flex items-center justify-center rounded-xl bg-red-50 px-3 py-2 text-red-700 transition-colors duration-200 hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
         aria-label={`Delete job ${job.title}`}
       >
         <Trash2 size={16} />
@@ -161,39 +237,41 @@ const JobModal = ({ isOpen, title, onClose, onSubmit, initialData, isSubmitting 
   const modalId = title?.toLowerCase().includes('edit') ? 'edit-job-modal-title' : 'create-job-modal-title';
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[80] overflow-y-auto p-3 sm:p-6">
       <div
         className="absolute inset-0 bg-black/55 backdrop-blur-sm"
         onClick={() => !isSubmitting && onClose()}
         aria-hidden="true"
       />
-      <div
-        className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={modalId}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="flex items-center justify-between mb-6">
-          <h2 id={modalId} className="text-2xl font-bold text-gray-900">
-            {title}
-          </h2>
-          <button
-            type="button"
-            onClick={() => !isSubmitting && onClose()}
-            className="text-gray-400 hover:text-gray-600 rounded-full p-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-            aria-label="Close job modal"
-          >
-            <span className="sr-only">Close</span>
-            ✕
-          </button>
+      <div className="relative flex min-h-full items-start justify-center sm:items-center">
+        <div
+          className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-gray-100 bg-white p-5 shadow-2xl sm:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={modalId}
+          aria-busy={isSubmitting}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="mb-6 flex items-center justify-between">
+            <h2 id={modalId} className="text-2xl font-bold text-gray-900">
+              {title}
+            </h2>
+            <button
+              type="button"
+              onClick={() => !isSubmitting && onClose()}
+              className="rounded-full p-1.5 text-gray-400 transition-colors duration-200 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+              aria-label="Close job modal"
+            >
+              <X size={18} aria-hidden="true" />
+            </button>
+          </div>
+          <JobForm
+            initialData={initialData}
+            onSubmit={onSubmit}
+            onCancel={onClose}
+            isLoading={isSubmitting}
+          />
         </div>
-        <JobForm
-          initialData={initialData}
-          onSubmit={onSubmit}
-          onCancel={onClose}
-          isLoading={isSubmitting}
-        />
       </div>
     </div>
   );
@@ -202,15 +280,15 @@ const JobModal = ({ isOpen, title, onClose, onSubmit, initialData, isSubmitting 
 const MyJobs = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { employerJobs, isLoading, isError, message } = useSelector(state => state.jobs);
-  
+  const { employerJobs, isLoading, isError, message } = useSelector((state) => state.jobs);
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const isAnyOverlayOpen = showCreateModal || showEditModal || showDeleteDialog;
   const [statusFilter, setStatusFilter] = useState('all');
+  const isAnyOverlayOpen = showCreateModal || showEditModal || showDeleteDialog;
 
   useEffect(() => {
     dispatch(getEmployerJobs());
@@ -278,6 +356,10 @@ const MyJobs = () => {
   };
 
   const handleEditJob = async (jobData) => {
+    if (!selectedJob?._id) {
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await dispatch(updateJob({ id: selectedJob._id, jobData })).unwrap();
@@ -293,6 +375,10 @@ const MyJobs = () => {
   };
 
   const handleDeleteJob = async () => {
+    if (!selectedJob?._id) {
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await dispatch(deleteJob(selectedJob._id)).unwrap();
@@ -333,17 +419,40 @@ const MyJobs = () => {
     }).format(salary);
   };
 
-  const filteredJobs =
-    statusFilter === 'all'
-      ? employerJobs
-      : employerJobs.filter((job) => job.status === statusFilter);
+  const allJobs = Array.isArray(employerJobs) ? employerJobs : [];
 
-  if (isLoading && employerJobs.length === 0) {
+  const statusCounts = useMemo(() => {
+    const counts = {
+      all: allJobs.length,
+      active: 0,
+      pending: 0,
+      closed: 0
+    };
+
+    allJobs.forEach((job) => {
+      if (matchesStatusFilter(job.status, 'active')) {
+        counts.active += 1;
+      } else if (matchesStatusFilter(job.status, 'pending')) {
+        counts.pending += 1;
+      } else if (matchesStatusFilter(job.status, 'closed')) {
+        counts.closed += 1;
+      }
+    });
+
+    return counts;
+  }, [allJobs]);
+
+  const filteredJobs = useMemo(
+    () => allJobs.filter((job) => matchesStatusFilter(job.status, statusFilter)),
+    [allJobs, statusFilter]
+  );
+
+  if (isLoading && allJobs.length === 0) {
     return (
       <div className="px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          <JobsHeader onCreate={() => {}} />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="mx-auto max-w-6xl">
+          <JobsHeader onCreate={() => setShowCreateModal(true)} />
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3" aria-live="polite">
             <SkeletonLoader type="card" count={6} />
           </div>
         </div>
@@ -352,22 +461,34 @@ const MyJobs = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="mx-auto max-w-6xl px-4 py-8">
       <JobsHeader onCreate={() => setShowCreateModal(true)} />
 
-      {employerJobs.length > 0 && (
+      {allJobs.length > 0 && (
         <JobsFilterBar
           statusFilter={statusFilter}
           onChange={setStatusFilter}
-          total={filteredJobs.length}
+          total={allJobs.length}
+          counts={statusCounts}
         />
       )}
 
-      {/* Empty State */}
-      {employerJobs.length === 0 ? (
-        <EmptyJobsState onCreate={() => setShowCreateModal(true)} />
+      {allJobs.length === 0 ? (
+        <EmptyJobsState
+          title="No jobs posted yet"
+          description="Start by creating your first job posting to attract qualified candidates."
+          actionLabel="Create your first job"
+          onAction={() => setShowCreateModal(true)}
+        />
+      ) : filteredJobs.length === 0 ? (
+        <EmptyJobsState
+          title="No jobs match this filter"
+          description="Try another status filter to review your jobs."
+          actionLabel="Show all jobs"
+          onAction={() => setStatusFilter('all')}
+        />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredJobs.map((job) => (
             <JobCard
               key={job._id}
@@ -423,3 +544,4 @@ const MyJobs = () => {
 };
 
 export default MyJobs;
+
