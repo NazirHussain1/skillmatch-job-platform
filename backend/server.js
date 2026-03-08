@@ -9,6 +9,8 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
 const http = require('http');
 const { Server } = require('socket.io');
 const connectDB = require('./config/db');
@@ -27,6 +29,23 @@ const notificationRoutes = require('./routes/notification.routes');
 // Import middleware
 const { errorHandler, notFound } = require('./middleware/error.middleware');
 const sanitizeInputs = require('./middleware/sanitize.middleware');
+
+// Environment variables validation
+const requiredEnvVars = [
+  'MONGODB_URI',
+  'JWT_SECRET',
+  'CLOUDINARY_CLOUD_NAME',
+  'CLOUDINARY_API_KEY',
+  'CLOUDINARY_API_SECRET'
+];
+
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+if (missingEnvVars.length > 0) {
+  console.error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
+  if (process.env.NODE_ENV === 'production') {
+    process.exit(1);
+  }
+}
 
 const parseOrigins = (value) =>
   (value || '')
@@ -76,27 +95,78 @@ const startServer = async () => {
     // Do not block API startup if admin bootstrap fails.
   }
 
-  server.listen(PORT);
+  server.listen(PORT, () => {
+    console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+    console.log(`Allowed CORS origins: ${allowedOrigins.join(', ')}`);
+  });
 };
 
-// Middleware
+// Security Middleware
 app.disable('x-powered-by');
 
-app.use(helmet());
+// Helmet - Security headers
+app.use(helmet({
+  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
+  crossOriginEmbedderPolicy: false
+}));
+
+// CORS
 app.use(cors(corsOptions));
 
-// Only use morgan in development
-if (process.env.NODE_ENV !== 'production') {
-  app.use(morgan('dev'));
+// Rate limiting - Apply in production and optionally in development
+if (process.env.NODE_ENV === 'production' || process.env.ENABLE_RATE_LIMIT === 'true') {
+  // General API rate limiter
+  const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  // Stricter rate limiter for auth routes
+  const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // Limit each IP to 5 requests per windowMs
+    message: 'Too many authentication attempts, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  // Apply rate limiters
+  app.use('/api/', apiLimiter);
+  app.use('/api/auth/login', authLimiter);
+  app.use('/api/auth/register', authLimiter);
+  app.use('/api/auth/forgot-password', authLimiter);
+  
+  console.log('Rate limiting enabled');
 }
 
+// MongoDB sanitization - Prevent NoSQL injection
+app.use(mongoSanitize());
+
+// Logging
+if (process.env.NODE_ENV !== 'production') {
+  app.use(morgan('dev'));
+} else {
+  app.use(morgan('combined'));
+}
+
+// Body parsing with size limits
 app.use(express.json({ limit: '100kb' }));
 app.use(express.urlencoded({ extended: true, limit: '100kb' }));
+
+// Custom sanitization middleware
 app.use(sanitizeInputs);
 
 // Routes
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Server is running' });
+  res.json({ 
+    status: 'OK', 
+    message: 'Server is running',
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString()
+  });
 });
 
 app.use('/api/auth', authRoutes);
@@ -159,7 +229,8 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
-startServer().catch(() => {
+startServer().catch((error) => {
+  console.error('Failed to start server:', error);
   process.exit(1);
 });
 
