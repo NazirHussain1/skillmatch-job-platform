@@ -6,7 +6,6 @@ import toast from 'react-hot-toast';
 import { getEmployerJobs, createJob, updateJob, deleteJob, reset } from '../features/jobs/jobSlice';
 import JobForm from '../components/JobForm';
 import ConfirmDialog from '../components/ConfirmDialog';
-import LoadingSpinner from '../components/LoadingSpinner';
 import SkeletonLoader from '../components/SkeletonLoader';
 
 const JobsHeader = ({ onCreate }) => (
@@ -27,6 +26,47 @@ const JobsHeader = ({ onCreate }) => (
     </button>
   </div>
 );
+
+const JobsFilterBar = ({ statusFilter, onChange, total }) => {
+  const filters = [
+    { id: 'all', label: 'All jobs' },
+    { id: 'active', label: 'Active' },
+    { id: 'pending', label: 'Pending' },
+    { id: 'closed', label: 'Closed' }
+  ];
+
+  return (
+    <section
+      className="mb-6 bg-white/80 border border-gray-100 rounded-2xl px-4 py-3 sm:px-5 sm:py-4 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+      aria-label="Filter jobs"
+    >
+      <div className="flex flex-col gap-1">
+        <p className="text-sm font-medium text-gray-900">Filters</p>
+        <p className="text-xs text-gray-500">
+          Showing <span className="font-semibold text-blue-600">{total}</span> job
+          {total === 1 ? '' : 's'}
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {filters.map((filter) => (
+          <button
+            key={filter.id}
+            type="button"
+            onClick={() => onChange(filter.id)}
+            className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all ${
+              statusFilter === filter.id
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'bg-gray-50 text-gray-700 border border-gray-200 hover:border-blue-300'
+            }`}
+            aria-pressed={statusFilter === filter.id}
+          >
+            {filter.label}
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+};
 
 const EmptyJobsState = ({ onCreate }) => (
   <div className="text-center py-16 bg-white rounded-2xl shadow-sm border border-dashed border-gray-200">
@@ -170,6 +210,7 @@ const MyJobs = () => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isAnyOverlayOpen = showCreateModal || showEditModal || showDeleteDialog;
+  const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
     dispatch(getEmployerJobs());
@@ -292,6 +333,11 @@ const MyJobs = () => {
     }).format(salary);
   };
 
+  const filteredJobs =
+    statusFilter === 'all'
+      ? employerJobs
+      : employerJobs.filter((job) => job.status === statusFilter);
+
   if (isLoading && employerJobs.length === 0) {
     return (
       <div className="px-4 py-8">
@@ -309,12 +355,20 @@ const MyJobs = () => {
     <div className="max-w-6xl mx-auto px-4 py-8">
       <JobsHeader onCreate={() => setShowCreateModal(true)} />
 
+      {employerJobs.length > 0 && (
+        <JobsFilterBar
+          statusFilter={statusFilter}
+          onChange={setStatusFilter}
+          total={filteredJobs.length}
+        />
+      )}
+
       {/* Empty State */}
       {employerJobs.length === 0 ? (
         <EmptyJobsState onCreate={() => setShowCreateModal(true)} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {employerJobs.map((job) => (
+          {filteredJobs.map((job) => (
             <JobCard
               key={job._id}
               job={job}
