@@ -44,3 +44,6 @@ test-*.js
 # Misc
 *.pem
 .cache/
+
+# AI Code Review temporary files
+.ai-code-review/
