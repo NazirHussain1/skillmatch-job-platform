@@ -1,0 +1,25 @@
+{
+  "name": "skill-match",
+  "version": "1.0.0",
+  "description": "SkillMatch is a full-stack MERN job portal that connects job seekers and employers, with an admin moderation layer, real-time chat, and role-based access control.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "start": "concurrently \"npm start --prefix backend\" \"npm start --prefix frontend\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NazirHussain1/skillmatch-job-platform.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NazirHussain1/skillmatch-job-platform/issues"
+  },
+  "homepage": "https://github.com/NazirHussain1/skillmatch-job-platform#readme",
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

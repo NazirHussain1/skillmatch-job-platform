@@ -9,7 +9,9 @@ const ConfirmDialog = ({
   cancelText = 'Cancel',
   onConfirm,
   onCancel,
-  variant = 'danger'
+  variant = 'danger',
+  confirmDisabled = false,
+  cancelDisabled = false
 }) => {
   if (!isOpen) return null;
 
@@ -41,7 +43,7 @@ const ConfirmDialog = ({
 
     const previousOverflow = document.body.style.overflow;
     const handleEscape = (event) => {
-      if (event.key === 'Escape') {
+      if (event.key === 'Escape' && !cancelDisabled) {
         onCancel();
       }
     };
@@ -53,14 +55,14 @@ const ConfirmDialog = ({
       document.body.style.overflow = previousOverflow;
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [isOpen, onCancel]);
+  }, [isOpen, onCancel, cancelDisabled]);
 
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/55 backdrop-blur-sm"
-        onClick={onCancel}
+        onClick={() => !cancelDisabled && onCancel()}
       />
       
       {/* Dialog */}
@@ -68,6 +70,7 @@ const ConfirmDialog = ({
         className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6"
         role="dialog"
         aria-modal="true"
+        aria-label={title}
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start gap-4">
@@ -79,22 +82,28 @@ const ConfirmDialog = ({
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               {title}
             </h3>
-            <p className="text-gray-600 text-sm">
-              {message}
-            </p>
+            {typeof message === 'string' ? (
+              <p className="text-sm text-gray-600">{message}</p>
+            ) : (
+              <div className="text-sm text-gray-600">{message}</div>
+            )}
           </div>
         </div>
 
         <div className="flex gap-3 mt-6">
           <button
+            type="button"
             onClick={onCancel}
-            className="flex-1 py-2 px-4 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            disabled={cancelDisabled}
+            className="flex-1 rounded-lg border border-gray-300 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {cancelText}
           </button>
           <button
+            type="button"
             onClick={onConfirm}
-            className={`flex-1 py-2 px-4 rounded-lg font-medium text-white transition-colors ${style.buttonBg}`}
+            disabled={confirmDisabled}
+            className={`flex-1 rounded-lg px-4 py-2 font-medium text-white transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${style.buttonBg}`}
           >
             {confirmText}
           </button>

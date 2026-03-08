@@ -1,16 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import {
   Users,
   Briefcase,
   FileText,
+  Building2,
   Filter,
   User,
   Mail,
   Calendar,
   Shield,
   Trash2,
-  Building2,
   CheckCircle,
   XCircle
 } from 'lucide-react';
@@ -18,27 +18,442 @@ import adminService from '../services/adminService';
 import ConfirmDialog from '../components/ConfirmDialog';
 import SkeletonLoader from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
+import Pagination from '../components/Pagination';
 
 const usersPerPage = 10;
 const jobsPerPage = 10;
 
 const roleFilters = ['all', 'admin', 'employer', 'jobseeker'];
+const roleOptions = roleFilters.filter((role) => role !== 'all');
 const statusFilters = ['all', 'pending', 'active', 'rejected', 'closed'];
+
+const ROLE_LABELS = {
+  admin: 'Admin',
+  employer: 'Employer',
+  jobseeker: 'Job Seeker'
+};
+
+const ROLE_BADGES = {
+  admin: 'badge-danger',
+  employer: 'badge-primary',
+  jobseeker: 'badge-success'
+};
+
+const STATUS_BADGES = {
+  active: 'badge-success',
+  pending: 'badge-warning',
+  rejected: 'badge-danger',
+  closed: 'badge-secondary'
+};
+
+const formatRoleLabel = (role) => ROLE_LABELS[role] || role;
+
+const formatStatusLabel = (status) => {
+  if (!status) return 'Unknown';
+  return status.charAt(0).toUpperCase() + status.slice(1);
+};
+
+const formatDate = (value) => new Date(value).toLocaleDateString('en-US');
+
+const TablePagination = ({ pagination, onPageChange, label }) => {
+  if (!pagination || pagination.pages <= 1) {
+    return null;
+  }
+
+  return (
+    <div className="border-t border-gray-200 bg-gray-50 px-4 py-4 sm:px-6" aria-label={`${label} pagination`}>
+      <Pagination
+        currentPage={pagination.page}
+        totalPages={pagination.pages}
+        onPageChange={onPageChange}
+      />
+    </div>
+  );
+};
+
+const FilterPills = ({ label, options, activeValue, onChange, getLabel }) => (
+  <div className="space-y-2">
+    <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+      <Filter className="h-4 w-4 text-gray-600" />
+      <span>{label}</span>
+    </div>
+    <div className="flex flex-wrap gap-2">
+      {options.map((option) => {
+        const isActive = option === activeValue;
+        return (
+          <button
+            key={option}
+            type="button"
+            onClick={() => onChange(option)}
+            aria-pressed={isActive}
+            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-200 sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
+              isActive
+                ? 'border-blue-600 bg-blue-600 text-white'
+                : 'border-gray-200 bg-white text-gray-700 hover:border-blue-300 hover:text-blue-700'
+            }`}
+          >
+            {getLabel(option)}
+          </button>
+        );
+      })}
+    </div>
+  </div>
+);
+
+const AnalyticsCards = ({ analytics, isLoading }) => {
+  const cards = useMemo(
+    () => [
+      {
+        id: 'users',
+        title: 'Total Users',
+        value: analytics?.overview?.totalUsers ?? 0,
+        icon: Users,
+        iconClasses: 'bg-blue-100 text-blue-600'
+      },
+      {
+        id: 'employers',
+        title: 'Total Employers',
+        value: analytics?.overview?.totalEmployers ?? 0,
+        icon: Building2,
+        iconClasses: 'bg-indigo-100 text-indigo-600'
+      },
+      {
+        id: 'jobs',
+        title: 'Total Jobs',
+        value: analytics?.overview?.totalJobs ?? 0,
+        icon: Briefcase,
+        iconClasses: 'bg-orange-100 text-orange-600'
+      },
+      {
+        id: 'applications',
+        title: 'Total Applications',
+        value: analytics?.overview?.totalApplications ?? 0,
+        icon: FileText,
+        iconClasses: 'bg-emerald-100 text-emerald-600'
+      }
+    ],
+    [analytics]
+  );
+
+  return (
+    <section aria-label="Analytics overview">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {isLoading ? (
+          <SkeletonLoader type="stat" count={4} />
+        ) : (
+          cards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <article
+                key={card.id}
+                className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">{card.title}</p>
+                    <p className="mt-2 text-3xl font-bold text-gray-900">{card.value}</p>
+                  </div>
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${card.iconClasses}`}>
+                    <Icon className="h-6 w-6" aria-hidden="true" />
+                  </div>
+                </div>
+              </article>
+            );
+          })
+        )}
+      </div>
+    </section>
+  );
+};
+
+const UsersTableSection = ({
+  users,
+  isLoading,
+  pagination,
+  roleFilter,
+  onRoleFilterChange,
+  onPageChange,
+  onOpenRoleDialog,
+  onOpenDeleteDialog,
+  actionLoading
+}) => (
+  <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <div className="space-y-4 border-b border-gray-200 px-4 py-4 sm:px-6 sm:py-5">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-xl font-bold text-gray-900">Users</h2>
+        <p className="text-sm text-gray-500">{pagination?.total || 0} total</p>
+      </div>
+
+      <FilterPills
+        label="Filter by role"
+        options={roleFilters}
+        activeValue={roleFilter}
+        onChange={onRoleFilterChange}
+        getLabel={(option) => (option === 'all' ? 'All Users' : formatRoleLabel(option))}
+      />
+    </div>
+
+    {isLoading ? (
+      <div className="p-6">
+        <SkeletonLoader type="list" count={8} />
+      </div>
+    ) : users.length === 0 ? (
+      <div className="p-6">
+        <EmptyState
+          type="inbox"
+          title="No users found"
+          description={`No ${roleFilter === 'all' ? '' : roleFilter} users to display.`}
+        />
+      </div>
+    ) : (
+      <>
+        <div className="overflow-x-auto">
+          <table className="min-w-[760px] w-full text-left text-sm" role="table">
+            <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-600">
+              <tr>
+                <th scope="col" className="px-4 py-3 sm:px-6">
+                  User
+                </th>
+                <th scope="col" className="px-4 py-3 sm:px-6">
+                  Email
+                </th>
+                <th scope="col" className="px-4 py-3 sm:px-6">
+                  Role
+                </th>
+                <th scope="col" className="px-4 py-3 sm:px-6">
+                  Joined
+                </th>
+                <th scope="col" className="px-4 py-3 text-right sm:px-6">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-gray-100 bg-white">
+              {users.map((user) => (
+                <tr key={user._id} className="transition-colors duration-200 hover:bg-blue-50/40">
+                  <td className="whitespace-nowrap px-4 py-4 sm:px-6">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+                        <User className="h-5 w-5 text-blue-600" aria-hidden="true" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900">{user.name}</p>
+                        {user.companyName && <p className="text-sm text-gray-500">{user.companyName}</p>}
+                      </div>
+                    </div>
+                  </td>
+
+                  <td className="whitespace-nowrap px-4 py-4 sm:px-6">
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Mail className="h-4 w-4" aria-hidden="true" />
+                      <span>{user.email}</span>
+                    </div>
+                  </td>
+
+                  <td className="whitespace-nowrap px-4 py-4 sm:px-6">
+                    <span className={`badge ${ROLE_BADGES[user.role] || 'badge-secondary'}`}>
+                      {formatRoleLabel(user.role)}
+                    </span>
+                  </td>
+
+                  <td className="whitespace-nowrap px-4 py-4 sm:px-6">
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Calendar className="h-4 w-4" aria-hidden="true" />
+                      <span>{formatDate(user.createdAt)}</span>
+                    </div>
+                  </td>
+
+                  <td className="whitespace-nowrap px-4 py-4 text-right sm:px-6">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => onOpenRoleDialog(user)}
+                        disabled={actionLoading?.startsWith('role-')}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-blue-600 transition-colors duration-200 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                        title="Change role"
+                        aria-label={`Change role for ${user.name}`}
+                      >
+                        <Shield className="h-5 w-5" aria-hidden="true" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => onOpenDeleteDialog(user)}
+                        disabled={actionLoading === `delete-user-${user._id}`}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-red-600 transition-colors duration-200 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                        title="Delete user"
+                        aria-label={`Delete user ${user.name}`}
+                      >
+                        <Trash2 className="h-5 w-5" aria-hidden="true" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <TablePagination pagination={pagination} onPageChange={onPageChange} label="Users" />
+      </>
+    )}
+  </section>
+);
+
+const JobsTableSection = ({
+  jobs,
+  isLoading,
+  pagination,
+  statusFilter,
+  onStatusFilterChange,
+  onPageChange,
+  onOpenModerationDialog,
+  onOpenDeleteDialog,
+  actionLoading
+}) => (
+  <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <div className="space-y-4 border-b border-gray-200 px-4 py-4 sm:px-6 sm:py-5">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-xl font-bold text-gray-900">Jobs</h2>
+        <p className="text-sm text-gray-500">{pagination?.total || 0} total</p>
+      </div>
+
+      <FilterPills
+        label="Filter by status"
+        options={statusFilters}
+        activeValue={statusFilter}
+        onChange={onStatusFilterChange}
+        getLabel={(option) => (option === 'all' ? 'All Jobs' : formatStatusLabel(option))}
+      />
+    </div>
+
+    {isLoading ? (
+      <div className="p-6">
+        <SkeletonLoader type="list" count={8} />
+      </div>
+    ) : jobs.length === 0 ? (
+      <div className="p-6">
+        <EmptyState
+          type="jobs"
+          title="No jobs found"
+          description={`No ${statusFilter === 'all' ? '' : statusFilter} jobs to display.`}
+        />
+      </div>
+    ) : (
+      <>
+        <div className="overflow-x-auto">
+          <table className="min-w-[920px] w-full text-left text-sm" role="table">
+            <thead className="border-b border-gray-200 bg-gray-50 text-xs uppercase tracking-wider text-gray-600">
+              <tr>
+                <th scope="col" className="px-4 py-3 sm:px-6">
+                  Job
+                </th>
+                <th scope="col" className="px-4 py-3 sm:px-6">
+                  Company
+                </th>
+                <th scope="col" className="px-4 py-3 sm:px-6">
+                  Employer
+                </th>
+                <th scope="col" className="px-4 py-3 sm:px-6">
+                  Status
+                </th>
+                <th scope="col" className="px-4 py-3 sm:px-6">
+                  Posted
+                </th>
+                <th scope="col" className="px-4 py-3 text-right sm:px-6">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-gray-100 bg-white">
+              {jobs.map((job) => (
+                <tr key={job._id} className="transition-colors duration-200 hover:bg-blue-50/40">
+                  <td className="px-4 py-4 sm:px-6">
+                    <p className="font-semibold text-gray-900">{job.title}</p>
+                    {job.category && <p className="text-sm text-gray-500">{job.category}</p>}
+                  </td>
+
+                  <td className="whitespace-nowrap px-4 py-4 sm:px-6">
+                    <div className="flex items-center gap-2 text-gray-700">
+                      <Building2 className="h-4 w-4" aria-hidden="true" />
+                      <span>{job.company}</span>
+                    </div>
+                  </td>
+
+                  <td className="whitespace-nowrap px-4 py-4 sm:px-6 text-gray-600">
+                    {job.employer?.name || 'Unknown'}
+                  </td>
+
+                  <td className="whitespace-nowrap px-4 py-4 sm:px-6">
+                    <span className={`badge ${STATUS_BADGES[job.status] || 'badge-secondary'}`}>
+                      {formatStatusLabel(job.status)}
+                    </span>
+                  </td>
+
+                  <td className="whitespace-nowrap px-4 py-4 sm:px-6 text-gray-600">
+                    {formatDate(job.createdAt)}
+                  </td>
+
+                  <td className="whitespace-nowrap px-4 py-4 text-right sm:px-6">
+                    <div className="flex items-center justify-end gap-2">
+                      {(job.status === 'pending' || job.status === 'rejected' || job.status === 'closed') && (
+                        <button
+                          type="button"
+                          onClick={() => onOpenModerationDialog(job, 'approve')}
+                          disabled={actionLoading === `approve-${job._id}`}
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-emerald-600 transition-colors duration-200 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                          title="Approve job"
+                          aria-label={`Approve job ${job.title}`}
+                        >
+                          <CheckCircle className="h-5 w-5" aria-hidden="true" />
+                        </button>
+                      )}
+
+                      {(job.status === 'pending' || job.status === 'active') && (
+                        <button
+                          type="button"
+                          onClick={() => onOpenModerationDialog(job, 'reject')}
+                          disabled={actionLoading === `reject-${job._id}`}
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-amber-600 transition-colors duration-200 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                          title="Reject job"
+                          aria-label={`Reject job ${job.title}`}
+                        >
+                          <XCircle className="h-5 w-5" aria-hidden="true" />
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => onOpenDeleteDialog(job)}
+                        disabled={actionLoading === `delete-job-${job._id}`}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-red-600 transition-colors duration-200 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                        title="Delete job"
+                        aria-label={`Delete job ${job.title}`}
+                      >
+                        <Trash2 className="h-5 w-5" aria-hidden="true" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <TablePagination pagination={pagination} onPageChange={onPageChange} label="Jobs" />
+      </>
+    )}
+  </section>
+);
 
 function AdminDashboard() {
   const [analytics, setAnalytics] = useState(null);
   const [users, setUsers] = useState([]);
   const [jobs, setJobs] = useState([]);
-  const [usersPagination, setUsersPagination] = useState({
-    page: 1,
-    pages: 0,
-    total: 0
-  });
-  const [jobsPagination, setJobsPagination] = useState({
-    page: 1,
-    pages: 0,
-    total: 0
-  });
+  const [usersPagination, setUsersPagination] = useState({ page: 1, pages: 0, total: 0 });
+  const [jobsPagination, setJobsPagination] = useState({ page: 1, pages: 0, total: 0 });
 
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(true);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
@@ -66,6 +481,12 @@ function AdminDashboard() {
     userName: '',
     currentRole: '',
     newRole: ''
+  });
+  const [moderationDialog, setModerationDialog] = useState({
+    isOpen: false,
+    action: '',
+    jobId: null,
+    jobTitle: ''
   });
 
   useEffect(() => {
@@ -101,8 +522,8 @@ function AdminDashboard() {
       }
 
       const data = await adminService.getAllUsers(filters);
-      setUsers(data.users);
-      setUsersPagination(data.pagination);
+      setUsers(data.users || []);
+      setUsersPagination(data.pagination || { page: 1, pages: 0, total: 0 });
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to fetch users');
     } finally {
@@ -119,8 +540,8 @@ function AdminDashboard() {
       }
 
       const data = await adminService.getAllJobs(filters);
-      setJobs(data.jobs);
-      setJobsPagination(data.pagination);
+      setJobs(data.jobs || []);
+      setJobsPagination(data.pagination || { page: 1, pages: 0, total: 0 });
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to fetch jobs');
     } finally {
@@ -129,18 +550,14 @@ function AdminDashboard() {
   };
 
   const handleDeleteUser = async () => {
-    const { userId } = deleteUserDialog;
-    if (!userId) return;
+    if (!deleteUserDialog.userId) return;
 
     try {
-      setActionLoading(`delete-user-${userId}`);
-      await adminService.deleteUser(userId);
+      setActionLoading(`delete-user-${deleteUserDialog.userId}`);
+      await adminService.deleteUser(deleteUserDialog.userId);
       toast.success('User deleted successfully');
       setDeleteUserDialog({ isOpen: false, userId: null, userName: '' });
-      await Promise.all([
-        fetchUsers(roleFilter, usersPage),
-        fetchAnalytics()
-      ]);
+      await Promise.all([fetchUsers(roleFilter, usersPage), fetchAnalytics()]);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to delete user');
     } finally {
@@ -149,18 +566,14 @@ function AdminDashboard() {
   };
 
   const handleDeleteJob = async () => {
-    const { jobId } = deleteJobDialog;
-    if (!jobId) return;
+    if (!deleteJobDialog.jobId) return;
 
     try {
-      setActionLoading(`delete-job-${jobId}`);
-      await adminService.deleteJob(jobId);
+      setActionLoading(`delete-job-${deleteJobDialog.jobId}`);
+      await adminService.deleteJob(deleteJobDialog.jobId);
       toast.success('Job deleted successfully');
       setDeleteJobDialog({ isOpen: false, jobId: null, jobTitle: '' });
-      await Promise.all([
-        fetchJobs(statusFilter, jobsPage),
-        fetchAnalytics()
-      ]);
+      await Promise.all([fetchJobs(statusFilter, jobsPage), fetchAnalytics()]);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to delete job');
     } finally {
@@ -173,12 +586,7 @@ function AdminDashboard() {
 
     try {
       setActionLoading(`role-${roleDialog.userId}`);
-      const updatedUser = await adminService.updateUserRole(roleDialog.userId, roleDialog.newRole);
-      setUsers((prevUsers) =>
-        prevUsers.map((user) =>
-          user._id === updatedUser._id ? updatedUser : user
-        )
-      );
+      await adminService.updateUserRole(roleDialog.userId, roleDialog.newRole);
       toast.success('User role updated successfully');
       setRoleDialog({
         isOpen: false,
@@ -187,6 +595,7 @@ function AdminDashboard() {
         currentRole: '',
         newRole: ''
       });
+      await Promise.all([fetchUsers(roleFilter, usersPage), fetchAnalytics()]);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to update user role');
     } finally {
@@ -194,455 +603,155 @@ function AdminDashboard() {
     }
   };
 
-  const handleApproveJob = async (jobId) => {
+  const handleModerationAction = async () => {
+    if (!moderationDialog.jobId || !moderationDialog.action) return;
+
+    const key = `${moderationDialog.action}-${moderationDialog.jobId}`;
+
     try {
-      setActionLoading(`approve-${jobId}`);
-      await adminService.approveJob(jobId);
-      toast.success('Job approved successfully');
-      await Promise.all([
-        fetchJobs(statusFilter, jobsPage),
-        fetchAnalytics()
-      ]);
+      setActionLoading(key);
+
+      if (moderationDialog.action === 'approve') {
+        await adminService.approveJob(moderationDialog.jobId);
+        toast.success('Job approved successfully');
+      } else {
+        await adminService.rejectJob(moderationDialog.jobId);
+        toast.success('Job rejected successfully');
+      }
+
+      setModerationDialog({
+        isOpen: false,
+        action: '',
+        jobId: null,
+        jobTitle: ''
+      });
+
+      await Promise.all([fetchJobs(statusFilter, jobsPage), fetchAnalytics()]);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to approve job');
+      toast.error(error.response?.data?.message || 'Failed to update job status');
     } finally {
       setActionLoading(null);
     }
   };
 
-  const handleRejectJob = async (jobId) => {
-    try {
-      setActionLoading(`reject-${jobId}`);
-      await adminService.rejectJob(jobId);
-      toast.success('Job rejected successfully');
-      await Promise.all([
-        fetchJobs(statusFilter, jobsPage),
-        fetchAnalytics()
-      ]);
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to reject job');
-    } finally {
-      setActionLoading(null);
-    }
-  };
+  const roleDialogMessage = (
+    <div className="space-y-3">
+      <p>
+        Change role for <span className="font-semibold text-gray-900">{roleDialog.userName}</span>.
+      </p>
+      <fieldset className="space-y-2" aria-label="Select user role">
+        {roleOptions.map((role) => (
+          <label
+            key={role}
+            className={`flex items-center gap-3 rounded-xl border px-3 py-2 transition-all duration-200 ${
+              roleDialog.newRole === role
+                ? 'border-blue-500 bg-blue-50'
+                : 'border-gray-200 bg-white hover:border-gray-300'
+            }`}
+          >
+            <input
+              type="radio"
+              name="admin-role"
+              value={role}
+              checked={roleDialog.newRole === role}
+              onChange={(event) =>
+                setRoleDialog((prevState) => ({
+                  ...prevState,
+                  newRole: event.target.value
+                }))
+              }
+              className="h-4 w-4 accent-blue-600"
+            />
+            <span className="font-medium text-gray-800">{formatRoleLabel(role)}</span>
+          </label>
+        ))}
+      </fieldset>
+    </div>
+  );
 
-  const getRoleBadge = (role) => {
-    const badges = {
-      admin: 'badge-danger',
-      employer: 'badge-primary',
-      jobseeker: 'badge-success'
-    };
-    return badges[role] || 'badge-secondary';
-  };
+  const moderationActionLabel =
+    moderationDialog.action === 'approve' ? 'Approve' : moderationDialog.action === 'reject' ? 'Reject' : 'Confirm';
 
-  const getRoleLabel = (role) => {
-    const labels = {
-      admin: 'Admin',
-      employer: 'Employer',
-      jobseeker: 'Job Seeker'
-    };
-    return labels[role] || role;
-  };
-
-  const getStatusBadge = (status) => {
-    const badges = {
-      active: 'badge-success',
-      pending: 'badge-warning',
-      rejected: 'badge-danger',
-      closed: 'badge-secondary'
-    };
-    return badges[status] || 'badge-secondary';
-  };
-
-  const getStatusLabel = (status) => {
-    if (!status) return 'Unknown';
-    return status.charAt(0).toUpperCase() + status.slice(1);
-  };
-
-  const renderPagination = (pagination, onPageChange) => {
-    if (!pagination || pagination.pages <= 1) return null;
-
-    return (
-      <div className="flex items-center justify-center gap-2 p-4 border-t border-gray-200 bg-gray-50">
-        <button
-          onClick={() => onPageChange(pagination.page - 1)}
-          disabled={pagination.page === 1}
-          className="px-3 py-2 rounded-lg border border-gray-300 text-xs sm:text-sm font-medium text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-50"
-        >
-          Previous
-        </button>
-        <span className="text-xs sm:text-sm text-gray-600">
-          Page {pagination.page} of {pagination.pages}
-        </span>
-        <button
-          onClick={() => onPageChange(pagination.page + 1)}
-          disabled={pagination.page === pagination.pages}
-          className="px-3 py-2 rounded-lg border border-gray-300 text-xs sm:text-sm font-medium text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-50"
-        >
-          Next
-        </button>
-      </div>
-    );
-  };
+  const moderationLoadingKey = `${moderationDialog.action}-${moderationDialog.jobId}`;
+  const isModerationLoading = actionLoading === moderationLoadingKey;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-1 text-sm">
-            Monitor platform health and manage users, jobs, and moderation workflows.
-          </p>
-        </div>
-      </div>
+      <header className="space-y-1">
+        <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+        <p className="text-sm text-gray-600">
+          Monitor platform health and manage users, jobs, and moderation workflows.
+        </p>
+      </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-        {isLoadingAnalytics ? (
-          <SkeletonLoader type="stat" count={3} />
-        ) : (
-          <>
-            <div className="card">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm">Total Users</p>
-                  <p className="text-3xl font-bold text-gray-900">{analytics?.overview?.totalUsers ?? 0}</p>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <Users className="w-6 h-6 text-blue-600" />
-                </div>
-              </div>
-            </div>
+      <AnalyticsCards analytics={analytics} isLoading={isLoadingAnalytics} />
 
-            <div className="card">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm">Total Jobs</p>
-                  <p className="text-3xl font-bold text-gray-900">{analytics?.overview?.totalJobs ?? 0}</p>
-                </div>
-                <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-                  <Briefcase className="w-6 h-6 text-orange-600" />
-                </div>
-              </div>
-            </div>
+      <UsersTableSection
+        users={users}
+        isLoading={isLoadingUsers}
+        pagination={usersPagination}
+        roleFilter={roleFilter}
+        onRoleFilterChange={(value) => {
+          setRoleFilter(value);
+          setUsersPage(1);
+        }}
+        onPageChange={setUsersPage}
+        onOpenRoleDialog={(user) =>
+          setRoleDialog({
+            isOpen: true,
+            userId: user._id,
+            userName: user.name,
+            currentRole: user.role,
+            newRole: user.role
+          })
+        }
+        onOpenDeleteDialog={(user) =>
+          setDeleteUserDialog({
+            isOpen: true,
+            userId: user._id,
+            userName: user.name
+          })
+        }
+        actionLoading={actionLoading}
+      />
 
-            <div className="card">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm">Total Applications</p>
-                  <p className="text-3xl font-bold text-gray-900">{analytics?.overview?.totalApplications ?? 0}</p>
-                </div>
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                  <FileText className="w-6 h-6 text-green-600" />
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-
-      <div className="glass rounded-2xl shadow-xl overflow-hidden">
-        <div className="p-4 sm:p-6 border-b border-gray-200">
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <h2 className="text-xl font-bold text-gray-900">Users</h2>
-              <div className="text-xs sm:text-sm text-gray-500">
-                {usersPagination.total} total
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">Filter by role</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {roleFilters.map((role) => (
-                <button
-                  key={role}
-                  onClick={() => {
-                    setRoleFilter(role);
-                    setUsersPage(1);
-                  }}
-                  className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all ${
-                    roleFilter === role
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white border border-gray-200 text-gray-700 hover:border-blue-300'
-                  }`}
-                >
-                  {role === 'all' ? 'All Users' : getRoleLabel(role)}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {isLoadingUsers ? (
-          <div className="p-6">
-            <SkeletonLoader type="list" count={8} />
-          </div>
-        ) : users.length === 0 ? (
-          <div className="p-6">
-            <EmptyState
-              type="inbox"
-              title="No users found"
-              description={`No ${roleFilter === 'all' ? '' : roleFilter} users to display`}
-            />
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm" role="table">
-                <thead className="bg-gray-50 border-b border-gray-200 text-xs uppercase tracking-wider text-gray-600">
-                  <tr>
-                    <th scope="col" className="px-4 sm:px-6 py-3">
-                      User
-                    </th>
-                    <th scope="col" className="px-4 sm:px-6 py-3">
-                      Email
-                    </th>
-                    <th scope="col" className="px-4 sm:px-6 py-3">
-                      Role
-                    </th>
-                    <th scope="col" className="px-4 sm:px-6 py-3">
-                      Joined
-                    </th>
-                    <th scope="col" className="px-4 sm:px-6 py-3 text-right">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-100">
-                  {users.map((user) => (
-                    <tr key={user._id} className="hover:bg-blue-50/40 transition-colors">
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                            <User className="w-5 h-5 text-blue-600" />
-                          </div>
-                          <div>
-                            <div className="font-semibold text-gray-900">{user.name}</div>
-                            {user.companyName && (
-                              <div className="text-sm text-gray-500">{user.companyName}</div>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Mail className="w-4 h-4" />
-                          <span className="text-sm">{user.email}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                        <span className={`badge ${getRoleBadge(user.role)}`}>{getRoleLabel(user.role)}</span>
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Calendar className="w-4 h-4" />
-                          <span className="text-sm">{new Date(user.createdAt).toLocaleDateString()}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end gap-1 sm:gap-2">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setRoleDialog({
-                                isOpen: true,
-                                userId: user._id,
-                                userName: user.name,
-                                currentRole: user.role,
-                                newRole: user.role
-                              })
-                            }
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                            title="Change role"
-                            aria-label={`Change role for ${user.name}`}
-                          >
-                            <Shield className="w-5 h-5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setDeleteUserDialog({
-                                isOpen: true,
-                                userId: user._id,
-                                userName: user.name
-                              })
-                            }
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                            title="Delete user"
-                            aria-label={`Delete user ${user.name}`}
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {renderPagination(usersPagination, setUsersPage)}
-          </>
-        )}
-      </div>
-
-      <div className="glass rounded-2xl shadow-xl overflow-hidden">
-        <div className="p-4 sm:p-6 border-b border-gray-200">
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <h2 className="text-xl font-bold text-gray-900">Jobs</h2>
-              <div className="text-xs sm:text-sm text-gray-500">
-                {jobsPagination.total} total
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">Filter by status</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {statusFilters.map((status) => (
-                <button
-                  key={status}
-                  onClick={() => {
-                    setStatusFilter(status);
-                    setJobsPage(1);
-                  }}
-                  className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all ${
-                    statusFilter === status
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white border border-gray-200 text-gray-700 hover:border-blue-300'
-                  }`}
-                >
-                  {status === 'all' ? 'All Jobs' : getStatusLabel(status)}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {isLoadingJobs ? (
-          <div className="p-6">
-            <SkeletonLoader type="list" count={8} />
-          </div>
-        ) : jobs.length === 0 ? (
-          <div className="p-6">
-            <EmptyState
-              type="jobs"
-              title="No jobs found"
-              description={`No ${statusFilter === 'all' ? '' : statusFilter} jobs to display`}
-            />
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm" role="table">
-                <thead className="bg-gray-50 border-b border-gray-200 text-xs uppercase tracking-wider text-gray-600">
-                  <tr>
-                    <th scope="col" className="px-4 sm:px-6 py-3">
-                      Job
-                    </th>
-                    <th scope="col" className="px-4 sm:px-6 py-3">
-                      Company
-                    </th>
-                    <th scope="col" className="px-4 sm:px-6 py-3">
-                      Employer
-                    </th>
-                    <th scope="col" className="px-4 sm:px-6 py-3">
-                      Status
-                    </th>
-                    <th scope="col" className="px-4 sm:px-6 py-3">
-                      Posted
-                    </th>
-                    <th scope="col" className="px-4 sm:px-6 py-3 text-right">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-100">
-                  {jobs.map((job) => (
-                    <tr key={job._id} className="hover:bg-blue-50/40 transition-colors">
-                      <td className="px-4 sm:px-6 py-4 align-top">
-                        <div className="font-semibold text-gray-900">{job.title}</div>
-                        {job.category && (
-                          <div className="text-sm text-gray-500">{job.category}</div>
-                        )}
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2 text-gray-700">
-                          <Building2 className="w-4 h-4" />
-                          <span className="text-sm">{job.company}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {job.employer?.name || 'Unknown'}
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                        <span className={`badge ${getStatusBadge(job.status)}`}>{getStatusLabel(job.status)}</span>
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {new Date(job.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end gap-1 sm:gap-2">
-                          {(job.status === 'pending' || job.status === 'rejected' || job.status === 'closed') && (
-                            <button
-                              type="button"
-                              onClick={() => handleApproveJob(job._id)}
-                              disabled={actionLoading === `approve-${job._id}`}
-                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                              title="Approve job"
-                              aria-label={`Approve job ${job.title}`}
-                            >
-                              <CheckCircle className="w-5 h-5" />
-                            </button>
-                          )}
-                          {(job.status === 'pending' || job.status === 'active') && (
-                            <button
-                              type="button"
-                              onClick={() => handleRejectJob(job._id)}
-                              disabled={actionLoading === `reject-${job._id}`}
-                              className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                              title="Reject job"
-                              aria-label={`Reject job ${job.title}`}
-                            >
-                              <XCircle className="w-5 h-5" />
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setDeleteJobDialog({
-                                isOpen: true,
-                                jobId: job._id,
-                                jobTitle: job.title
-                              })
-                            }
-                            disabled={actionLoading === `delete-job-${job._id}`}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                            title="Delete job"
-                            aria-label={`Delete job ${job.title}`}
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {renderPagination(jobsPagination, setJobsPage)}
-          </>
-        )}
-      </div>
+      <JobsTableSection
+        jobs={jobs}
+        isLoading={isLoadingJobs}
+        pagination={jobsPagination}
+        statusFilter={statusFilter}
+        onStatusFilterChange={(value) => {
+          setStatusFilter(value);
+          setJobsPage(1);
+        }}
+        onPageChange={setJobsPage}
+        onOpenModerationDialog={(job, action) =>
+          setModerationDialog({
+            isOpen: true,
+            action,
+            jobId: job._id,
+            jobTitle: job.title
+          })
+        }
+        onOpenDeleteDialog={(job) =>
+          setDeleteJobDialog({
+            isOpen: true,
+            jobId: job._id,
+            jobTitle: job.title
+          })
+        }
+        actionLoading={actionLoading}
+      />
 
       <ConfirmDialog
         isOpen={deleteUserDialog.isOpen}
         onCancel={() => setDeleteUserDialog({ isOpen: false, userId: null, userName: '' })}
         onConfirm={handleDeleteUser}
         title="Delete User"
-        message={`Are you sure you want to delete "${deleteUserDialog.userName}"? This will also delete all associated data.`}
+        message={`Are you sure you want to delete "${deleteUserDialog.userName}"? This will remove related data as well.`}
         confirmText={actionLoading?.startsWith('delete-user-') ? 'Deleting...' : 'Delete'}
+        confirmDisabled={actionLoading?.startsWith('delete-user-')}
+        cancelDisabled={actionLoading?.startsWith('delete-user-')}
         variant="danger"
       />
 
@@ -653,81 +762,49 @@ function AdminDashboard() {
         title="Delete Job"
         message={`Are you sure you want to delete "${deleteJobDialog.jobTitle}"? This action cannot be undone.`}
         confirmText={actionLoading?.startsWith('delete-job-') ? 'Deleting...' : 'Delete'}
+        confirmDisabled={actionLoading?.startsWith('delete-job-')}
+        cancelDisabled={actionLoading?.startsWith('delete-job-')}
         variant="danger"
       />
 
-      {roleDialog.isOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-          <div
-            className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="change-role-title"
-            aria-describedby="change-role-description"
-          >
-            <h3 id="change-role-title" className="text-xl font-bold text-gray-900 mb-4">
-              Change User Role
-            </h3>
-            <p id="change-role-description" className="text-gray-600 mb-4">
-              Change role for <span className="font-semibold">{roleDialog.userName}</span>.
-            </p>
+      <ConfirmDialog
+        isOpen={moderationDialog.isOpen}
+        onCancel={() =>
+          setModerationDialog({
+            isOpen: false,
+            action: '',
+            jobId: null,
+            jobTitle: ''
+          })
+        }
+        onConfirm={handleModerationAction}
+        title={`${moderationActionLabel} Job`}
+        message={`Are you sure you want to ${moderationActionLabel.toLowerCase()} "${moderationDialog.jobTitle}"?`}
+        confirmText={isModerationLoading ? `${moderationActionLabel}ing...` : moderationActionLabel}
+        confirmDisabled={isModerationLoading}
+        cancelDisabled={isModerationLoading}
+        variant={moderationDialog.action === 'approve' ? 'info' : 'warning'}
+      />
 
-            <div className="space-y-3 mb-6">
-              {['admin', 'employer', 'jobseeker'].map((role) => (
-                <label
-                  key={role}
-                  className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                    roleDialog.newRole === role
-                      ? 'border-blue-600 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="role"
-                    value={role}
-                    checked={roleDialog.newRole === role}
-                    onChange={(event) =>
-                      setRoleDialog((prev) => ({ ...prev, newRole: event.target.value }))
-                    }
-                    className="w-4 h-4 text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                  />
-                  <span className="font-medium text-gray-900">{getRoleLabel(role)}</span>
-                </label>
-              ))}
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() =>
-                  setRoleDialog({
-                    isOpen: false,
-                    userId: null,
-                    userName: '',
-                    currentRole: '',
-                    newRole: ''
-                  })
-                }
-                className="btn-secondary flex-1"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleRoleUpdate}
-                disabled={
-                  roleDialog.newRole === roleDialog.currentRole ||
-                  actionLoading === `role-${roleDialog.userId}`
-                }
-                className="btn-primary flex-1"
-              >
-                {actionLoading === `role-${roleDialog.userId}` ? 'Updating...' : 'Update Role'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        isOpen={roleDialog.isOpen}
+        onCancel={() =>
+          setRoleDialog({
+            isOpen: false,
+            userId: null,
+            userName: '',
+            currentRole: '',
+            newRole: ''
+          })
+        }
+        onConfirm={handleRoleUpdate}
+        title="Update User Role"
+        message={roleDialogMessage}
+        confirmText={actionLoading?.startsWith('role-') ? 'Updating...' : 'Update Role'}
+        confirmDisabled={roleDialog.newRole === roleDialog.currentRole || actionLoading?.startsWith('role-')}
+        cancelDisabled={actionLoading?.startsWith('role-')}
+        variant="info"
+      />
     </div>
   );
 }
