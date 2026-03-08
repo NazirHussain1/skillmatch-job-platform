@@ -18,6 +18,27 @@ const MainLayout = ({ children }) => {
   const desktopNotificationsRef = useRef(null);
   const mobileNotificationsRef = useRef(null);
 
+  const isActivePath = (path) => {
+    if (path === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  };
+
+  const getDesktopNavClasses = (path) =>
+    `px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+      isActivePath(path)
+        ? 'bg-blue-600 text-white shadow-sm'
+        : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+    }`;
+
+  const getBottomNavClasses = (path) =>
+    `flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 active:scale-95 ${
+      isActivePath(path)
+        ? 'text-blue-600 bg-blue-50 shadow-sm'
+        : 'text-gray-600 hover:bg-blue-50 hover:text-blue-600'
+    }`;
+
   const handleLogout = () => {
     dispatch(logout());
     navigate('/login');
@@ -127,11 +148,15 @@ const MainLayout = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
       {/* Header */}
-      <header className="header-blur">
+      <header className="header-blur sticky top-0 z-40" role="banner">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link to="/dashboard" className="flex items-center gap-2 z-50">
+            <Link
+              to="/dashboard"
+              className="flex items-center gap-2 z-50"
+              aria-label="Go to dashboard"
+            >
               <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
                 <Briefcase className="w-6 h-6 text-white" />
               </div>
@@ -141,45 +166,48 @@ const MainLayout = ({ children }) => {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-1">
-              <Link to="/dashboard" className="px-4 py-2 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 font-medium">
+            <nav
+              className="hidden lg:flex items-center gap-1"
+              aria-label="Primary navigation"
+            >
+              <Link to="/dashboard" className={getDesktopNavClasses('/dashboard')}>
                 Dashboard
               </Link>
-              <Link to="/jobs" className="px-4 py-2 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 font-medium">
+              <Link to="/jobs" className={getDesktopNavClasses('/jobs')}>
                 Jobs
               </Link>
-              <Link to="/chat" className="px-4 py-2 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 font-medium">
+              <Link to="/chat" className={getDesktopNavClasses('/chat')}>
                 Messages
               </Link>
               {user?.role === 'jobseeker' && (
                 <>
-                  <Link to="/applications" className="px-4 py-2 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 font-medium">
+                  <Link to="/applications" className={getDesktopNavClasses('/applications')}>
                     Applications
                   </Link>
-                  <Link to="/saved-jobs" className="px-4 py-2 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 font-medium">
+                  <Link to="/saved-jobs" className={getDesktopNavClasses('/saved-jobs')}>
                     Saved Jobs
                   </Link>
                 </>
               )}
               {user?.role === 'employer' && (
-                <Link to="/my-jobs" className="px-4 py-2 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 font-medium">
+                <Link to="/my-jobs" className={getDesktopNavClasses('/my-jobs')}>
                   My Jobs
                 </Link>
               )}
               {user?.role === 'admin' && (
                 <>
-                  <Link to="/admin" className="px-4 py-2 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 font-medium">
+                  <Link to="/admin" className={getDesktopNavClasses('/admin')}>
                     Analytics
                   </Link>
-                  <Link to="/admin/users" className="px-4 py-2 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 font-medium">
+                  <Link to="/admin/users" className={getDesktopNavClasses('/admin/users')}>
                     Users
                   </Link>
-                  <Link to="/admin/jobs" className="px-4 py-2 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 font-medium">
+                  <Link to="/admin/jobs" className={getDesktopNavClasses('/admin/jobs')}>
                     All Jobs
                   </Link>
                 </>
               )}
-              <Link to="/profile" className="px-4 py-2 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 font-medium">
+              <Link to="/profile" className={getDesktopNavClasses('/profile')}>
                 Profile
               </Link>
             </nav>
@@ -189,9 +217,11 @@ const MainLayout = ({ children }) => {
               <div className="relative" ref={desktopNotificationsRef}>
                 <button
                   onClick={handleToggleNotifications}
-                  className="relative p-2 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
+                  className="relative p-2 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                   title="Notifications"
-                  aria-label="Notifications"
+                  aria-label="Toggle notifications"
+                  aria-haspopup="dialog"
+                  aria-expanded={notificationsOpen}
                 >
                   <Bell size={20} />
                   {unreadCount > 0 && (
@@ -202,10 +232,17 @@ const MainLayout = ({ children }) => {
                 </button>
 
                 {notificationsOpen && (
-                  <div className="absolute right-0 mt-2 w-96 max-w-[90vw] bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden z-[60]">
+                  <div
+                    className="absolute right-0 mt-2 w-96 max-w-[90vw] bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden z-[60]"
+                    role="dialog"
+                    aria-modal="false"
+                    aria-label="Notifications"
+                  >
                     <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+                        <h3 className="text-sm font-semibold text-gray-900" id="desktop-notifications-title">
+                          Notifications
+                        </h3>
                         <span className="text-xs text-gray-500">{unreadCount} unread</span>
                       </div>
                     </div>
@@ -231,7 +268,7 @@ const MainLayout = ({ children }) => {
                               {!notification.isRead && (
                                 <button
                                   onClick={() => handleMarkNotificationAsRead(notification._id)}
-                                  className="text-xs font-medium text-blue-600 hover:text-blue-700"
+                                  className="text-xs font-medium text-blue-600 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded"
                                 >
                                   Mark as read
                                 </button>
@@ -260,9 +297,11 @@ const MainLayout = ({ children }) => {
               <div className="relative" ref={mobileNotificationsRef}>
                 <button
                   onClick={handleToggleNotifications}
-                  className="relative p-2 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
+                  className="relative p-2 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                   title="Notifications"
-                  aria-label="Notifications"
+                  aria-label="Toggle notifications"
+                  aria-haspopup="dialog"
+                  aria-expanded={notificationsOpen}
                 >
                   <Bell size={22} />
                   {unreadCount > 0 && (
@@ -273,10 +312,17 @@ const MainLayout = ({ children }) => {
                 </button>
 
                 {notificationsOpen && (
-                  <div className="absolute right-0 mt-2 w-80 max-w-[90vw] bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden z-[60]">
+                  <div
+                    className="absolute right-0 mt-2 w-80 max-w-[90vw] bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden z-[60]"
+                    role="dialog"
+                    aria-modal="false"
+                    aria-label="Notifications"
+                  >
                     <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+                        <h3 className="text-sm font-semibold text-gray-900" id="mobile-notifications-title">
+                          Notifications
+                        </h3>
                         <span className="text-xs text-gray-500">{unreadCount} unread</span>
                       </div>
                     </div>
@@ -302,7 +348,7 @@ const MainLayout = ({ children }) => {
                               {!notification.isRead && (
                                 <button
                                   onClick={() => handleMarkNotificationAsRead(notification._id)}
-                                  className="text-xs font-medium text-blue-600 hover:text-blue-700"
+                                  className="text-xs font-medium text-blue-600 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded"
                                 >
                                   Mark as read
                                 </button>
@@ -318,7 +364,10 @@ const MainLayout = ({ children }) => {
 
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 rounded-xl text-gray-700 hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-xl text-gray-700 hover:bg-gray-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+                aria-expanded={mobileMenuOpen}
+                aria-controls="mobile-nav-drawer"
               >
                 {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
@@ -335,9 +384,15 @@ const MainLayout = ({ children }) => {
         )}
 
         {/* Mobile Menu Drawer */}
-        <div className={`lg:hidden fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
-          mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}>
+        <div
+          id="mobile-nav-drawer"
+          className={`lg:hidden fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
+            mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Mobile navigation"
+        >
           <div className="flex flex-col h-full">
             {/* Mobile Menu Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -353,12 +408,16 @@ const MainLayout = ({ children }) => {
             </div>
 
             {/* Mobile Menu Links */}
-            <nav className="flex-1 overflow-y-auto p-4">
+            <nav className="flex-1 overflow-y-auto p-4" aria-label="Mobile navigation links">
               <div className="space-y-1">
                 <Link 
                   to="/dashboard" 
                   onClick={closeMobileMenu}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 font-medium"
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    isActivePath('/dashboard')
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                  }`}
                 >
                   <LayoutDashboard size={20} />
                   Dashboard
@@ -366,7 +425,11 @@ const MainLayout = ({ children }) => {
                 <Link 
                   to="/jobs" 
                   onClick={closeMobileMenu}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 font-medium"
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    isActivePath('/jobs')
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                  }`}
                 >
                   <Briefcase size={20} />
                   Jobs
@@ -374,7 +437,11 @@ const MainLayout = ({ children }) => {
                 <Link 
                   to="/chat" 
                   onClick={closeMobileMenu}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 font-medium"
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    isActivePath('/chat')
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                  }`}
                 >
                   <MessageCircle size={20} />
                   Messages
@@ -384,7 +451,11 @@ const MainLayout = ({ children }) => {
                     <Link 
                       to="/applications" 
                       onClick={closeMobileMenu}
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 font-medium"
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                        isActivePath('/applications')
+                          ? 'bg-blue-600 text-white'
+                          : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                      }`}
                     >
                       <FileText size={20} />
                       Applications
@@ -392,7 +463,11 @@ const MainLayout = ({ children }) => {
                     <Link 
                       to="/saved-jobs" 
                       onClick={closeMobileMenu}
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 font-medium"
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                        isActivePath('/saved-jobs')
+                          ? 'bg-blue-600 text-white'
+                          : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                      }`}
                     >
                       <Bookmark size={20} />
                       Saved Jobs
@@ -403,7 +478,11 @@ const MainLayout = ({ children }) => {
                   <Link 
                     to="/my-jobs" 
                     onClick={closeMobileMenu}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 font-medium"
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                      isActivePath('/my-jobs')
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                    }`}
                   >
                     <FileText size={20} />
                     My Jobs
@@ -414,7 +493,11 @@ const MainLayout = ({ children }) => {
                     <Link 
                       to="/admin" 
                       onClick={closeMobileMenu}
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 font-medium"
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                        isActivePath('/admin')
+                          ? 'bg-blue-600 text-white'
+                          : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                      }`}
                     >
                       <LayoutDashboard size={20} />
                       Analytics
@@ -422,7 +505,11 @@ const MainLayout = ({ children }) => {
                     <Link 
                       to="/admin/users" 
                       onClick={closeMobileMenu}
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 font-medium"
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                        isActivePath('/admin/users')
+                          ? 'bg-blue-600 text-white'
+                          : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                      }`}
                     >
                       <User size={20} />
                       Users
@@ -430,7 +517,11 @@ const MainLayout = ({ children }) => {
                     <Link 
                       to="/admin/jobs" 
                       onClick={closeMobileMenu}
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 font-medium"
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                        isActivePath('/admin/jobs')
+                          ? 'bg-blue-600 text-white'
+                          : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                      }`}
                     >
                       <Briefcase size={20} />
                       All Jobs
@@ -440,7 +531,11 @@ const MainLayout = ({ children }) => {
                 <Link 
                   to="/profile" 
                   onClick={closeMobileMenu}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 font-medium"
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    isActivePath('/profile')
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                  }`}
                 >
                   <User size={20} />
                   Profile
@@ -463,46 +558,82 @@ const MainLayout = ({ children }) => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <main
+        className="flex-1 overflow-y-auto max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8"
+        role="main"
+      >
         {children}
       </main>
 
+      {/* Footer (desktop and larger tablets) */}
+      <footer className="hidden lg:block border-t border-gray-200 bg-white/80 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between text-xs text-gray-500">
+          <span>© {new Date().getFullYear()} SkillMatch. All rights reserved.</span>
+          <span className="hidden sm:inline">
+            Job seekers, employers, and admins working together.
+          </span>
+        </div>
+      </footer>
+
       {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-gray-200 shadow-2xl z-40">
+      <nav
+        className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-gray-200 shadow-2xl z-40"
+        aria-label="Bottom navigation"
+      >
         <div className={`grid ${user?.role === 'jobseeker' ? 'grid-cols-5' : user?.role === 'admin' ? 'grid-cols-4' : 'grid-cols-4'} gap-1 px-2 py-2`}>
-          <Link to="/dashboard" className="flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 active:scale-95">
+          <Link to="/dashboard" className={getBottomNavClasses('/dashboard')} aria-label="Home dashboard">
             <LayoutDashboard size={22} strokeWidth={2} />
             <span className="text-xs font-medium">Home</span>
           </Link>
-          <Link to="/jobs" className="flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 active:scale-95">
+          <Link to="/jobs" className={getBottomNavClasses('/jobs')} aria-label="Browse jobs">
             <Briefcase size={22} strokeWidth={2} />
             <span className="text-xs font-medium">Jobs</span>
           </Link>
           {user?.role === 'jobseeker' && (
             <>
-              <Link to="/applications" className="flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 active:scale-95">
+              <Link
+                to="/applications"
+                className={getBottomNavClasses('/applications')}
+                aria-label="View applications"
+              >
                 <FileText size={22} strokeWidth={2} />
                 <span className="text-xs font-medium">Applied</span>
               </Link>
-              <Link to="/saved-jobs" className="flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 active:scale-95">
+              <Link
+                to="/saved-jobs"
+                className={getBottomNavClasses('/saved-jobs')}
+                aria-label="Saved jobs"
+              >
                 <Bookmark size={22} strokeWidth={2} />
                 <span className="text-xs font-medium">Saved</span>
               </Link>
             </>
           )}
           {user?.role === 'employer' && (
-            <Link to="/my-jobs" className="flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 active:scale-95">
+            <Link
+              to="/my-jobs"
+              className={getBottomNavClasses('/my-jobs')}
+              aria-label="My jobs"
+            >
               <FileText size={22} strokeWidth={2} />
               <span className="text-xs font-medium">My Jobs</span>
             </Link>
           )}
           {user?.role === 'admin' && (
-            <Link to="/admin" className="flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 active:scale-95">
+            <Link
+              to="/admin"
+              className={getBottomNavClasses('/admin')}
+              aria-label="Admin dashboard"
+            >
               <LayoutDashboard size={22} strokeWidth={2} />
               <span className="text-xs font-medium">Admin</span>
             </Link>
           )}
-          <Link to="/profile" className="flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 active:scale-95">
+          <Link
+            to="/profile"
+            className={getBottomNavClasses('/profile')}
+            aria-label="Profile"
+          >
             <User size={22} strokeWidth={2} />
             <span className="text-xs font-medium">Profile</span>
           </Link>
