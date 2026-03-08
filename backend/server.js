@@ -34,7 +34,7 @@ const parseOrigins = (value) =>
     .map((origin) => origin.trim())
     .filter(Boolean);
 
-const devOrigins = ['http://localhost:3000', 'http://localhost:5173'];
+const devOrigins = ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'];
 const configuredOrigins = parseOrigins(process.env.CORS_ORIGIN);
 const allowedOrigins = [
   ...new Set(

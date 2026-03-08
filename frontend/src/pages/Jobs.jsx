@@ -213,45 +213,42 @@ function Jobs() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6">
-        <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xl">
-          <form onSubmit={handleSearch} className="space-y-3 sm:space-y-4">
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search jobs..."
-                  value={filters.keyword}
-                  onChange={(event) => handleFilterChange('keyword', event.target.value)}
-                  className="input-field pl-10"
-                />
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Filters Sidebar */}
+          <div className="lg:w-80 flex-shrink-0">
+            <div className="glass rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-xl sticky top-24">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+                {hasActiveFilters && (
+                  <button type="button" onClick={handleClearFilters} className="text-sm text-blue-600 hover:text-blue-700">
+                    Clear all
+                  </button>
+                )}
               </div>
-              <button
-                type="button"
-                onClick={() => setShowFilters((prev) => !prev)}
-                className="btn-secondary flex items-center gap-2"
-              >
-                <Filter className="w-4 h-4" />
-                Filters
-              </button>
-              <button type="submit" className="btn-primary">
-                Search
-              </button>
-            </div>
 
-            {showFilters && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t">
+              <form onSubmit={handleSearch} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Keywords</label>
+                  <input
+                    type="text"
+                    placeholder="Job title, company..."
+                    value={filters.keyword}
+                    onChange={(event) => handleFilterChange('keyword', event.target.value)}
+                    className="input-field"
+                  />
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
                   <input
                     type="text"
-                    placeholder="e.g., New York, Remote"
+                    placeholder="City, state, or remote"
                     value={filters.location}
                     onChange={(event) => handleFilterChange('location', event.target.value)}
                     className="input-field"
                   />
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Job Type</label>
                   <select
@@ -267,6 +264,7 @@ function Jobs() {
                     <option value="contract">Contract</option>
                   </select>
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
                   <select
@@ -285,6 +283,7 @@ function Jobs() {
                     <option value="Other">Other</option>
                   </select>
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Minimum Salary</label>
                   <select
@@ -300,49 +299,16 @@ function Jobs() {
                     <option value="150000">$150,000+</option>
                   </select>
                 </div>
-              </div>
-            )}
 
-            {showFilters && (filters.location || filters.jobType || filters.category || filters.salary) && (
-              <div className="pt-4">
-                <button type="button" onClick={handleClearFilters} className="btn-secondary">
-                  Clear All Filters
+                <button type="submit" className="btn-primary w-full">
+                  Apply Filters
                 </button>
-              </div>
-            )}
-          </form>
-
-          {hasActiveFilters && (
-            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
-              <span className="text-sm text-gray-600">Active filters:</span>
-              {searchParams.keyword && (
-                <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm">
-                  Keyword: {searchParams.keyword}
-                </span>
-              )}
-              {searchParams.location && (
-                <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm">
-                  Location: {searchParams.location}
-                </span>
-              )}
-              {searchParams.salary && (
-                <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm">
-                  Salary: ${parseInt(searchParams.salary, 10).toLocaleString()}+
-                </span>
-              )}
-              {searchParams.category && (
-                <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm">
-                  Category: {searchParams.category}
-                </span>
-              )}
-              {searchParams.jobType && (
-                <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm">
-                  Type: {searchParams.jobType}
-                </span>
-              )}
+              </form>
             </div>
-          )}
-        </div>
+          </div>
+
+          {/* Job Results */}
+          <div className="flex-1 space-y-4">
 
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -366,77 +332,66 @@ function Jobs() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {jobs.map((job) => (
-                <div key={job._id} className="job-card group relative overflow-hidden">
-                  {user?.role === 'jobseeker' && (
-                    <button
-                      onClick={() => handleSaveJob(job._id)}
-                      className="absolute top-4 right-4 p-2.5 bg-white/90 backdrop-blur-sm text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 shadow-md z-10"
-                      title={isJobSaved(job._id) ? 'Remove from saved' : 'Save job'}
-                    >
-                      {isJobSaved(job._id) ? (
-                        <BookmarkCheck className="w-5 h-5 fill-current" />
-                      ) : (
-                        <Bookmark className="w-5 h-5" />
-                      )}
-                    </button>
-                  )}
+              {jobs.map((job) => {
+                const postedDate = new Date(job.createdAt);
+                const now = new Date();
+                const diffTime = Math.abs(now - postedDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                const postedText = diffDays === 1 ? '1 day ago' : `${diffDays} days ago`;
 
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
-                      <Building2 className="w-7 h-7 text-blue-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors line-clamp-1">
-                        {job.title}
-                      </h3>
-                      <p className="text-gray-600 font-medium line-clamp-1">{job.company}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {job.jobType && <span className="badge-primary">{job.jobType}</span>}
-                    {job.category && <span className="badge-secondary">{job.category}</span>}
-                    {user?.role === 'employer' && job.status && (
-                      <span
-                        className={`badge ${
-                          job.status === 'active'
-                            ? 'badge-success'
-                            : job.status === 'pending'
-                              ? 'badge-warning'
-                              : job.status === 'rejected'
-                                ? 'badge-danger'
-                                : 'badge-secondary'
-                        }`}
+                return (
+                  <div key={job._id} className="job-card group relative overflow-hidden">
+                    {user?.role === 'jobseeker' && (
+                      <button
+                        onClick={() => handleSaveJob(job._id)}
+                        className="absolute top-4 right-4 p-2.5 bg-white/90 backdrop-blur-sm text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 shadow-md z-10"
+                        title={isJobSaved(job._id) ? 'Remove from saved' : 'Save job'}
                       >
-                        {job.status}
-                      </span>
+                        {isJobSaved(job._id) ? (
+                          <BookmarkCheck className="w-5 h-5 fill-current" />
+                        ) : (
+                          <Bookmark className="w-5 h-5" />
+                        )}
+                      </button>
+                    )}
+
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Building2 className="w-6 h-6 text-gray-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors line-clamp-1">
+                          {job.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 line-clamp-1">{job.company}</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">{job.jobType}</span>
+                        <span className="text-sm font-medium text-green-600">${job.salary?.toLocaleString()}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1 text-sm text-gray-600">
+                          <MapPin className="w-4 h-4" />
+                          {job.location}
+                        </div>
+                        <span className="text-xs text-gray-500">{postedText}</span>
+                      </div>
+                    </div>
+
+                    {user?.role === 'jobseeker' && (
+                      <button
+                        onClick={() => handleApply(job._id)}
+                        className="btn-primary w-full"
+                      >
+                        Apply Now
+                      </button>
                     )}
                   </div>
-
-                  <div className="space-y-2.5 mb-4">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                      <span className="text-sm font-medium line-clamp-1">{job.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <DollarSign className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                      <span className="text-sm font-bold text-green-600">${job.salary?.toLocaleString()}/year</span>
-                    </div>
-                  </div>
-
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">{job.description}</p>
-
-                  {user?.role === 'jobseeker' && (
-                    <button
-                      onClick={() => handleApply(job._id)}
-                      className="btn-primary w-full group-hover:scale-105 transition-transform"
-                    >
-                      Apply Now
-                    </button>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <Pagination
@@ -445,14 +400,15 @@ function Jobs() {
               onPageChange={handlePageChange}
             />
           </>
-        ) : (
-          <EmptyState
-            type="search"
-            title="No jobs found"
-            description="Try adjusting your search filters or check back later for new opportunities"
-          />
-        )}
-      </div>
+            ) : (
+              <EmptyState
+                type="search"
+                title="No jobs found"
+                description="Try adjusting your search filters or check back later for new opportunities"
+              />
+            )}
+          </div>
+        </div>
 
       {showModal && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">

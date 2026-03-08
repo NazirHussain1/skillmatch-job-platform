@@ -30,9 +30,8 @@
   
   /* Job Card */
   .job-card {
-    @apply bg-white rounded-2xl shadow-sm p-6 border border-gray-100;
-    @apply hover:shadow-2xl hover:border-primary-200 hover:-translate-y-1;
-    @apply transition-all duration-300 cursor-pointer;
+    @apply bg-white rounded-xl border border-gray-200 shadow-sm p-6;
+    @apply hover:shadow-md transition-all duration-200 cursor-pointer;
   }
   
   /* Stat Card */
@@ -81,7 +80,7 @@
   
   /* Input fields */
   .input-field {
-    @apply w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-white;
+    @apply w-full px-3 py-2 border border-gray-200 rounded-lg bg-white;
     @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
     @apply transition-all duration-200 hover:border-gray-300;
     @apply placeholder:text-gray-400;
