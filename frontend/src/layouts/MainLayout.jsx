@@ -2,8 +2,9 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useRef, useState } from 'react';
 import { logout } from '../features/auth/authSlice';
-import { Briefcase, LayoutDashboard, FileText, User, LogOut, Bookmark, MessageCircle, Menu, X, Bell } from 'lucide-react';
+import { Briefcase, LayoutDashboard, FileText, User, LogOut, Bookmark, MessageCircle, Menu, X } from 'lucide-react';
 import notificationService from '../services/notificationService';
+import NotificationDropdown from '../components/NotificationDropdown';
 
 const MainLayout = ({ children }) => {
   const location = useLocation();
@@ -214,78 +215,23 @@ const MainLayout = ({ children }) => {
 
             {/* Desktop Actions */}
             <div className="hidden lg:flex items-center gap-3">
-              <div className="relative" ref={desktopNotificationsRef}>
-                <button
-                  onClick={handleToggleNotifications}
-                  className="relative p-2 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                  title="Notifications"
-                  aria-label="Toggle notifications"
-                  aria-haspopup="dialog"
-                  aria-expanded={notificationsOpen}
-                >
-                  <Bell size={20} />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-red-600 text-white text-[10px] font-bold rounded-full">
-                      {unreadCount > 99 ? '99+' : unreadCount}
-                    </span>
-                  )}
-                </button>
-
-                {notificationsOpen && (
-                  <div
-                    className="absolute right-0 mt-2 w-96 max-w-[90vw] bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden z-[60]"
-                    role="dialog"
-                    aria-modal="false"
-                    aria-label="Notifications"
-                  >
-                    <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-gray-900" id="desktop-notifications-title">
-                          Notifications
-                        </h3>
-                        <span className="text-xs text-gray-500">{unreadCount} unread</span>
-                      </div>
-                    </div>
-
-                    <div className="max-h-96 overflow-y-auto">
-                      {isNotificationsLoading ? (
-                        <div className="p-4 text-sm text-gray-500">Loading notifications...</div>
-                      ) : notifications.length === 0 ? (
-                        <div className="p-4 text-sm text-gray-500">No notifications yet.</div>
-                      ) : (
-                        notifications.map((notification) => (
-                          <div
-                            key={notification._id}
-                            className={`p-4 border-b border-gray-100 ${
-                              notification.isRead ? 'bg-white' : 'bg-blue-50/60'
-                            }`}
-                          >
-                            <p className="text-sm text-gray-800">{notification.message}</p>
-                            <div className="mt-2 flex items-center justify-between">
-                              <span className="text-xs text-gray-500">
-                                {formatNotificationTime(notification.createdAt)}
-                              </span>
-                              {!notification.isRead && (
-                                <button
-                                  onClick={() => handleMarkNotificationAsRead(notification._id)}
-                                  className="text-xs font-medium text-blue-600 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded"
-                                >
-                                  Mark as read
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <NotificationDropdown
+                notificationsOpen={notificationsOpen}
+                unreadCount={unreadCount}
+                notifications={notifications}
+                isNotificationsLoading={isNotificationsLoading}
+                onToggle={handleToggleNotifications}
+                onMarkAsRead={handleMarkNotificationAsRead}
+                formatTime={formatNotificationTime}
+                dropdownRef={desktopNotificationsRef}
+                isMobile={false}
+              />
 
               <span className="text-sm text-gray-600 font-medium">{user?.name}</span>
               <button
                 onClick={handleLogout}
                 className="btn-secondary"
+                aria-label="Logout"
               >
                 <LogOut size={18} />
                 Logout
@@ -294,73 +240,17 @@ const MainLayout = ({ children }) => {
 
             {/* Mobile Header Actions */}
             <div className="lg:hidden flex items-center gap-1 z-50">
-              <div className="relative" ref={mobileNotificationsRef}>
-                <button
-                  onClick={handleToggleNotifications}
-                  className="relative p-2 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
-                  title="Notifications"
-                  aria-label="Toggle notifications"
-                  aria-haspopup="dialog"
-                  aria-expanded={notificationsOpen}
-                >
-                  <Bell size={22} />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-red-600 text-white text-[10px] font-bold rounded-full">
-                      {unreadCount > 99 ? '99+' : unreadCount}
-                    </span>
-                  )}
-                </button>
-
-                {notificationsOpen && (
-                  <div
-                    className="absolute right-0 mt-2 w-80 max-w-[90vw] bg-white border border-gray-200 rounded-xl shadow-2xl overflow-hidden z-[60]"
-                    role="dialog"
-                    aria-modal="false"
-                    aria-label="Notifications"
-                  >
-                    <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-gray-900" id="mobile-notifications-title">
-                          Notifications
-                        </h3>
-                        <span className="text-xs text-gray-500">{unreadCount} unread</span>
-                      </div>
-                    </div>
-
-                    <div className="max-h-96 overflow-y-auto">
-                      {isNotificationsLoading ? (
-                        <div className="p-4 text-sm text-gray-500">Loading notifications...</div>
-                      ) : notifications.length === 0 ? (
-                        <div className="p-4 text-sm text-gray-500">No notifications yet.</div>
-                      ) : (
-                        notifications.map((notification) => (
-                          <div
-                            key={notification._id}
-                            className={`p-4 border-b border-gray-100 ${
-                              notification.isRead ? 'bg-white' : 'bg-blue-50/60'
-                            }`}
-                          >
-                            <p className="text-sm text-gray-800">{notification.message}</p>
-                            <div className="mt-2 flex items-center justify-between">
-                              <span className="text-xs text-gray-500">
-                                {formatNotificationTime(notification.createdAt)}
-                              </span>
-                              {!notification.isRead && (
-                                <button
-                                  onClick={() => handleMarkNotificationAsRead(notification._id)}
-                                  className="text-xs font-medium text-blue-600 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white rounded"
-                                >
-                                  Mark as read
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <NotificationDropdown
+                notificationsOpen={notificationsOpen}
+                unreadCount={unreadCount}
+                notifications={notifications}
+                isNotificationsLoading={isNotificationsLoading}
+                onToggle={handleToggleNotifications}
+                onMarkAsRead={handleMarkNotificationAsRead}
+                formatTime={formatNotificationTime}
+                dropdownRef={mobileNotificationsRef}
+                isMobile={true}
+              />
 
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
