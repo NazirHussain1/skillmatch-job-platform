@@ -137,7 +137,7 @@ const AnalyticsCards = ({ analytics, isLoading }) => {
 
   return (
     <section aria-label="Analytics overview">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {isLoading ? (
           <SkeletonLoader type="stat" count={4} />
         ) : (
@@ -146,15 +146,17 @@ const AnalyticsCards = ({ analytics, isLoading }) => {
             return (
               <article
                 key={card.id}
-                className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                className="rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2"
+                role="region"
+                aria-label={`${card.title}: ${card.value}`}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">{card.title}</p>
-                    <p className="mt-2 text-3xl font-bold text-gray-900">{card.value}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-600 mb-2">{card.title}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-gray-900 tabular-nums">{card.value.toLocaleString()}</p>
                   </div>
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${card.iconClasses}`}>
-                    <Icon className="h-6 w-6" aria-hidden="true" />
+                  <div className={`flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl flex-shrink-0 ${card.iconClasses}`}>
+                    <Icon className="h-6 w-6 sm:h-7 sm:w-7" aria-hidden="true" />
                   </div>
                 </div>
               </article>
@@ -676,10 +678,10 @@ function AdminDashboard() {
   const isModerationLoading = actionLoading === moderationLoadingKey;
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-        <p className="text-sm text-gray-600">
+    <div className="space-y-6 sm:space-y-8">
+      <header className="space-y-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+        <p className="text-sm sm:text-base text-gray-600">
           Monitor platform health and manage users, jobs, and moderation workflows.
         </p>
       </header>
