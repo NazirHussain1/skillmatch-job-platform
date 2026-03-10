@@ -57,11 +57,11 @@ fly secrets set EMAIL_FROM="noreply@skillmatch.com"
 
 fly secrets set EMAIL_FROM_NAME="SkillMatch"
 
-fly secrets set ADMIN_NAME="NAZIR HUSSAIN"
+fly secrets set 
 
-fly secrets set ADMIN_EMAIL="admin@skillmatch.com"
+fly secrets set 
 
-fly secrets set ADMIN_PASSWORD="Admin123!"
+fly secrets set 
 
 fly secrets set ENABLE_RATE_LIMIT="true"
 
