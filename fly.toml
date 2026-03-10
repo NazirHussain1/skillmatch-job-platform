@@ -1,0 +1,29 @@
+app = "skillmatch-backend"
+primary_region = "iad"
+
+[build]
+  [build.args]
+    NODE_VERSION = "18"
+
+[env]
+  PORT = "8080"
+  NODE_ENV = "production"
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+  [[services.http_checks]]
+    interval = 10000
+    timeout = 2000
+    grace_period = "5s"
+    method = "get"
+    path = "/api/health"
