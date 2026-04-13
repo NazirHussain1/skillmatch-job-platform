@@ -41,9 +41,8 @@ const requiredEnvVars = [
 
 const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
 if (missingEnvVars.length > 0) {
-  console.error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
   if (process.env.NODE_ENV === 'production') {
-    process.exit(1);
+    throw new Error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
   }
 }
 
@@ -95,10 +94,7 @@ const startServer = async () => {
     // Do not block API startup if admin bootstrap fails.
   }
 
-  server.listen(PORT, () => {
-    console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-    console.log(`Allowed CORS origins: ${allowedOrigins.join(', ')}`);
-  });
+  server.listen(PORT);
 };
 
 // Security Middleware
@@ -138,8 +134,6 @@ if (process.env.NODE_ENV === 'production' || process.env.ENABLE_RATE_LIMIT === '
   app.use('/api/auth/login', authLimiter);
   app.use('/api/auth/register', authLimiter);
   app.use('/api/auth/forgot-password', authLimiter);
-  
-  console.log('Rate limiting enabled');
 }
 
 // MongoDB sanitization - Prevent NoSQL injection
@@ -230,7 +224,9 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 5000;
 startServer().catch((error) => {
-  console.error('Failed to start server:', error);
+  if (error instanceof Error && error.message) {
+    process.stderr.write(`${error.message}\n`);
+  }
   process.exit(1);
 });
 
