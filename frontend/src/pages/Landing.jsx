@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { Briefcase, Users, TrendingUp, Search, MapPin, Building, Star, CheckCircle } from 'lucide-react';
+import { Briefcase, Users, TrendingUp, Search, MapPin, Building, CheckCircle } from 'lucide-react';
 import jobService from '../services/jobService';
 
 function Landing() {
@@ -14,8 +14,8 @@ function Landing() {
       try {
         const data = await jobService.getJobs({ limit: 6, status: 'active' });
         setFeaturedJobs(data.jobs || []);
-      } catch (error) {
-        console.error('Error fetching featured jobs:', error);
+      } catch {
+        setFeaturedJobs([]);
       } finally {
         setLoading(false);
       }
@@ -148,7 +148,7 @@ function Landing() {
               {featuredJobs.slice(0, 6).map((job) => (
                 <Link
                   key={job._id}
-                  to={`/jobs/${job._id}`}
+                  to="/jobs"
                   className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200 p-6"
                 >
                   <div className="flex items-start gap-4 mb-4">
