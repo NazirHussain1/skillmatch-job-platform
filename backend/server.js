@@ -221,11 +221,13 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
-startServer().catch((error) => {
-  if (error instanceof Error && error.message) {
-    process.stderr.write(`${error.message}\n`);
-  }
-  process.exit(1);
-});
+if (require.main === module) {
+  startServer().catch((error) => {
+    if (error instanceof Error && error.message) {
+      process.stderr.write(`${error.message}\n`);
+    }
+    process.exit(1);
+  });
+}
 
-module.exports = app;
+module.exports = { app, server, startServer };
