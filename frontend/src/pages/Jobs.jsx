@@ -28,6 +28,7 @@ import {
   formatDeadline,
   formatSalaryRange
 } from '../utils/jobFormatters';
+import { setDocumentMeta } from '../utils/documentMeta';
 
 // JobCard Component
 const JobCard = ({ job, user, isJobSaved, onSaveJob, onApply }) => {
@@ -426,6 +427,13 @@ function Jobs() {
 
     return searchParams;
   }, [searchParams, user?._id, user?.role]);
+
+  useEffect(() => {
+    setDocumentMeta({
+      title: 'Browse Jobs | SkillMatch',
+      description: 'Browse active jobs by keyword, location, salary, workplace type, experience level, and skills.'
+    });
+  }, []);
 
   useEffect(() => {
     dispatch(getJobs(effectiveSearchParams));

@@ -12,6 +12,7 @@ import companyService from '../services/companyService';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import { getOptimizedCloudinaryUrl } from '../utils/cloudinary';
+import { setDocumentMeta } from '../utils/documentMeta';
 
 function CompanyDetails() {
   const { id } = useParams();
@@ -50,14 +51,14 @@ function CompanyDetails() {
   }, [id]);
 
   useEffect(() => {
-    const previousTitle = document.title;
     const name = companyData?.company?.companyName || companyData?.company?.name;
-    document.title = name ? `${name} | SkillMatch` : 'Company Profile | SkillMatch';
-
-    return () => {
-      document.title = previousTitle;
-    };
-  }, [companyData?.company?.companyName, companyData?.company?.name]);
+    setDocumentMeta({
+      title: name ? `${name} Jobs and Company Profile | SkillMatch` : 'Company Profile | SkillMatch',
+      description: companyData?.company?.companyDescription
+        ? companyData.company.companyDescription.slice(0, 155)
+        : 'View company details and active job openings on SkillMatch.'
+    });
+  }, [companyData?.company?.companyDescription, companyData?.company?.companyName, companyData?.company?.name]);
 
   const company = companyData?.company;
   const jobs = companyData?.jobs || [];

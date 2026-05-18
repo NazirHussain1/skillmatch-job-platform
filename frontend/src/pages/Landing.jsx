@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Briefcase, Users, TrendingUp, Search, MapPin, Building, CheckCircle } from 'lucide-react';
 import jobService from '../services/jobService';
 import { formatSalaryRange } from '../utils/jobFormatters';
+import { setDocumentMeta } from '../utils/documentMeta';
 
 function Landing() {
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -11,6 +12,11 @@ function Landing() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setDocumentMeta({
+      title: 'SkillMatch - Find Jobs and Hire Talent',
+      description: 'Search jobs, apply with your profile, and help employers manage professional hiring pipelines.'
+    });
+
     const fetchFeaturedJobs = async () => {
       try {
         const data = await jobService.getJobs({ limit: 6, status: 'active' });

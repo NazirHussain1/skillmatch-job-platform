@@ -25,6 +25,7 @@ import {
   formatDeadline,
   formatSalaryRange
 } from '../utils/jobFormatters';
+import { setDocumentMeta } from '../utils/documentMeta';
 
 const formatJobType = (jobType) => {
   const labels = {
@@ -61,13 +62,13 @@ function JobDetails() {
   }, [dispatch, id]);
 
   useEffect(() => {
-    const previousTitle = document.title;
-    document.title = job?.title ? `${job.title} | SkillMatch` : 'Job Details | SkillMatch';
-
-    return () => {
-      document.title = previousTitle;
-    };
-  }, [job?.title]);
+    setDocumentMeta({
+      title: job?.title ? `${job.title} at ${job.company} | SkillMatch` : 'Job Details | SkillMatch',
+      description: job?.description
+        ? job.description.slice(0, 155)
+        : 'View job details, salary, skills, benefits, and application information on SkillMatch.'
+    });
+  }, [job?.company, job?.description, job?.title]);
 
   const handleApply = async () => {
     try {

@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /applications
+Disallow: /saved-jobs
+Disallow: /my-jobs
+Disallow: /chat
