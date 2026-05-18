@@ -79,6 +79,7 @@ const createApplication = asyncHandler(async (req, res) => {
 // @access  Private
 const getMyApplications = asyncHandler(async (req, res) => {
   const applications = await Application.find({ applicant: req.user._id })
+    .select('-employerNotes')
     .populate('job', 'title company location salary salaryMin salaryMax jobType category workplaceType experienceLevel')
     .sort({ createdAt: -1 });
   
