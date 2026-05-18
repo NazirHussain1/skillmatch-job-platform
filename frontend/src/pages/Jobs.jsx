@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { Link, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import {
   Briefcase,
@@ -21,6 +22,12 @@ import Pagination from '../components/Pagination';
 import SkeletonLoader from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
 import JobForm from '../components/JobForm';
+import {
+  EXPERIENCE_LEVEL_LABELS,
+  WORKPLACE_TYPE_LABELS,
+  formatDeadline,
+  formatSalaryRange
+} from '../utils/jobFormatters';
 
 // JobCard Component
 const JobCard = ({ job, user, isJobSaved, onSaveJob, onApply }) => {
@@ -72,7 +79,7 @@ const JobCard = ({ job, user, isJobSaved, onSaveJob, onApply }) => {
           </span>
           <span className="text-sm font-semibold text-green-600 flex items-center gap-1">
             <DollarSign className="w-4 h-4" aria-hidden="true" />
-            <span aria-label={`Salary: ${job.salary} dollars`}>{job.salary?.toLocaleString()}</span>
+            <span aria-label={`Salary: ${formatSalaryRange(job)}`}>{formatSalaryRange(job)}</span>
           </span>
         </div>
         <div className="flex items-center justify-between">
@@ -86,15 +93,68 @@ const JobCard = ({ job, user, isJobSaved, onSaveJob, onApply }) => {
         </div>
       </div>
 
+      <div className="mb-4 flex flex-wrap gap-2">
+        {job.workplaceType && (
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+            {WORKPLACE_TYPE_LABELS[job.workplaceType] || job.workplaceType}
+          </span>
+        )}
+        {job.experienceLevel && (
+          <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700">
+            {EXPERIENCE_LEVEL_LABELS[job.experienceLevel] || job.experienceLevel}
+          </span>
+        )}
+        {job.isUrgent && (
+          <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-medium text-rose-700">
+            Urgent
+          </span>
+        )}
+      </div>
+
+      {Array.isArray(job.skills) && job.skills.length > 0 && (
+        <div className="mb-4 flex flex-wrap gap-1.5">
+          {job.skills.slice(0, 4).map((skill) => (
+            <span key={skill} className="rounded-md bg-gray-50 px-2 py-1 text-xs text-gray-700">
+              {skill}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {job.applicationDeadline && (
+        <p className="mb-4 text-xs font-medium text-gray-500">
+          Apply by {formatDeadline(job.applicationDeadline)}
+        </p>
+      )}
+
       {user?.role === 'jobseeker' && (
-        <button
-          type="button"
-          onClick={() => onApply(job._id)}
+        <div className="grid grid-cols-2 gap-2">
+          <Link
+            to={`/jobs/${job._id}`}
+            className="btn-secondary px-3 py-2 text-sm"
+            aria-label={`View details for ${job.title}`}
+          >
+            Details
+          </Link>
+          <button
+            type="button"
+            onClick={() => onApply(job._id)}
+            className="btn-primary px-3 py-2 text-sm"
+            aria-label={`Apply for ${job.title} position`}
+          >
+            Apply
+          </button>
+        </div>
+      )}
+
+      {user?.role !== 'jobseeker' && (
+        <Link
+          to={`/jobs/${job._id}`}
           className="btn-primary w-full"
-          aria-label={`Apply for ${job.title} position`}
+          aria-label={`View details for ${job.title}`}
         >
-          Apply Now
-        </button>
+          View Details
+        </Link>
       )}
     </article>
   );
@@ -167,6 +227,59 @@ const JobsFilterBar = ({ filters, onFilterChange, onSearch, onClearFilters, hasA
             <option value="internship">Internship</option>
             <option value="contract">Contract</option>
           </select>
+        </div>
+
+        <div>
+          <label htmlFor="filter-workplace-type" className="block text-sm font-medium text-gray-700 mb-2">
+            Workplace
+          </label>
+          <select
+            id="filter-workplace-type"
+            value={filters.workplaceType}
+            onChange={(event) => onFilterChange('workplaceType', event.target.value)}
+            className="input-field"
+            aria-label="Filter by workplace type"
+          >
+            <option value="">Any Workplace</option>
+            <option value="on-site">On-site</option>
+            <option value="hybrid">Hybrid</option>
+            <option value="remote">Remote</option>
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="filter-experience-level" className="block text-sm font-medium text-gray-700 mb-2">
+            Experience
+          </label>
+          <select
+            id="filter-experience-level"
+            value={filters.experienceLevel}
+            onChange={(event) => onFilterChange('experienceLevel', event.target.value)}
+            className="input-field"
+            aria-label="Filter by experience level"
+          >
+            <option value="">Any Experience</option>
+            <option value="entry">Entry level</option>
+            <option value="mid">Mid level</option>
+            <option value="senior">Senior level</option>
+            <option value="lead">Lead</option>
+            <option value="executive">Executive</option>
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="filter-skill" className="block text-sm font-medium text-gray-700 mb-2">
+            Skill
+          </label>
+          <input
+            id="filter-skill"
+            type="text"
+            placeholder="React, sales, Excel..."
+            value={filters.skill}
+            onChange={(event) => onFilterChange('skill', event.target.value)}
+            className="input-field"
+            aria-label="Filter by skill"
+          />
         </div>
 
         <div>
@@ -274,6 +387,7 @@ const JobModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
 
 function Jobs() {
   const dispatch = useDispatch();
+  const [urlSearchParams] = useSearchParams();
   const { user } = useSelector((state) => state.auth);
   const { jobs, pagination, isLoading } = useSelector((state) => state.jobs);
   const { profile } = useSelector((state) => state.user);
@@ -283,20 +397,21 @@ function Jobs() {
   const [isCreatingJob, setIsCreatingJob] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const [filters, setFilters] = useState({
-    keyword: '',
-    location: '',
-    salary: '',
-    category: '',
-    jobType: ''
+  const getInitialFilters = () => ({
+    keyword: urlSearchParams.get('keyword') || '',
+    location: urlSearchParams.get('location') || '',
+    salary: urlSearchParams.get('salary') || '',
+    category: urlSearchParams.get('category') || '',
+    jobType: urlSearchParams.get('jobType') || '',
+    workplaceType: urlSearchParams.get('workplaceType') || '',
+    experienceLevel: urlSearchParams.get('experienceLevel') || '',
+    skill: urlSearchParams.get('skill') || ''
   });
 
+  const [filters, setFilters] = useState(getInitialFilters);
+
   const [searchParams, setSearchParams] = useState({
-    keyword: '',
-    location: '',
-    salary: '',
-    category: '',
-    jobType: '',
+    ...getInitialFilters(),
     page: 1,
     limit: 9
   });
@@ -418,7 +533,10 @@ function Jobs() {
       location: '',
       salary: '',
       category: '',
-      jobType: ''
+      jobType: '',
+      workplaceType: '',
+      experienceLevel: '',
+      skill: ''
     };
 
     setFilters(clearedFilters);
@@ -441,7 +559,10 @@ function Jobs() {
     searchParams.location ||
     searchParams.salary ||
     searchParams.category ||
-    searchParams.jobType;
+    searchParams.jobType ||
+    searchParams.workplaceType ||
+    searchParams.experienceLevel ||
+    searchParams.skill;
 
   return (
     <div className="min-h-screen pb-24 lg:pb-8">
@@ -466,6 +587,22 @@ function Jobs() {
                 <Plus className="w-5 h-5" aria-hidden="true" />
                 Post Job
               </button>
+            )}
+            {!user && (
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                <Link
+                  to="/login"
+                  className="btn bg-white text-blue-600 hover:bg-blue-50 shadow-xl justify-center"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="btn bg-blue-900/30 text-white hover:bg-blue-900/40 border border-white/30 justify-center"
+                >
+                  Create Account
+                </Link>
+              </div>
             )}
           </div>
         </div>

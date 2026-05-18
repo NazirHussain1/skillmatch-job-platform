@@ -7,6 +7,11 @@ import { getEmployerJobs, createJob, updateJob, deleteJob, reset } from '../feat
 import JobForm from '../components/JobForm';
 import ConfirmDialog from '../components/ConfirmDialog';
 import SkeletonLoader from '../components/SkeletonLoader';
+import {
+  EXPERIENCE_LEVEL_LABELS,
+  WORKPLACE_TYPE_LABELS,
+  formatSalaryRange
+} from '../utils/jobFormatters';
 
 const STATUS_FILTERS = [
   { id: 'all', label: 'All' },
@@ -158,7 +163,7 @@ const EmptyJobsState = ({ title, description, actionLabel, onAction }) => (
   </div>
 );
 
-const JobCard = ({ job, onViewApplicants, onEdit, onDelete, formatDate, formatSalary }) => (
+const JobCard = ({ job, onViewApplicants, onEdit, onDelete, formatDate }) => (
   <article className="group flex h-full flex-col rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 focus-within:ring-offset-white">
     <div className="mb-4 flex items-start justify-between gap-3">
       <div className="min-w-0">
@@ -190,14 +195,32 @@ const JobCard = ({ job, onViewApplicants, onEdit, onDelete, formatDate, formatSa
           {job.category}
         </span>
       )}
+      {job.workplaceType && (
+        <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-[11px] font-medium text-blue-700">
+          {WORKPLACE_TYPE_LABELS[job.workplaceType] || job.workplaceType}
+        </span>
+      )}
+      {job.experienceLevel && (
+        <span className="inline-flex items-center rounded-full bg-purple-50 px-3 py-1 text-[11px] font-medium text-purple-700">
+          {EXPERIENCE_LEVEL_LABELS[job.experienceLevel] || job.experienceLevel}
+        </span>
+      )}
+      {job.isUrgent && (
+        <span className="inline-flex items-center rounded-full bg-rose-50 px-3 py-1 text-[11px] font-medium text-rose-700">
+          Urgent
+        </span>
+      )}
     </div>
 
     <div className="mb-4 space-y-1">
       <p className="truncate text-sm text-gray-600">{job.location}</p>
       <p className="text-sm font-semibold text-green-600">
-        {formatSalary(job.salary)}
+        {formatSalaryRange(job)}
         <span className="text-xs font-normal text-gray-500"> / year</span>
       </p>
+      {Array.isArray(job.skills) && job.skills.length > 0 && (
+        <p className="truncate text-xs text-gray-500">{job.skills.slice(0, 4).join(', ')}</p>
+      )}
       <p className="text-xs text-gray-400">Posted on {formatDate(job.createdAt)}</p>
     </div>
 
@@ -411,14 +434,6 @@ const MyJobs = () => {
     });
   };
 
-  const formatSalary = (salary) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0
-    }).format(salary);
-  };
-
   const allJobs = Array.isArray(employerJobs) ? employerJobs : [];
 
   const statusCounts = useMemo(() => {
@@ -494,7 +509,6 @@ const MyJobs = () => {
               key={job._id}
               job={job}
               formatDate={formatDate}
-              formatSalary={formatSalary}
               onViewApplicants={() => navigate(`/job-applicants/${job._id}`)}
               onEdit={() => openEditModal(job)}
               onDelete={() => openDeleteDialog(job)}

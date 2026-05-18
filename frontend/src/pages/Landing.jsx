@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Briefcase, Users, TrendingUp, Search, MapPin, Building, CheckCircle } from 'lucide-react';
 import jobService from '../services/jobService';
+import { formatSalaryRange } from '../utils/jobFormatters';
 
 function Landing() {
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -148,7 +149,7 @@ function Landing() {
               {featuredJobs.slice(0, 6).map((job) => (
                 <Link
                   key={job._id}
-                  to="/jobs"
+                  to={`/jobs/${job._id}`}
                   className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200 p-6"
                 >
                   <div className="flex items-start gap-4 mb-4">
@@ -157,7 +158,7 @@ function Landing() {
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900 mb-1">{job.title}</h3>
-                      <p className="text-sm text-gray-600">{job.company?.name || 'Company'}</p>
+                      <p className="text-sm text-gray-600">{job.company || 'Company'}</p>
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -171,7 +172,7 @@ function Landing() {
                     </div>
                     {job.salary && (
                       <div className="text-sm font-medium text-green-600">
-                        ${job.salary.toLocaleString()}
+                        {formatSalaryRange(job)}
                       </div>
                     )}
                   </div>

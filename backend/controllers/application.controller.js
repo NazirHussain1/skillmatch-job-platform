@@ -17,6 +17,12 @@ const createApplication = asyncHandler(async (req, res) => {
       ApiResponse.error('Job not found', 404)
     );
   }
+
+  if (job.status !== 'active') {
+    return res.status(400).json(
+      ApiResponse.error('Applications are only open for active jobs', 400)
+    );
+  }
   
   // Check if already applied
   const existingApplication = await Application.findOne({

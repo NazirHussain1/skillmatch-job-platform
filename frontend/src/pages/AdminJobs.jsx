@@ -5,6 +5,7 @@ import { Trash2, CheckCircle, XCircle, Filter, Building2, MapPin, DollarSign } f
 import ConfirmDialog from '../components/ConfirmDialog';
 import SkeletonLoader from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
+import { formatSalaryRange } from '../utils/jobFormatters';
 
 function AdminJobs() {
   const [jobs, setJobs] = useState([]);
@@ -171,9 +172,19 @@ function AdminJobs() {
                     </div>
                     <div className="flex items-center gap-2">
                       <DollarSign className="w-4 h-4" />
-                      <span className="font-semibold text-green-600">${job.salary?.toLocaleString()}/year</span>
+                      <span className="font-semibold text-green-600">{formatSalaryRange(job)}/year</span>
                     </div>
                   </div>
+
+                  {Array.isArray(job.skills) && job.skills.length > 0 && (
+                    <div className="mb-3 flex flex-wrap gap-1.5">
+                      {job.skills.slice(0, 5).map((skill) => (
+                        <span key={skill} className="rounded-md bg-gray-50 px-2 py-1 text-xs text-gray-700">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  )}
 
                   {job.employer && (
                     <p className="text-sm text-gray-500">

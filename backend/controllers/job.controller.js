@@ -2,15 +2,100 @@ const asyncHandler = require('../utils/asyncHandler');
 const ApiResponse = require('../utils/ApiResponse');
 const Job = require('../models/Job.model');
 
+const normalizeList = (value) => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item) => String(item || '').trim())
+    .filter(Boolean);
+};
+
+const normalizeJobPayload = (payload) => {
+  const normalizedPayload = {
+    ...payload
+  };
+
+  if (payload.salaryMin !== undefined && payload.salaryMin !== '') {
+    normalizedPayload.salaryMin = Number(payload.salaryMin);
+  }
+
+  if (payload.salaryMax !== undefined && payload.salaryMax !== '') {
+    normalizedPayload.salaryMax = Number(payload.salaryMax);
+  }
+
+  if (payload.salary !== undefined && payload.salary !== '') {
+    normalizedPayload.salary = Number(payload.salary);
+  } else if (normalizedPayload.salaryMax !== undefined) {
+    normalizedPayload.salary = normalizedPayload.salaryMax;
+  } else if (normalizedPayload.salaryMin !== undefined) {
+    normalizedPayload.salary = normalizedPayload.salaryMin;
+  }
+
+  if (payload.skills !== undefined) {
+    normalizedPayload.skills = normalizeList(payload.skills);
+  }
+
+  if (payload.benefits !== undefined) {
+    normalizedPayload.benefits = normalizeList(payload.benefits);
+  }
+
+  if (payload.applicationDeadline === '') {
+    normalizedPayload.applicationDeadline = undefined;
+  }
+
+  if (payload.isUrgent !== undefined) {
+    normalizedPayload.isUrgent = payload.isUrgent === true || payload.isUrgent === 'true';
+  }
+
+  return normalizedPayload;
+};
+
+const canManageEmployerJobs = (user, employerId) => {
+  if (!user) {
+    return false;
+  }
+
+  return user.role === 'admin' || (
+    user.role === 'employer' &&
+    employerId &&
+    user._id.toString() === employerId.toString()
+  );
+};
+
+const canViewPrivateJob = (user, job) => {
+  if (job.status === 'active') {
+    return true;
+  }
+
+  return canManageEmployerJobs(user, job.employer);
+};
+
 // @desc    Get all jobs
 // @route   GET /api/jobs
 // @access  Public
 const getJobs = asyncHandler(async (req, res) => {
-  const { keyword, location, salary, category, jobType, status, page = 1, limit = 10, employer } = req.query;
+  const {
+    keyword,
+    location,
+    salary,
+    category,
+    jobType,
+    workplaceType,
+    experienceLevel,
+    skill,
+    status,
+    page = 1,
+    limit = 10,
+    employer
+  } = req.query;
   
   // Build filter object
   const filter = {};
   
+  const canViewEmployerPrivateJobs = canManageEmployerJobs(req.user, employer);
+
   // Filter by employer if provided
   if (employer) {
     filter.employer = employer;
@@ -22,9 +107,18 @@ const getJobs = asyncHandler(async (req, res) => {
         ApiResponse.error('Invalid status', 400)
       );
     }
+    if (status !== 'active' && !canViewEmployerPrivateJobs) {
+      return res.status(403).json(
+        ApiResponse.error('Not authorized to view jobs with this status', 403)
+      );
+    }
+
     filter.status = status;
   } else if (!employer) {
     // Public jobs listing only shows moderated/approved jobs.
+    filter.status = 'active';
+  } else if (!canViewEmployerPrivateJobs) {
+    // Public company/employer listings must not expose pending, rejected, or closed jobs.
     filter.status = 'active';
   }
   
@@ -50,6 +144,18 @@ const getJobs = asyncHandler(async (req, res) => {
   // Job Type filter
   if (jobType) {
     filter.jobType = jobType;
+  }
+
+  if (workplaceType) {
+    filter.workplaceType = workplaceType;
+  }
+
+  if (experienceLevel) {
+    filter.experienceLevel = experienceLevel;
+  }
+
+  if (skill) {
+    filter.skills = { $regex: skill, $options: 'i' };
   }
   
   // Category filter
@@ -98,6 +204,12 @@ const getJob = asyncHandler(async (req, res) => {
       ApiResponse.error('Job not found', 404)
     );
   }
+
+  if (!canViewPrivateJob(req.user, job)) {
+    return res.status(404).json(
+      ApiResponse.error('Job not found', 404)
+    );
+  }
   
   return res.status(200).json(
     ApiResponse.success('Job retrieved successfully', job)
@@ -109,7 +221,7 @@ const getJob = asyncHandler(async (req, res) => {
 // @access  Private (Employer only)
 const createJob = asyncHandler(async (req, res) => {
   const job = await Job.create({
-    ...req.body,
+    ...normalizeJobPayload(req.body),
     employer: req.user._id
   });
   
@@ -139,7 +251,7 @@ const updateJob = asyncHandler(async (req, res) => {
   
   job = await Job.findByIdAndUpdate(
     req.params.id,
-    req.body,
+    normalizeJobPayload(req.body),
     { new: true, runValidators: true }
   );
   

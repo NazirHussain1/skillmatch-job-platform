@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-hot-toast';
 import { getSavedJobs, unsaveJob } from '../features/user/userSlice';
 import { MapPin, DollarSign, Bookmark, BookmarkCheck } from 'lucide-react';
+import { formatSalaryRange } from '../utils/jobFormatters';
 
 function SavedJobs() {
   const dispatch = useDispatch();
@@ -72,11 +74,28 @@ function SavedJobs() {
                 </div>
                 <div className="flex items-center gap-2 text-gray-600">
                   <DollarSign className="w-4 h-4" />
-                  <span className="text-sm">${job.salary?.toLocaleString()}</span>
+                  <span className="text-sm">{formatSalaryRange(job)}</span>
                 </div>
               </div>
+
+              {Array.isArray(job.skills) && job.skills.length > 0 && (
+                <div className="mb-4 flex flex-wrap gap-1.5">
+                  {job.skills.slice(0, 4).map((skill) => (
+                    <span key={skill} className="rounded-md bg-gray-50 px-2 py-1 text-xs text-gray-700">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              )}
               
               <p className="text-gray-600 text-sm mb-4 line-clamp-3">{job.description}</p>
+
+              <Link
+                to={`/jobs/${job._id}`}
+                className="btn-outline mb-4 w-full px-3 py-2 text-sm"
+              >
+                View Details
+              </Link>
               
               {job.employer && (
                 <p className="text-xs text-gray-500">

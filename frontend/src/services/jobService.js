@@ -10,6 +10,9 @@ const getJobs = async (filters = {}) => {
   if (filters.salary) params.append('salary', filters.salary);
   if (filters.category) params.append('category', filters.category);
   if (filters.jobType) params.append('jobType', filters.jobType);
+  if (filters.workplaceType) params.append('workplaceType', filters.workplaceType);
+  if (filters.experienceLevel) params.append('experienceLevel', filters.experienceLevel);
+  if (filters.skill) params.append('skill', filters.skill);
   if (filters.status) params.append('status', filters.status);
   if (filters.employer) params.append('employer', filters.employer);
   if (filters.page) params.append('page', filters.page);

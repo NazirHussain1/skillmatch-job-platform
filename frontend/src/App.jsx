@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { Toaster } from 'react-hot-toast';
 import useAuthPersist from './hooks/useAuthPersist';
 import LoadingSpinner from './components/LoadingSpinner';
@@ -23,6 +24,8 @@ const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Jobs = lazy(() => import('./pages/Jobs'));
+const JobDetails = lazy(() => import('./pages/JobDetails'));
+const CompanyDetails = lazy(() => import('./pages/CompanyDetails'));
 const Applications = lazy(() => import('./pages/Applications'));
 const Profile = lazy(() => import('./pages/Profile'));
 const MyJobs = lazy(() => import('./pages/MyJobs'));
@@ -32,6 +35,48 @@ const AdminUsers = lazy(() => import('./pages/AdminUsers'));
 const AdminJobs = lazy(() => import('./pages/AdminJobs'));
 const SavedJobs = lazy(() => import('./pages/SavedJobs'));
 const Chat = lazy(() => import('./pages/Chat'));
+
+const JobsRoute = () => {
+  const { user } = useSelector((state) => state.auth);
+
+  if (!user) {
+    return <Jobs />;
+  }
+
+  return (
+    <MainLayout>
+      <Jobs />
+    </MainLayout>
+  );
+};
+
+const JobDetailsRoute = () => {
+  const { user } = useSelector((state) => state.auth);
+
+  if (!user) {
+    return <JobDetails />;
+  }
+
+  return (
+    <MainLayout>
+      <JobDetails />
+    </MainLayout>
+  );
+};
+
+const CompanyDetailsRoute = () => {
+  const { user } = useSelector((state) => state.auth);
+
+  if (!user) {
+    return <CompanyDetails />;
+  }
+
+  return (
+    <MainLayout>
+      <CompanyDetails />
+    </MainLayout>
+  );
+};
 
 function App() {
   useAuthPersist();
@@ -118,13 +163,17 @@ function App() {
           
           <Route 
             path="/jobs" 
-            element={
-              <ProtectedRoute>
-                <MainLayout>
-                  <Jobs />
-                </MainLayout>
-              </ProtectedRoute>
-            } 
+            element={<JobsRoute />} 
+          />
+
+          <Route
+            path="/jobs/:id"
+            element={<JobDetailsRoute />}
+          />
+
+          <Route
+            path="/companies/:id"
+            element={<CompanyDetailsRoute />}
           />
           
           <Route 

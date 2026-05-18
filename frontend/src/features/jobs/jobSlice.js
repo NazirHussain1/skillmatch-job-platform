@@ -110,6 +110,8 @@ export const jobSlice = createSlice({
     builder
       .addCase(getJobs.pending, (state) => {
         state.isLoading = true;
+        state.isError = false;
+        state.message = '';
       })
       .addCase(getJobs.fulfilled, (state, action) => {
         state.isLoading = false;
@@ -129,10 +131,13 @@ export const jobSlice = createSlice({
       })
       .addCase(getJob.pending, (state) => {
         state.isLoading = true;
+        state.isError = false;
+        state.message = '';
       })
       .addCase(getJob.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
+        state.isError = false;
         state.job = action.payload;
       })
       .addCase(getJob.rejected, (state, action) => {

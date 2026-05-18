@@ -40,6 +40,28 @@ const protect = asyncHandler(async (req, res, next) => {
   }
 });
 
+// @desc    Attach authenticated user when a valid bearer token is present
+const optionalProtect = asyncHandler(async (req, res, next) => {
+  let token;
+
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
+  if (!token) {
+    return next();
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = await User.findById(decoded.id).select('-password');
+  } catch {
+    req.user = null;
+  }
+
+  return next();
+});
+
 // @desc    Authorize specific roles
 const authorize = (...roles) => {
   return (req, res, next) => {
@@ -55,4 +77,4 @@ const authorize = (...roles) => {
   };
 };
 
-module.exports = { protect, authorize };
+module.exports = { protect, optionalProtect, authorize };
