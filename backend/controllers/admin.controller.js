@@ -3,6 +3,8 @@ const ApiResponse = require('../utils/ApiResponse');
 const User = require('../models/User.model');
 const Job = require('../models/Job.model');
 const Application = require('../models/Application.model');
+const AuditLog = require('../models/AuditLog.model');
+const { logAuditEvent } = require('../utils/auditLogger');
 
 // @desc    Get all users
 // @route   GET /api/admin/users
@@ -70,6 +72,17 @@ const deleteUser = asyncHandler(async (req, res) => {
   }
   
   await user.deleteOne();
+
+  await logAuditEvent({
+    req,
+    action: 'user.delete',
+    targetType: 'User',
+    targetId: user._id,
+    metadata: {
+      deletedUserEmail: user.email,
+      deletedUserRole: user.role
+    }
+  });
   
   return res.status(200).json(
     ApiResponse.success('User deleted successfully', { id: req.params.id })
@@ -133,6 +146,18 @@ const deleteJobAdmin = asyncHandler(async (req, res) => {
   await Application.deleteMany({ job: job._id });
   
   await job.deleteOne();
+
+  await logAuditEvent({
+    req,
+    action: 'job.delete',
+    targetType: 'Job',
+    targetId: job._id,
+    metadata: {
+      title: job.title,
+      company: job.company,
+      previousStatus: job.status
+    }
+  });
   
   return res.status(200).json(
     ApiResponse.success('Job deleted successfully', { id: req.params.id })
@@ -271,8 +296,21 @@ const updateUserRole = asyncHandler(async (req, res) => {
     );
   }
   
+  const previousRole = user.role;
   user.role = role;
   await user.save();
+
+  await logAuditEvent({
+    req,
+    action: 'user.role_update',
+    targetType: 'User',
+    targetId: user._id,
+    metadata: {
+      previousRole,
+      nextRole: role,
+      email: user.email
+    }
+  });
   
   return res.status(200).json(
     ApiResponse.success('User role updated successfully', user)
@@ -291,8 +329,22 @@ const approveJob = asyncHandler(async (req, res) => {
     );
   }
   
+  const previousStatus = job.status;
   job.status = 'active';
   await job.save();
+
+  await logAuditEvent({
+    req,
+    action: 'job.approve',
+    targetType: 'Job',
+    targetId: job._id,
+    metadata: {
+      title: job.title,
+      company: job.company,
+      previousStatus,
+      nextStatus: job.status
+    }
+  });
   
   return res.status(200).json(
     ApiResponse.success('Job approved successfully', job)
@@ -311,8 +363,22 @@ const rejectJob = asyncHandler(async (req, res) => {
     );
   }
   
+  const previousStatus = job.status;
   job.status = 'rejected';
   await job.save();
+
+  await logAuditEvent({
+    req,
+    action: 'job.reject',
+    targetType: 'Job',
+    targetId: job._id,
+    metadata: {
+      title: job.title,
+      company: job.company,
+      previousStatus,
+      nextStatus: job.status
+    }
+  });
   
   return res.status(200).json(
     ApiResponse.success('Job rejected successfully', job)
@@ -357,6 +423,45 @@ const getJobsByStatus = asyncHandler(async (req, res) => {
   );
 });
 
+// @desc    Get audit logs
+// @route   GET /api/admin/audit-logs
+// @access  Private (Admin only)
+const getAuditLogs = asyncHandler(async (req, res) => {
+  const { action, targetType, page = 1, limit = 20 } = req.query;
+  const filter = {};
+
+  if (action) {
+    filter.action = action;
+  }
+
+  if (targetType) {
+    filter.targetType = targetType;
+  }
+
+  const pageNum = Math.max(1, parseInt(page, 10) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+  const skip = (pageNum - 1) * limitNum;
+
+  const total = await AuditLog.countDocuments(filter);
+  const logs = await AuditLog.find(filter)
+    .populate('actor', 'name email role')
+    .sort({ createdAt: -1 })
+    .limit(limitNum)
+    .skip(skip);
+
+  return res.status(200).json(
+    ApiResponse.success('Audit logs retrieved successfully', {
+      logs,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum)
+      }
+    })
+  );
+});
+
 module.exports = {
   getAllUsers,
   deleteUser,
@@ -366,5 +471,6 @@ module.exports = {
   updateUserRole,
   approveJob,
   rejectJob,
-  getJobsByStatus
+  getJobsByStatus,
+  getAuditLogs
 };

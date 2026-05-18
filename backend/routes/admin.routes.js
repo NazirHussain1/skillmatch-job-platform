@@ -8,7 +8,8 @@ const {
   updateUserRole,
   approveJob,
   rejectJob,
-  getJobsByStatus
+  getJobsByStatus,
+  getAuditLogs
 } = require('../controllers/admin.controller');
 const { protect, authorize } = require('../middleware/auth.middleware');
 
@@ -32,5 +33,6 @@ router.put('/jobs/:id/reject', rejectJob);
 
 // Analytics
 router.get('/analytics', getAnalytics);
+router.get('/audit-logs', getAuditLogs);
 
 module.exports = router;

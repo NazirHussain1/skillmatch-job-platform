@@ -54,6 +54,21 @@ const getAnalytics = async () => {
   return response.data.data;
 };
 
+// Get audit logs
+const getAuditLogs = async (filters = {}) => {
+  const params = new URLSearchParams();
+
+  if (filters.action) params.append('action', filters.action);
+  if (filters.targetType) params.append('targetType', filters.targetType);
+  if (filters.page) params.append('page', filters.page);
+  if (filters.limit) params.append('limit', filters.limit);
+
+  const queryString = params.toString();
+  const url = queryString ? `/admin/audit-logs?${queryString}` : '/admin/audit-logs';
+  const response = await api.get(url);
+  return response.data.data;
+};
+
 // Get jobs by status
 const getJobsByStatus = async (status, filters = {}) => {
   const params = new URLSearchParams();
@@ -87,6 +102,7 @@ const adminService = {
   getAllJobs,
   deleteJob,
   getAnalytics,
+  getAuditLogs,
   getJobsByStatus,
   approveJob,
   rejectJob
