@@ -3,6 +3,17 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { getApplications } from '../features/applications/applicationSlice';
 import { FileText, MapPin, DollarSign, Calendar, MessageCircle } from 'lucide-react';
+import { formatSalaryRange } from '../utils/jobFormatters';
+
+const STATUS_LABELS = {
+  pending: 'Pending',
+  shortlisted: 'Shortlisted',
+  interview: 'Interview',
+  offer: 'Offer',
+  hired: 'Hired',
+  accepted: 'Accepted',
+  rejected: 'Rejected'
+};
 
 function Applications() {
   const dispatch = useDispatch();
@@ -16,7 +27,13 @@ function Applications() {
   const getStatusColor = (status) => {
     switch (status) {
       case 'accepted':
+      case 'offer':
+      case 'hired':
         return 'bg-green-100 text-green-700';
+      case 'shortlisted':
+        return 'bg-blue-100 text-blue-700';
+      case 'interview':
+        return 'bg-purple-100 text-purple-700';
       case 'rejected':
         return 'bg-red-100 text-red-700';
       default:
@@ -77,7 +94,7 @@ function Applications() {
                     </div>
                     <div className="flex items-center gap-2">
                       <DollarSign className="w-4 h-4" />
-                      <span>${app.job?.salary?.toLocaleString()}</span>
+                      <span>{formatSalaryRange(app.job)}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
@@ -87,8 +104,13 @@ function Applications() {
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(app.status)}`}>
-                    {app.status}
+                    {STATUS_LABELS[app.status] || app.status}
                   </span>
+                  {app.interviewDate && (
+                    <span className="text-xs font-medium text-purple-700">
+                      Interview: {new Date(app.interviewDate).toLocaleDateString()}
+                    </span>
+                  )}
                   <button
                     onClick={() => navigate(`/chat?application=${app._id}`)}
                     className="btn-secondary flex items-center gap-2"

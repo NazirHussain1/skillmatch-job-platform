@@ -4,6 +4,16 @@ const Application = require('../models/Application.model');
 const Job = require('../models/Job.model');
 const Notification = require('../models/Notification.model');
 
+const STATUS_MESSAGES = {
+  pending: 'Your application has been moved back to pending review.',
+  shortlisted: 'Your application has been shortlisted.',
+  interview: 'You have been moved to the interview stage.',
+  offer: 'You have received an offer update.',
+  hired: 'You have been marked as hired.',
+  accepted: 'Your application has been accepted.',
+  rejected: 'Your application has been rejected.'
+};
+
 // @desc    Create application
 // @route   POST /api/applications/:jobId
 // @access  Private (Jobseeker only)
@@ -39,7 +49,11 @@ const createApplication = asyncHandler(async (req, res) => {
   // Create application
   const application = await Application.create({
     job: jobId,
-    applicant: req.user._id
+    applicant: req.user._id,
+    statusHistory: [{
+      status: 'pending',
+      note: 'Application submitted'
+    }]
   });
 
   if (job.employer.toString() !== req.user._id.toString()) {
@@ -52,7 +66,7 @@ const createApplication = asyncHandler(async (req, res) => {
   
   // Populate and return
   const populatedApplication = await Application.findById(application._id)
-    .populate('job', 'title company location salary')
+    .populate('job', 'title company location salary salaryMin salaryMax jobType category workplaceType experienceLevel')
     .populate('applicant', 'name email resume');
   
   return res.status(201).json(
@@ -65,7 +79,7 @@ const createApplication = asyncHandler(async (req, res) => {
 // @access  Private
 const getMyApplications = asyncHandler(async (req, res) => {
   const applications = await Application.find({ applicant: req.user._id })
-    .populate('job', 'title company location salary')
+    .populate('job', 'title company location salary salaryMin salaryMax jobType category workplaceType experienceLevel')
     .sort({ createdAt: -1 });
   
   return res.status(200).json(
@@ -108,7 +122,7 @@ const getJobApplications = asyncHandler(async (req, res) => {
 // @route   PUT /api/applications/:id
 // @access  Private (Employer only)
 const updateApplicationStatus = asyncHandler(async (req, res) => {
-  const { status } = req.body;
+  const { status, employerNotes, interviewDate, historyNote } = req.body;
   
   // Find application and populate job
   const application = await Application.findById(req.params.id)
@@ -129,29 +143,37 @@ const updateApplicationStatus = asyncHandler(async (req, res) => {
   
   const previousStatus = application.status;
 
-  // Update status
   application.status = status;
+
+  if (employerNotes !== undefined) {
+    application.employerNotes = employerNotes;
+  }
+
+  if (interviewDate !== undefined) {
+    application.interviewDate = interviewDate ? new Date(interviewDate) : undefined;
+  }
+
+  if (status !== previousStatus || historyNote) {
+    application.statusHistory.push({
+      status,
+      note: historyNote || '',
+      changedAt: new Date()
+    });
+  }
+
   await application.save();
 
   if (status !== previousStatus) {
-    if (status === 'accepted') {
-      await Notification.create({
-        userId: application.applicant,
-        type: 'application_accepted',
-        message: `Your application for "${application.job.title}" has been accepted.`
-      });
-    } else if (status === 'rejected') {
-      await Notification.create({
-        userId: application.applicant,
-        type: 'application_rejected',
-        message: `Your application for "${application.job.title}" has been rejected.`
-      });
-    }
+    await Notification.create({
+      userId: application.applicant,
+      type: status === 'rejected' ? 'application_rejected' : 'application_accepted',
+      message: `${STATUS_MESSAGES[status] || 'Your application status has been updated'} Job: "${application.job.title}".`
+    });
   }
   
   // Return updated application with populated fields
   const updatedApplication = await Application.findById(application._id)
-    .populate('job', 'title company location salary')
+    .populate('job', 'title company location salary salaryMin salaryMax jobType category workplaceType experienceLevel')
     .populate('applicant', 'name email resume');
   
   return res.status(200).json(

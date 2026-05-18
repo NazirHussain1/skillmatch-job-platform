@@ -19,8 +19,9 @@ const getJobApplications = async (jobId) => {
 };
 
 // Update application status (employer)
-const updateApplicationStatus = async (id, status) => {
-  const response = await api.put(`/applications/${id}`, { status });
+const updateApplicationStatus = async (id, payload) => {
+  const body = typeof payload === 'string' ? { status: payload } : payload;
+  const response = await api.put(`/applications/${id}`, body);
   return response.data.data;
 };
 

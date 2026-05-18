@@ -1,27 +1,74 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Check, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  CalendarClock,
+  FileText,
+  Mail,
+  MessageSquare,
+  Save,
+  UserRound
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getJobApplications, updateApplicationStatus, reset } from '../features/applications/applicationSlice';
 import { getJob } from '../features/jobs/jobSlice';
 import LoadingSpinner from '../components/LoadingSpinner';
 
+const PIPELINE_STATUSES = [
+  { id: 'pending', label: 'Pending', badge: 'bg-amber-50 text-amber-700 border-amber-200' },
+  { id: 'shortlisted', label: 'Shortlisted', badge: 'bg-blue-50 text-blue-700 border-blue-200' },
+  { id: 'interview', label: 'Interview', badge: 'bg-purple-50 text-purple-700 border-purple-200' },
+  { id: 'offer', label: 'Offer', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  { id: 'hired', label: 'Hired', badge: 'bg-green-50 text-green-700 border-green-200' },
+  { id: 'accepted', label: 'Accepted', badge: 'bg-green-50 text-green-700 border-green-200' },
+  { id: 'rejected', label: 'Rejected', badge: 'bg-rose-50 text-rose-700 border-rose-200' }
+];
+
+const getStatusConfig = (status) =>
+  PIPELINE_STATUSES.find((item) => item.id === status) || PIPELINE_STATUSES[0];
+
+const formatDate = (dateString) => {
+  if (!dateString) return 'Not set';
+
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
+const formatDateTimeLocal = (dateString) => {
+  if (!dateString) return '';
+
+  const date = new Date(dateString);
+  const offsetMs = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+};
+
+const createDraft = (application) => ({
+  status: application.status || 'pending',
+  employerNotes: application.employerNotes || '',
+  interviewDate: formatDateTimeLocal(application.interviewDate),
+  historyNote: ''
+});
+
 const JobApplicants = () => {
   const { jobId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  
-  const { jobApplications, isLoading, isError, message } = useSelector(state => state.applications);
-  const { job } = useSelector(state => state.jobs);
-  
+
+  const { jobApplications, isLoading, isError, message } = useSelector((state) => state.applications);
+  const { job } = useSelector((state) => state.jobs);
+
   const [statusFilter, setStatusFilter] = useState('all');
   const [updatingId, setUpdatingId] = useState(null);
+  const [drafts, setDrafts] = useState({});
 
   useEffect(() => {
     dispatch(getJob(jobId));
     dispatch(getJobApplications(jobId));
-    
+
     return () => {
       dispatch(reset());
     };
@@ -33,66 +80,89 @@ const JobApplicants = () => {
     }
   }, [isError, message]);
 
-  const handleUpdateStatus = async (applicationId, status) => {
-    setUpdatingId(applicationId);
+  useEffect(() => {
+    setDrafts((prev) => {
+      const next = { ...prev };
+
+      jobApplications.forEach((application) => {
+        if (!next[application._id]) {
+          next[application._id] = createDraft(application);
+        }
+      });
+
+      return next;
+    });
+  }, [jobApplications]);
+
+  const statusCounts = useMemo(() => {
+    const counts = { all: jobApplications.length };
+
+    PIPELINE_STATUSES.forEach((status) => {
+      counts[status.id] = jobApplications.filter((app) => app.status === status.id).length;
+    });
+
+    return counts;
+  }, [jobApplications]);
+
+  const filteredApplications = useMemo(() => {
+    if (statusFilter === 'all') {
+      return jobApplications;
+    }
+
+    return jobApplications.filter((application) => application.status === statusFilter);
+  }, [jobApplications, statusFilter]);
+
+  const updateDraft = (applicationId, field, value) => {
+    setDrafts((prev) => ({
+      ...prev,
+      [applicationId]: {
+        ...prev[applicationId],
+        [field]: value
+      }
+    }));
+  };
+
+  const handleSavePipeline = async (application) => {
+    const draft = drafts[application._id] || createDraft(application);
+
+    setUpdatingId(application._id);
     try {
-      await dispatch(updateApplicationStatus({ id: applicationId, status })).unwrap();
-      toast.success(`Application ${status}`);
+      const updated = await dispatch(updateApplicationStatus({
+        id: application._id,
+        status: draft.status,
+        employerNotes: draft.employerNotes,
+        interviewDate: draft.interviewDate,
+        historyNote: draft.historyNote
+      })).unwrap();
+
+      setDrafts((prev) => ({
+        ...prev,
+        [application._id]: createDraft(updated)
+      }));
+
+      toast.success('Application pipeline updated');
     } catch (error) {
-      toast.error(error || 'Failed to update application status');
+      toast.error(error || 'Failed to update application');
     } finally {
       setUpdatingId(null);
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  const filteredApplications = jobApplications.filter(app => {
-    if (statusFilter === 'all') return true;
-    return app.status === statusFilter;
-  });
-
-  const getStatusBadgeColor = (status) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'accepted':
-        return 'bg-green-100 text-green-800';
-      case 'rejected':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const statusCounts = {
-    all: jobApplications.length,
-    pending: jobApplications.filter(app => app.status === 'pending').length,
-    accepted: jobApplications.filter(app => app.status === 'accepted').length,
-    rejected: jobApplications.filter(app => app.status === 'rejected').length
-  };
-
   if (isLoading && jobApplications.length === 0) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <LoadingSpinner />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
+    <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-8">
         <button
+          type="button"
           onClick={() => navigate('/my-jobs')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+          className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900"
         >
           <ArrowLeft size={20} />
           Back to My Jobs
@@ -101,124 +171,181 @@ const JobApplicants = () => {
           {job ? job.title : 'Job Applicants'}
         </h1>
         {job && (
-          <div className="mt-2">
-            <p className="text-gray-600">
-              {job.company} | {job.location}
-            </p>
-            {/* Job Type and Category Badges */}
-            <div className="flex flex-wrap gap-2 mt-2">
-              {job.jobType && (
-                <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-700">
-                  {job.jobType === 'full-time' && 'Full Time'}
-                  {job.jobType === 'part-time' && 'Part Time'}
-                  {job.jobType === 'remote' && 'Remote'}
-                  {job.jobType === 'internship' && 'Internship'}
-                  {job.jobType === 'contract' && 'Contract'}
-                </span>
-              )}
-              {job.category && (
-                <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-700">
-                  {job.category}
-                </span>
-              )}
-            </div>
-          </div>
+          <p className="mt-2 text-gray-600">
+            {job.company} | {job.location}
+          </p>
         )}
       </div>
 
-      {/* Status Filter */}
-      <div className="mb-6 flex gap-2 flex-wrap">
-        {['all', 'pending', 'accepted', 'rejected'].map((status) => (
-          <button
-            key={status}
-            onClick={() => setStatusFilter(status)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              statusFilter === status
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            {status.charAt(0).toUpperCase() + status.slice(1)} ({statusCounts[status]})
-          </button>
-        ))}
-      </div>
+      <section className="mb-6 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+        <div className="mb-3 flex items-center gap-2">
+          <UserRound className="h-5 w-5 text-blue-600" aria-hidden="true" />
+          <h2 className="font-semibold text-gray-900">Hiring Pipeline</h2>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {[{ id: 'all', label: 'All' }, ...PIPELINE_STATUSES].map((status) => (
+            <button
+              key={status.id}
+              type="button"
+              onClick={() => setStatusFilter(status.id)}
+              className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+                statusFilter === status.id
+                  ? 'border-blue-600 bg-blue-600 text-white'
+                  : 'border-gray-200 bg-white text-gray-700 hover:border-blue-300 hover:text-blue-700'
+              }`}
+            >
+              {status.label} ({statusCounts[status.id] || 0})
+            </button>
+          ))}
+        </div>
+      </section>
 
-      {/* Empty State */}
       {filteredApplications.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="text-gray-400 mb-4">
-            <FileText size={64} className="mx-auto" />
-          </div>
-          <h2 className="text-2xl font-semibold text-gray-700 mb-2">
-            {statusFilter === 'all' 
-              ? 'No applications yet' 
-              : `No ${statusFilter} applications`}
+        <div className="rounded-2xl border border-dashed border-gray-200 bg-white py-16 text-center">
+          <FileText size={64} className="mx-auto mb-4 text-gray-300" />
+          <h2 className="mb-2 text-2xl font-semibold text-gray-800">
+            {statusFilter === 'all' ? 'No applications yet' : `No ${statusFilter} applications`}
           </h2>
           <p className="text-gray-500">
             {statusFilter === 'all'
-              ? 'Applications will appear here once jobseekers apply'
-              : `Try selecting a different status filter`}
+              ? 'Applications will appear here once jobseekers apply.'
+              : 'Try another pipeline filter.'}
           </p>
         </div>
       ) : (
-        /* Applicants List */
         <div className="space-y-4">
-          {filteredApplications.map((application) => (
-            <div key={application._id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900">
-                        {application.applicant?.name || 'Unknown Applicant'}
-                      </h3>
-                      <p className="text-gray-600">{application.applicant?.email}</p>
+          {filteredApplications.map((application) => {
+            const statusConfig = getStatusConfig(application.status);
+            const draft = drafts[application._id] || createDraft(application);
+            const isUpdating = updatingId === application._id;
+
+            return (
+              <article key={application._id} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+                <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
+                  <div>
+                    <div className="mb-4 flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="text-xl font-semibold text-gray-900">
+                          {application.applicant?.name || 'Unknown Applicant'}
+                        </h3>
+                        <p className="mt-1 flex items-center gap-2 text-gray-600">
+                          <Mail className="h-4 w-4" aria-hidden="true" />
+                          {application.applicant?.email}
+                        </p>
+                      </div>
+                      <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusConfig.badge}`}>
+                        {statusConfig.label}
+                      </span>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(application.status)}`}>
-                      {application.status.charAt(0).toUpperCase() + application.status.slice(1)}
-                    </span>
-                  </div>
-                  
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-500 mt-3">
-                    <span>Applied on {formatDate(application.createdAt)}</span>
-                    {application.applicant?.resume && (
-                      <a
-                        href={application.applicant.resume}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
-                      >
-                        <FileText size={16} />
-                        View Resume
-                      </a>
+
+                    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                      <span>Applied on {formatDate(application.createdAt)}</span>
+                      {application.interviewDate && (
+                        <span className="flex items-center gap-1 font-medium text-purple-700">
+                          <CalendarClock className="h-4 w-4" aria-hidden="true" />
+                          Interview: {formatDate(application.interviewDate)}
+                        </span>
+                      )}
+                      {application.applicant?.resume && (
+                        <a
+                          href={application.applicant.resume}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 font-medium text-blue-600 hover:text-blue-800"
+                        >
+                          <FileText size={16} />
+                          View Resume
+                        </a>
+                      )}
+                    </div>
+
+                    {application.employerNotes && (
+                      <div className="mt-4 rounded-xl bg-gray-50 p-4">
+                        <p className="mb-1 flex items-center gap-2 text-sm font-semibold text-gray-900">
+                          <MessageSquare className="h-4 w-4" aria-hidden="true" />
+                          Employer notes
+                        </p>
+                        <p className="whitespace-pre-line text-sm leading-6 text-gray-700">
+                          {application.employerNotes}
+                        </p>
+                      </div>
                     )}
                   </div>
-                </div>
 
-                {/* Action Buttons */}
-                {application.status === 'pending' && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleUpdateStatus(application._id, 'accepted')}
-                      disabled={updatingId === application._id}
-                      className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Check size={16} />
-                      Accept
-                    </button>
-                    <button
-                      onClick={() => handleUpdateStatus(application._id, 'rejected')}
-                      disabled={updatingId === application._id}
-                      className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <X size={16} />
-                      Reject
-                    </button>
+                  <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                    <div className="grid gap-3">
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                          Pipeline Stage
+                        </label>
+                        <select
+                          value={draft.status}
+                          onChange={(event) => updateDraft(application._id, 'status', event.target.value)}
+                          className="input-field"
+                        >
+                          {PIPELINE_STATUSES.map((status) => (
+                            <option key={status.id} value={status.id}>
+                              {status.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                          Interview Date
+                        </label>
+                        <input
+                          type="datetime-local"
+                          value={draft.interviewDate}
+                          onChange={(event) => updateDraft(application._id, 'interviewDate', event.target.value)}
+                          className="input-field"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                          Private Notes
+                        </label>
+                        <textarea
+                          value={draft.employerNotes}
+                          onChange={(event) => updateDraft(application._id, 'employerNotes', event.target.value)}
+                          rows={4}
+                          maxLength={2000}
+                          className="input-field"
+                          placeholder="Add screening notes, salary expectations, or follow-up context..."
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">
+                          Update Note
+                        </label>
+                        <input
+                          type="text"
+                          value={draft.historyNote}
+                          onChange={(event) => updateDraft(application._id, 'historyNote', event.target.value)}
+                          maxLength={500}
+                          className="input-field"
+                          placeholder="Optional note for this stage change"
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleSavePipeline(application)}
+                        disabled={isUpdating}
+                        className="btn-primary w-full"
+                      >
+                        <Save className="h-4 w-4" aria-hidden="true" />
+                        {isUpdating ? 'Saving...' : 'Save Pipeline'}
+                      </button>
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
-          ))}
+                </div>
+              </article>
+            );
+          })}
         </div>
       )}
     </div>
@@ -226,4 +353,3 @@ const JobApplicants = () => {
 };
 
 export default JobApplicants;
-

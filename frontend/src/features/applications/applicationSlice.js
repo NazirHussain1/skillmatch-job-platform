@@ -52,9 +52,14 @@ export const getJobApplications = createAsyncThunk(
 // Update application status (employer)
 export const updateApplicationStatus = createAsyncThunk(
   'applications/updateStatus',
-  async ({ id, status }, thunkAPI) => {
+  async ({ id, status, employerNotes, interviewDate, historyNote }, thunkAPI) => {
     try {
-      return await applicationService.updateApplicationStatus(id, status);
+      return await applicationService.updateApplicationStatus(id, {
+        status,
+        employerNotes,
+        interviewDate,
+        historyNote
+      });
     } catch (error) {
       const message = error.response?.data?.message || error.message;
       return thunkAPI.rejectWithValue(message);
