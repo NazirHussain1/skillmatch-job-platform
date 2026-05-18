@@ -69,6 +69,16 @@ const run = async () => {
     }
   });
 
+  await assertResponse({
+    name: 'backend readiness',
+    url: `${backendUrl}/api/ready`,
+    validate: (body) => {
+      if (!body || body.ready !== true || body.status !== 'ready') {
+        throw new Error('backend readiness failed: API is running but not production-ready');
+      }
+    }
+  });
+
   const jobsBody = await assertResponse({
     name: 'public jobs API',
     url: `${backendUrl}/api/jobs?limit=1`,

@@ -29,17 +29,10 @@ const notificationRoutes = require('./routes/notification.routes');
 // Import middleware
 const { errorHandler, notFound } = require('./middleware/error.middleware');
 const sanitizeInputs = require('./middleware/sanitize.middleware');
+const { REQUIRED_ENV_VARS, getReadiness } = require('./utils/readiness');
 
 // Environment variables validation
-const requiredEnvVars = [
-  'MONGODB_URI',
-  'JWT_SECRET',
-  'CLOUDINARY_CLOUD_NAME',
-  'CLOUDINARY_API_KEY',
-  'CLOUDINARY_API_SECRET'
-];
-
-const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+const missingEnvVars = REQUIRED_ENV_VARS.filter(varName => !process.env[varName]);
 if (missingEnvVars.length > 0) {
   if (process.env.NODE_ENV === 'production') {
     throw new Error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
@@ -161,6 +154,11 @@ app.get('/api/health', (req, res) => {
     environment: process.env.NODE_ENV || 'development',
     timestamp: new Date().toISOString()
   });
+});
+
+app.get('/api/ready', (req, res) => {
+  const readiness = getReadiness();
+  res.status(readiness.ready ? 200 : 503).json(readiness);
 });
 
 app.use('/api/auth', authRoutes);

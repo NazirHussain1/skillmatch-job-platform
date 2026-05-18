@@ -155,10 +155,21 @@ Backend-only check:
 npm run smoke -- --backend=https://your-backend-domain.com
 ```
 
+The smoke test checks:
+
+```text
+/api/health
+/api/ready
+/api/jobs?limit=1
+/api/jobs/:id when at least one active job exists
+Frontend SPA fallback routes when FRONTEND_URL is provided
+```
+
 Manual workflow checks:
 
 ```text
 GET https://your-backend-domain.com/api/health
+GET https://your-backend-domain.com/api/ready
 Open https://your-frontend-domain.com
 Open https://your-frontend-domain.com/jobs
 Open a direct job details URL: /jobs/:id
