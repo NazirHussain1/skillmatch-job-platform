@@ -107,9 +107,12 @@ function Register() {
                   className="input pl-10"
                   placeholder="********"
                   required
-                  minLength={6}
+                  minLength={8}
                 />
               </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Use 8+ characters with uppercase, lowercase, number, and special character.
+              </p>
             </div>
 
             <div>

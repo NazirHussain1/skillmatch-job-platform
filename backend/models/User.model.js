@@ -101,6 +101,13 @@ const userSchema = new mongoose.Schema({
   },
   resetPasswordExpire: {
     type: Date
+  },
+  loginAttempts: {
+    type: Number,
+    default: 0
+  },
+  lockUntil: {
+    type: Date
   }
 }, {
   timestamps: true

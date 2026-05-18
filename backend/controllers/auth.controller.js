@@ -5,6 +5,29 @@ const sendEmail = require('../utils/sendEmail');
 const User = require('../models/User.model');
 const crypto = require('crypto');
 
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCK_TIME_MS = 15 * 60 * 1000;
+
+const isAccountLocked = (user) => user.lockUntil && user.lockUntil > Date.now();
+
+const recordFailedLogin = async (user) => {
+  user.loginAttempts = (user.loginAttempts || 0) + 1;
+
+  if (user.loginAttempts >= MAX_LOGIN_ATTEMPTS) {
+    user.lockUntil = new Date(Date.now() + LOCK_TIME_MS);
+  }
+
+  await user.save({ validateBeforeSave: false });
+};
+
+const clearLoginLock = async (user) => {
+  if (user.loginAttempts || user.lockUntil) {
+    user.loginAttempts = 0;
+    user.lockUntil = undefined;
+    await user.save({ validateBeforeSave: false });
+  }
+};
+
 // @desc    Register user
 // @route   POST /api/auth/register
 // @access  Public
@@ -67,14 +90,23 @@ const login = asyncHandler(async (req, res) => {
     );
   }
 
+  if (isAccountLocked(user)) {
+    return res.status(423).json(
+      ApiResponse.error('Too many failed login attempts. Please try again later.', 423)
+    );
+  }
+
   // Check password
   const isPasswordMatch = await user.matchPassword(password);
   
   if (!isPasswordMatch) {
+    await recordFailedLogin(user);
     return res.status(401).json(
       ApiResponse.error('Invalid email or password', 401)
     );
   }
+
+  await clearLoginLock(user);
 
   return res.status(200).json(
     ApiResponse.success('Login successful', {

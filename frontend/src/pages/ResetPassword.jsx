@@ -35,8 +35,14 @@ function ResetPassword() {
       return;
     }
 
-    if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    if (
+      formData.password.length < 8 ||
+      !/[a-z]/.test(formData.password) ||
+      !/[A-Z]/.test(formData.password) ||
+      !/[0-9]/.test(formData.password) ||
+      !/[^A-Za-z0-9]/.test(formData.password)
+    ) {
+      toast.error('Use 8+ characters with uppercase, lowercase, number, and special character');
       return;
     }
 
@@ -117,7 +123,9 @@ function ResetPassword() {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">Must be at least 6 characters</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Use 8+ characters with uppercase, lowercase, number, and special character.
+              </p>
             </div>
 
             <div>
