@@ -169,6 +169,12 @@ Backend runs on `http://localhost:5000`.
 
 ## Production Build
 
+### Verify Before Deploy
+
+```bash
+npm run verify
+```
+
 ### Frontend Build
 
 ```bash
@@ -187,6 +193,12 @@ npm start
 ## Deployment Readiness Notes
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for host-specific Render, Railway, Fly.io, Vercel, and Netlify settings.
+
+After deployment, run:
+
+```bash
+npm run smoke -- --backend=https://your-backend-domain.com --frontend=https://your-frontend-domain.com
+```
 
 ### Backend (Render or Railway)
 

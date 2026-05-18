@@ -143,6 +143,20 @@ Environment: VITE_API_URL=https://your-backend-domain.com/api
 
 After deployment, verify these URLs and workflows:
 
+Automated public checks:
+
+```bash
+npm run smoke -- --backend=https://your-backend-domain.com --frontend=https://your-frontend-domain.com
+```
+
+Backend-only check:
+
+```bash
+npm run smoke -- --backend=https://your-backend-domain.com
+```
+
+Manual workflow checks:
+
 ```text
 GET https://your-backend-domain.com/api/health
 Open https://your-frontend-domain.com

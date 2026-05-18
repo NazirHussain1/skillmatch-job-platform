@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
     "start": "concurrently \"npm start --prefix backend\" \"npm start --prefix frontend\"",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npm test --prefix backend",
+    "build": "npm run build --prefix frontend",
+    "verify": "npm test --prefix backend && npm run build --prefix frontend",
+    "smoke": "node scripts/smoke-test.js"
   },
   "repository": {
     "type": "git",
