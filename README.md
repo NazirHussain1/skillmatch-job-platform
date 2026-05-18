@@ -186,6 +186,8 @@ npm start
 
 ## Deployment Readiness Notes
 
+See [DEPLOYMENT.md](DEPLOYMENT.md) for host-specific Render, Railway, Fly.io, Vercel, and Netlify settings.
+
 ### Backend (Render or Railway)
 
 - Set all backend environment variables.

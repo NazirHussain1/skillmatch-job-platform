@@ -2,6 +2,10 @@
   "name": "skillmatch-frontend",
   "version": "1.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=18 <23",
+    "npm": ">=9"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
