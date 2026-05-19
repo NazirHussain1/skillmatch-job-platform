@@ -5,6 +5,7 @@ import { User, Trash2, Shield, Filter, Mail, Calendar } from 'lucide-react';
 import ConfirmDialog from '../components/ConfirmDialog';
 import SkeletonLoader from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
+import Pagination from '../components/Pagination';
 
 function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -122,7 +123,7 @@ function AdminUsers() {
       ) : (
         <div className="glass rounded-2xl shadow-xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="min-w-[760px] w-full">
               <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -215,20 +216,12 @@ function AdminUsers() {
 
       {/* Pagination */}
       {pagination && pagination.pages > 1 && (
-        <div className="flex justify-center gap-2">
-          {[...Array(pagination.pages)].map((_, index) => (
-            <button
-              key={index}
-              onClick={() => fetchUsers(roleFilter, index + 1)}
-              className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
-                pagination.page === index + 1
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                  : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-blue-300'
-              }`}
-            >
-              {index + 1}
-            </button>
-          ))}
+        <div className="rounded-2xl border border-gray-200 bg-white px-3 pb-5 pt-1 shadow-sm">
+          <Pagination
+            currentPage={pagination.page}
+            totalPages={pagination.pages}
+            onPageChange={(page) => fetchUsers(roleFilter, page)}
+          />
         </div>
       )}
 

@@ -52,7 +52,7 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
   const pageNumbers = getPageNumbers();
 
   return (
-    <div className="flex items-center justify-center gap-2 mt-8">
+    <nav className="mt-8 flex flex-wrap items-center justify-center gap-2" aria-label="Pagination">
       {/* Previous Button */}
       <button
         onClick={() => onPageChange(currentPage - 1)}
@@ -68,12 +68,14 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
       </button>
 
       {/* Page Numbers */}
-      <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center justify-center gap-1">
         {pageNumbers.map((page, index) => (
           <button
             key={index}
             onClick={() => typeof page === 'number' && onPageChange(page)}
             disabled={page === '...'}
+            aria-current={page === currentPage ? 'page' : undefined}
+            aria-label={typeof page === 'number' ? `Go to page ${page}` : 'More pages'}
             className={`min-w-[40px] h-10 px-3 rounded-lg font-medium transition-colors ${
               page === currentPage
                 ? 'bg-primary-600 text-white'
@@ -100,7 +102,7 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
       >
         <ChevronRight className="w-5 h-5" />
       </button>
-    </div>
+    </nav>
   );
 }
 

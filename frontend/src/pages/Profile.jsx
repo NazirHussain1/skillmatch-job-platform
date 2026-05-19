@@ -349,7 +349,7 @@ function Profile() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
           <p className="text-gray-600 mt-1">Manage your account information</p>
@@ -363,7 +363,7 @@ function Profile() {
             Edit Profile
           </button>
         ) : (
-          <div className="flex gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <button
               onClick={handleCancel}
               className="btn-secondary flex items-center gap-2"
@@ -386,7 +386,7 @@ function Profile() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Info Card */}
         <div className="card">
-          <div className="flex items-center gap-4 mb-6">
+          <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center">
             <div className="relative">
               {imagePreview || formData.profilePicture ? (
                 <img
@@ -416,7 +416,7 @@ function Profile() {
                 </label>
               )}
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               {isEditing ? (
                 <div className="space-y-2">
                   <input
@@ -533,7 +533,7 @@ function Profile() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Company Logo
               </label>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 {logoPreview || formData.companyLogo ? (
                   <img
                     src={getOptimizedCloudinaryUrl(logoPreview || formData.companyLogo, {
@@ -550,9 +550,9 @@ function Profile() {
                   </div>
                 )}
                 {isEditing && (
-                  <div className="flex-1">
-                    <label className="btn-secondary cursor-pointer inline-block">
-                      <Camera className="w-4 h-4 inline mr-2" />
+                  <div className="flex-1 min-w-0">
+                    <label className="btn-secondary cursor-pointer inline-flex">
+                      <Camera className="w-4 h-4" />
                       Choose Logo
                       <input
                         type="file"
@@ -566,7 +566,7 @@ function Profile() {
                         type="button"
                         onClick={handleUploadLogo}
                         disabled={uploadingLogo}
-                        className="btn-primary ml-2"
+                        className="btn-primary mt-2 sm:ml-2 sm:mt-0"
                       >
                         {uploadingLogo ? 'Uploading...' : 'Upload Logo'}
                       </button>
@@ -674,7 +674,7 @@ function Profile() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Upload New Resume (PDF, DOC, DOCX)
                 </label>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <input
                     type="file"
                     accept=".pdf,.doc,.docx"
@@ -691,7 +691,7 @@ function Profile() {
                   </label>
                   {resumeFile && (
                     <>
-                      <span className="text-sm text-gray-600">{resumeFile.name}</span>
+                      <span className="min-w-0 max-w-full break-all text-sm text-gray-600">{resumeFile.name}</span>
                       <button
                         type="button"
                         onClick={handleUploadResume}
@@ -737,12 +737,12 @@ function Profile() {
             )}
           </div>
           {isEditing && (
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <input
                 type="text"
                 value={newSkill}
                 onChange={(e) => setNewSkill(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())}
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddSkill())}
                 className="input-field flex-1"
                 placeholder="Add a skill"
               />
@@ -759,7 +759,7 @@ function Profile() {
 
         {/* Experience Section */}
         <div className="card">
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
             <h3 className="text-xl font-bold text-gray-900">Experience</h3>
             {isEditing && (
               <button
@@ -807,7 +807,7 @@ function Profile() {
                       className="input-field"
                       placeholder="Location"
                     />
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <input
                         type="date"
                         value={exp.from ? new Date(exp.from).toISOString().split('T')[0] : ''}
@@ -860,7 +860,7 @@ function Profile() {
 
         {/* Education Section */}
         <div className="card">
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
             <h3 className="text-xl font-bold text-gray-900">Education</h3>
             {isEditing && (
               <button
@@ -908,7 +908,7 @@ function Profile() {
                       className="input-field"
                       placeholder="Field of Study"
                     />
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <input
                         type="date"
                         value={edu.from ? new Date(edu.from).toISOString().split('T')[0] : ''}

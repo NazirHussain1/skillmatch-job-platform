@@ -10,6 +10,19 @@
   body {
     @apply antialiased bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 text-gray-900;
   }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  img,
+  video,
+  canvas,
+  svg {
+    max-width: 100%;
+  }
   
   *:focus-visible {
     @apply outline-none ring-2 ring-primary-500 ring-offset-2;
@@ -174,7 +187,13 @@
   background-size: 200% 100%;
 }
 
-/* Smooth transitions */
-* {
-  @apply transition-colors duration-200;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

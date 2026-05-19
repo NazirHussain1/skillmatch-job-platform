@@ -5,6 +5,7 @@ import { Trash2, CheckCircle, XCircle, Filter, Building2, MapPin, DollarSign } f
 import ConfirmDialog from '../components/ConfirmDialog';
 import SkeletonLoader from '../components/SkeletonLoader';
 import EmptyState from '../components/EmptyState';
+import Pagination from '../components/Pagination';
 import { formatSalaryRange } from '../utils/jobFormatters';
 
 function AdminJobs() {
@@ -195,7 +196,7 @@ function AdminJobs() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex lg:flex-col gap-2 lg:w-48">
+                <div className="flex flex-col gap-2 sm:flex-row lg:w-48 lg:flex-col">
                   {job.status === 'pending' && (
                     <>
                       <button
@@ -242,20 +243,12 @@ function AdminJobs() {
 
       {/* Pagination */}
       {pagination && pagination.pages > 1 && (
-        <div className="flex justify-center gap-2">
-          {[...Array(pagination.pages)].map((_, index) => (
-            <button
-              key={index}
-              onClick={() => fetchJobs(statusFilter, index + 1)}
-              className={`px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
-                pagination.page === index + 1
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg'
-                  : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-blue-300'
-              }`}
-            >
-              {index + 1}
-            </button>
-          ))}
+        <div className="rounded-2xl border border-gray-200 bg-white px-3 pb-5 pt-1 shadow-sm">
+          <Pagination
+            currentPage={pagination.page}
+            totalPages={pagination.pages}
+            onPageChange={(page) => fetchJobs(statusFilter, page)}
+          />
         </div>
       )}
 

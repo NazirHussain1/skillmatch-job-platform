@@ -1,6 +1,12 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+const vendorChunks = {
+  'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+  'redux-vendor': ['@reduxjs/toolkit', 'react-redux'],
+  'ui-vendor': ['lucide-react', 'react-hot-toast'],
+};
+
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -21,10 +27,16 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'redux-vendor': ['@reduxjs/toolkit', 'react-redux'],
-          'ui-vendor': ['lucide-react', 'react-hot-toast'],
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+
+          for (const [chunkName, packages] of Object.entries(vendorChunks)) {
+            if (packages.some((packageName) => id.includes(`/node_modules/${packageName}/`))) {
+              return chunkName;
+            }
+          }
+
+          return undefined;
         },
       },
     },

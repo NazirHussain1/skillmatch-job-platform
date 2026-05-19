@@ -2,7 +2,17 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
 // Base URL from environment variable or default
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/+$/, '');
+
+const isPublicAuthRequest = (url = '') =>
+  [
+    '/auth/login',
+    '/auth/register',
+    '/auth/forgot-password',
+    '/auth/reset-password',
+    '/auth/verify-email',
+    '/auth/resend-verification',
+  ].some((path) => url.startsWith(path));
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -54,8 +64,14 @@ api.interceptors.response.use(
     const status = error.response?.status;
     const message = error.response?.data?.message || error.message;
 
-    // Handle 401 Unauthorized - token expired or invalid
-    if (status === 401) {
+    // Handle 401 Unauthorized for protected requests only. Public auth screens
+    // need to show their own validation message without forcing a redirect.
+    if (
+      status === 401 &&
+      error.config?.headers?.Authorization &&
+      !isPublicAuthRequest(error.config?.url) &&
+      window.location.pathname !== '/login'
+    ) {
       // Clear user from localStorage
       localStorage.removeItem('user');
       
@@ -64,7 +80,7 @@ api.interceptors.response.use(
       
       // Redirect to login page after a short delay
       setTimeout(() => {
-        window.location.href = '/login';
+        window.location.assign('/login');
       }, 1000);
     }
     

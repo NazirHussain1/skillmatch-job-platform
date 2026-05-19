@@ -1,15 +1,33 @@
-import { Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { Briefcase, Users, TrendingUp, Search, MapPin, Building, CheckCircle } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Briefcase, Search, MapPin, Building, CheckCircle } from 'lucide-react';
 import jobService from '../services/jobService';
 import { formatSalaryRange } from '../utils/jobFormatters';
 import { setDocumentMeta } from '../utils/documentMeta';
 
 function Landing() {
+  const navigate = useNavigate();
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
   const [featuredJobs, setFeaturedJobs] = useState([]);
+  const [totalJobs, setTotalJobs] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  const featuredCompanies = useMemo(() => {
+    const companies = new Map();
+
+    featuredJobs.forEach((job) => {
+      const companyName = job.company || job.employer?.companyName;
+      if (!companyName || companies.has(companyName)) return;
+
+      companies.set(companyName, {
+        name: companyName,
+        logo: companyName.charAt(0).toUpperCase()
+      });
+    });
+
+    return Array.from(companies.values()).slice(0, 6);
+  }, [featuredJobs]);
 
   useEffect(() => {
     setDocumentMeta({
@@ -21,8 +39,10 @@ function Landing() {
       try {
         const data = await jobService.getJobs({ limit: 6, status: 'active' });
         setFeaturedJobs(data.jobs || []);
+        setTotalJobs(data.pagination?.total || data.jobs?.length || 0);
       } catch {
         setFeaturedJobs([]);
+        setTotalJobs(0);
       } finally {
         setLoading(false);
       }
@@ -33,11 +53,10 @@ function Landing() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    // Navigate to jobs page with search params
     const params = new URLSearchParams();
     if (searchKeyword) params.append('keyword', searchKeyword);
     if (searchLocation) params.append('location', searchLocation);
-    window.location.href = `/jobs?${params.toString()}`;
+    navigate(params.toString() ? `/jobs?${params.toString()}` : '/jobs');
   };
 
   return (
@@ -54,11 +73,11 @@ function Landing() {
                 SkillMatch
               </span>
             </Link>
-            <div className="flex items-center gap-4">
-              <Link to="/login" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Link to="/login" className="text-sm sm:text-base text-gray-700 hover:text-blue-600 font-medium transition-colors">
                 Login
               </Link>
-              <Link to="/register" className="btn-primary">
+              <Link to="/register" className="btn-primary px-3 py-2 text-sm sm:px-6 sm:py-3 sm:text-base">
                 Get Started
               </Link>
             </div>
@@ -112,18 +131,18 @@ function Landing() {
             </div>
           </form>
 
-          <div className="flex items-center justify-center gap-8 text-sm text-gray-600">
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-8 text-sm text-gray-600">
             <span className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-green-500" />
-              Trusted by 10,000+ users
+              Public job search
             </span>
             <span className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-green-500" />
-              5,000+ active jobs
+              Employer pipelines
             </span>
             <span className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-green-500" />
-              500+ companies
+              Admin moderation
             </span>
           </div>
         </div>
@@ -150,7 +169,7 @@ function Landing() {
                 </div>
               ))}
             </div>
-          ) : (
+          ) : featuredJobs.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredJobs.slice(0, 6).map((job) => (
                 <Link
@@ -185,6 +204,12 @@ function Landing() {
                 </Link>
               ))}
             </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center">
+              <Briefcase className="mx-auto mb-3 h-10 w-10 text-gray-400" aria-hidden="true" />
+              <p className="font-semibold text-gray-900">No featured jobs available yet</p>
+              <p className="mt-1 text-sm text-gray-600">New approved roles will appear here automatically.</p>
+            </div>
           )}
 
           <div className="text-center mt-8">
@@ -201,27 +226,27 @@ function Landing() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Top Companies Hiring</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Join industry leaders and innovative companies that are actively hiring top talent.
+              Companies with currently approved opportunities appear here automatically.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
-            {[
-              { name: 'TechCorp', logo: 'T' },
-              { name: 'InnovateLab', logo: 'I' },
-              { name: 'DataFlow', logo: 'D' },
-              { name: 'CloudSync', logo: 'C' },
-              { name: 'AI Solutions', logo: 'A' },
-              { name: 'WebWorks', logo: 'W' }
-            ].map((company, index) => (
-              <div key={index} className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <span className="text-xl font-bold text-blue-600">{company.logo}</span>
+          {featuredCompanies.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
+              {featuredCompanies.map((company) => (
+                <div key={company.name} className="text-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <span className="text-xl font-bold text-blue-600">{company.logo}</span>
+                  </div>
+                  <p className="text-sm font-medium text-gray-900 break-words">{company.name}</p>
                 </div>
-                <p className="text-sm font-medium text-gray-900">{company.name}</p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-gray-300 bg-white px-6 py-10 text-center">
+              <Building className="mx-auto mb-3 h-10 w-10 text-gray-400" aria-hidden="true" />
+              <p className="font-semibold text-gray-900">No companies to feature yet</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -230,16 +255,16 @@ function Landing() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             <div className="text-white">
-              <div className="text-4xl font-bold mb-2">10,000+</div>
-              <div className="text-blue-100">Active Users</div>
+              <div className="text-4xl font-bold mb-2">{totalJobs.toLocaleString()}</div>
+              <div className="text-blue-100">Active Jobs</div>
             </div>
             <div className="text-white">
-              <div className="text-4xl font-bold mb-2">5,000+</div>
-              <div className="text-blue-100">Jobs Posted</div>
+              <div className="text-4xl font-bold mb-2">3</div>
+              <div className="text-blue-100">Role Workspaces</div>
             </div>
             <div className="text-white">
-              <div className="text-4xl font-bold mb-2">500+</div>
-              <div className="text-blue-100">Companies</div>
+              <div className="text-4xl font-bold mb-2">24/7</div>
+              <div className="text-blue-100">Public Access</div>
             </div>
           </div>
         </div>

@@ -449,7 +449,7 @@ const MainLayout = ({ children }) => {
 
       {/* Main Content */}
       <main
-        className="flex-1 overflow-y-auto max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8"
+        className="flex-1 w-full overflow-y-auto max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8"
         role="main"
       >
         {children}
@@ -458,7 +458,7 @@ const MainLayout = ({ children }) => {
       {/* Footer (desktop and larger tablets) */}
       <footer className="hidden lg:block border-t border-gray-200 bg-white/80 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between text-xs text-gray-500">
-          <span>© {new Date().getFullYear()} SkillMatch. All rights reserved.</span>
+          <span>&copy; {new Date().getFullYear()} SkillMatch. All rights reserved.</span>
           <span className="hidden sm:inline">
             Job seekers, employers, and admins working together.
           </span>
