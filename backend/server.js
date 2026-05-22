@@ -46,11 +46,15 @@ const parseOrigins = (value) =>
     .filter(Boolean);
 
 const devOrigins = ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'];
-const configuredOrigins = parseOrigins(process.env.CORS_ORIGIN);
+const productionFallbackOrigins = ['https://skillmatch-job-platform.vercel.app'];
+const configuredOrigins = [
+  ...parseOrigins(process.env.CORS_ORIGIN),
+  ...parseOrigins(process.env.FRONTEND_URL)
+];
 const allowedOrigins = [
   ...new Set(
     process.env.NODE_ENV === 'production'
-      ? configuredOrigins
+      ? [...productionFallbackOrigins, ...configuredOrigins]
       : [...devOrigins, ...configuredOrigins]
   )
 ];

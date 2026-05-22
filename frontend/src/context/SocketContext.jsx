@@ -3,12 +3,13 @@ import { useSelector } from 'react-redux';
 import { io } from 'socket.io-client';
 
 const SocketContext = createContext();
+const DEFAULT_DEV_API_URL = 'http://localhost:5000/api';
+const DEFAULT_PRODUCTION_API_URL = 'https://skillmatch-backend.onrender.com/api';
 
 const getSocketServerUrl = () => {
-  const apiUrl = import.meta.env.VITE_API_URL;
-  if (!apiUrl) {
-    return 'http://localhost:5000';
-  }
+  const apiUrl =
+    import.meta.env.VITE_API_URL ||
+    (import.meta.env.PROD ? DEFAULT_PRODUCTION_API_URL : DEFAULT_DEV_API_URL);
 
   return apiUrl.replace(/\/api\/?$/, '');
 };

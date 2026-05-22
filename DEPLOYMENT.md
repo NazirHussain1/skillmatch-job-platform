@@ -61,6 +61,12 @@ Required:
 VITE_API_URL=https://your-backend-domain.com/api
 ```
 
+If `VITE_API_URL` is missing, the production frontend falls back to:
+
+```text
+https://skillmatch-backend.onrender.com/api
+```
+
 ## Render
 
 The root `render.yaml` defines:

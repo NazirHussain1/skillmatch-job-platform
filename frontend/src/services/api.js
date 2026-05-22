@@ -1,8 +1,14 @@
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
-// Base URL from environment variable or default
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/+$/, '');
+const DEFAULT_DEV_API_URL = 'http://localhost:5000/api';
+const DEFAULT_PRODUCTION_API_URL = 'https://skillmatch-backend.onrender.com/api';
+
+// Base URL from environment variable, with safe defaults for local and production builds.
+const API_URL = (
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.PROD ? DEFAULT_PRODUCTION_API_URL : DEFAULT_DEV_API_URL)
+).replace(/\/+$/, '');
 
 const isPublicAuthRequest = (url = '') =>
   [
@@ -57,7 +63,7 @@ api.interceptors.response.use(
   },
   (error) => {
     if (!error.response) {
-      toast.error('Network error: Unable to reach server. Please check backend/CORS settings.');
+      toast.error(`Network error: Unable to reach API at ${API_URL}. Check backend status and CORS settings.`);
       return Promise.reject(error);
     }
 
