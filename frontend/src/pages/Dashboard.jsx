@@ -3,15 +3,47 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { getJobs } from '../features/jobs/jobSlice';
 import { getApplications } from '../features/applications/applicationSlice';
-import { Briefcase, FileText, TrendingUp, Plus, CheckCircle, XCircle, Clock, Users } from 'lucide-react';
+import { getUserProfile } from '../features/user/userSlice';
+import { Briefcase, FileText, TrendingUp, Plus, CheckCircle, XCircle, Clock, Users, UserCheck } from 'lucide-react';
 import api from '../services/api';
+import { setDocumentMeta } from '../utils/documentMeta';
+
+const getProfileReadiness = (profile) => {
+  const checks = [
+    { id: 'resume', label: 'Resume uploaded', complete: Boolean(profile?.resume) },
+    { id: 'skills', label: 'Skills added', complete: Array.isArray(profile?.skills) && profile.skills.length >= 3 },
+    { id: 'location', label: 'Location added', complete: Boolean(profile?.location) },
+    { id: 'bio', label: 'Professional summary added', complete: Boolean(profile?.bio) },
+    {
+      id: 'history',
+      label: 'Experience or education added',
+      complete: Boolean(profile?.experience?.length || profile?.education?.length)
+    }
+  ];
+  const completed = checks.filter((check) => check.complete).length;
+
+  return {
+    checks,
+    completed,
+    percent: Math.round((completed / checks.length) * 100)
+  };
+};
 
 function Dashboard() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { jobs } = useSelector((state) => state.jobs);
   const { applications } = useSelector((state) => state.applications);
+  const { profile } = useSelector((state) => state.user);
   const [employerStats, setEmployerStats] = useState(null);
+  const profileReadiness = getProfileReadiness(profile);
+
+  useEffect(() => {
+    setDocumentMeta({
+      title: 'Dashboard | SkillMatch',
+      description: 'Manage your SkillMatch job search, applications, profile readiness, and hiring activity.'
+    });
+  }, []);
 
   useEffect(() => {
     if (user?.role === 'employer') {
@@ -23,6 +55,7 @@ function Dashboard() {
     } else {
       dispatch(getJobs({ limit: 10 }));
       dispatch(getApplications());
+      dispatch(getUserProfile());
     }
   }, [dispatch, user]);
 
@@ -133,6 +166,57 @@ function Dashboard() {
           ))
         )}
       </div>
+
+      {user?.role !== 'employer' && (
+        <div className="card">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-center">
+            <div>
+              <div className="mb-4 flex items-start gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary-100 text-primary-700">
+                  <UserCheck className="h-5 w-5" aria-hidden="true" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Profile Readiness</h2>
+                  <p className="mt-1 text-sm text-gray-600">
+                    Complete profiles help employers evaluate applications faster.
+                  </p>
+                </div>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-gray-100">
+                <div
+                  className="h-full rounded-full bg-primary-600 transition-all"
+                  style={{ width: `${profileReadiness.percent}%` }}
+                />
+              </div>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {profileReadiness.checks.map((check) => (
+                  <div
+                    key={check.id}
+                    className={`flex items-center gap-2 text-sm ${
+                      check.complete ? 'text-green-700' : 'text-gray-600'
+                    }`}
+                  >
+                    <CheckCircle
+                      className={`h-4 w-4 ${check.complete ? 'text-green-600' : 'text-gray-300'}`}
+                      aria-hidden="true"
+                    />
+                    <span>{check.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-lg border border-gray-100 bg-gray-50 p-4 text-center">
+              <p className="text-4xl font-bold text-gray-900">{profileReadiness.percent}%</p>
+              <p className="mt-1 text-sm text-gray-600">
+                {profileReadiness.completed} of {profileReadiness.checks.length} complete
+              </p>
+              <Link to="/profile" className="btn-primary mt-4 w-full">
+                Update Profile
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Employer Additional Stats */}
       {user?.role === 'employer' && employerStats && (
